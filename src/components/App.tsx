@@ -13,13 +13,24 @@ import type { Activity, AppState, ClientT } from "@/lib/types";
 import Sidebar from "./Sidebar";
 import ClientList from "./ClientList";
 import ClientDetail from "./ClientDetail";
-import { ClientDialog, FinishDialog, SetupDialog } from "./Dialogs";
+import {
+  AdminDialog,
+  ClientDialog,
+  FinishDialog,
+  SetupDialog,
+} from "./Dialogs";
 import Toasts, { type ToastItem } from "./Toasts";
 import Avatar from "./Avatar";
 
 const ME_KEY = "checkflow-me-v1";
 
-type Me = { id: string; name: string; color: string };
+type Me = {
+  id: string;
+  name: string;
+  color: string;
+  username: string;
+  role: string;
+};
 
 let toastSeq = 1;
 
@@ -36,6 +47,7 @@ export default function App() {
     { mode: "new" } | { mode: "rename"; client: ClientT } | null
   >(null);
   const [finishFor, setFinishFor] = useState<ClientT | null>(null);
+  const [adminOpen, setAdminOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [now, setNow] = useState(() => Date.now());
 
@@ -43,7 +55,10 @@ export default function App() {
   const seenRef = useRef<Set<string>>(new Set());
   const refetchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const meRef = useRef<Me | null>(null);
-  meRef.current = me;
+
+  useEffect(() => {
+    meRef.current = me;
+  }, [me]);
 
   /* ---------- helpers ---------- */
 
@@ -84,20 +99,30 @@ export default function App() {
   /* ---------- bootstrap ---------- */
 
   useEffect(() => {
-    void fetchState();
-    try {
-      const raw = localStorage.getItem(ME_KEY);
-      if (raw) {
-        const p = JSON.parse(raw) as Partial<Me>;
-        if (p && typeof p.id === "string" && typeof p.name === "string" && p.name) {
-          setMe({ id: p.id, name: p.name, color: p.color ?? "#2a9b81" });
-          return;
+    const bootstrap = async () => {
+      try {
+        const raw = localStorage.getItem(ME_KEY);
+        if (raw) {
+          const p = JSON.parse(raw) as Partial<Me>;
+          if (p && typeof p.id === "string" && typeof p.name === "string" && p.name) {
+            setMe({
+              id: p.id,
+              name: p.name,
+              color: p.color ?? "#2a9b81",
+              username: p.username ?? p.name,
+              role: p.role ?? "user",
+            });
+            return;
+          }
         }
+      } catch {
+        // identidade corrompida -> pede novamente
       }
-    } catch {
-      // identidade corrompida -> pede novamente
-    }
-    setNeedSetup(true);
+      setNeedSetup(true);
+      await fetchState();
+    };
+
+    void bootstrap();
   }, [fetchState]);
 
   useEffect(() => {
@@ -185,13 +210,10 @@ export default function App() {
     return q ? list.filter((c) => norm(c.name).includes(q)) : list;
   }, [view, search, activeClients, doneClients]);
 
-  useEffect(() => {
-    if (!visible.some((c) => c.id === selectedId)) {
-      setSelectedId(visible[0]?.id ?? null);
-    }
-  }, [visible, selectedId]);
-
-  const selected = (clients ?? []).find((c) => c.id === selectedId) ?? null;
+  const selected =
+    (clients ?? []).find((c) => c.id === selectedId) ??
+    visible[0] ??
+    null;
   const onlineCollabs = collaborators.filter((c) => isOnline(c, now));
   const stepsDone = activeClients.reduce((n, c) => n + stepTotal(c), 0);
 
@@ -203,15 +225,42 @@ export default function App() {
     setSelectedId(null);
   };
 
-  const join = async (name: string) => {
+  const login = async (username: string, password?: string) => {
     setSaving(true);
     try {
       const current = meRef.current;
-      const { collaborator } = await api.join({ id: current?.id, name });
+      if (!password && current) {
+        const { collaborator } = await api.join({ id: current.id, name: username });
+        const next: Me = {
+          id: collaborator.id,
+          name: collaborator.name,
+          color: collaborator.color,
+          username,
+          role: current.role,
+        };
+        try {
+          localStorage.setItem(ME_KEY, JSON.stringify(next));
+        } catch {
+          // armazenamento indisponível — sessão ainda funciona
+        }
+        setMe(next);
+        setNeedSetup(false);
+        pushToast("Nome e usuário atualizados para a equipe.");
+        void fetchState();
+        return;
+      }
+
+      const payload = {
+        username,
+        password: password ?? "",
+      };
+      const { user, collaborator } = await api.login(payload);
       const next: Me = {
         id: collaborator.id,
         name: collaborator.name,
         color: collaborator.color,
+        username: user.username,
+        role: user.role,
       };
       try {
         localStorage.setItem(ME_KEY, JSON.stringify(next));
@@ -222,12 +271,12 @@ export default function App() {
       setNeedSetup(false);
       pushToast(
         current
-          ? "Nome atualizado para a equipe."
-          : `Bem-vindo(a), ${collaborator.name}! Suas marcações aparecem para todos.`,
+          ? `Usuário atualizado para ${user.username}.`
+          : `Bem-vindo(a), ${user.username}! Suas marcações aparecem para todos.`,
       );
       void fetchState();
     } catch (e) {
-      pushToast(errMsg(e, "Não foi possível entrar. Tente novamente."));
+      pushToast(errMsg(e, "Não foi possível entrar. Verifique usuário e senha."));
     } finally {
       setSaving(false);
     }
@@ -426,6 +475,27 @@ export default function App() {
     }
   };
 
+  const deleteCollaborator = async (id: string) => {
+    const meNow = meRef.current;
+    if (!meNow) return;
+    if (!window.confirm("Deseja excluir este colaborador?")) return;
+    try {
+      setSaving(true);
+      await api.deleteCollaborator(id);
+      pushToast("Colaborador removido.");
+      if (id === meNow.id) {
+        localStorage.removeItem(ME_KEY);
+        setMe(null);
+        setNeedSetup(true);
+      }
+      await fetchState();
+    } catch (e) {
+      pushToast(errMsg(e, "Não foi possível excluir o colaborador."));
+    } finally {
+      setSaving(false);
+    }
+  };
+
   /* ---------- render ---------- */
 
   if (!data) {
@@ -438,7 +508,7 @@ export default function App() {
           <i />
         </div>
         <p>Conectando ao servidor…</p>
-        {needSetup && <SetupDialog busy={saving} onSubmit={join} />}
+        {needSetup && <SetupDialog busy={saving} onSubmit={login} />}
       </div>
     );
   }
@@ -460,6 +530,7 @@ export default function App() {
         meId={me?.id ?? null}
         now={now}
         onEditIdentity={() => setNeedSetup(true)}
+        onOpenAdmin={() => setAdminOpen(true)}
       />
 
       <main className="main">
@@ -576,11 +647,20 @@ export default function App() {
 
       {needSetup && (
         <SetupDialog
-          initialName={me?.name ?? ""}
+          initialName={me?.username ?? me?.name ?? ""}
           editing={!!me}
           busy={saving}
-          onSubmit={join}
+          onSubmit={login}
           onCancel={() => setNeedSetup(false)}
+        />
+      )}
+
+      {adminOpen && (
+        <AdminDialog
+          collaborators={collaborators.map((c) => ({ id: c.id, name: c.name }))}
+          busy={saving}
+          onDelete={deleteCollaborator}
+          onClose={() => setAdminOpen(false)}
         />
       )}
 

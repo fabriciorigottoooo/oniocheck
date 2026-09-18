@@ -12,6 +12,7 @@ type Props = {
   meId: string | null;
   now: number;
   onEditIdentity: () => void;
+  onOpenAdmin: () => void;
 };
 
 export default function Sidebar({
@@ -23,6 +24,7 @@ export default function Sidebar({
   meId,
   now,
   onEditIdentity,
+  onOpenAdmin,
 }: Props) {
   const onlineN = collaborators.filter((c) => isOnline(c, now)).length;
   const sorted = [...collaborators].sort((a, b) => {
@@ -59,6 +61,10 @@ export default function Sidebar({
           Finalizados <span className="count">{counts.done}</span>
         </button>
       </nav>
+
+      <button className="secondary" onClick={onOpenAdmin}>
+        Administrador
+      </button>
 
       <div className="side-section team">
         <div className="side-label">

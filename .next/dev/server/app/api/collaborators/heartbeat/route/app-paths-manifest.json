@@ -1,0 +1,3 @@
+{
+  "/api/collaborators/heartbeat/route": "app/api/collaborators/heartbeat/route.js"
+}

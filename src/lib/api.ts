@@ -30,6 +30,15 @@ async function req<T>(url: string, options?: RequestInit): Promise<T> {
 export const api = {
   state: () => req<AppState>("/api/state"),
 
+  login: (body: { username: string; password: string }) =>
+    req<{ user: { id: string; username: string; role: string }; collaborator: Collab }>(
+      "/api/auth/login",
+      {
+        method: "POST",
+        body: JSON.stringify(body),
+      },
+    ),
+
   join: (body: { id?: string; name: string }) =>
     req<{ collaborator: Collab }>("/api/collaborators", {
       method: "POST",
@@ -52,6 +61,11 @@ export const api = {
     req<{ client: ClientT }>(`/api/clients/${encodeURIComponent(id)}`, {
       method: "PATCH",
       body: JSON.stringify(body),
+    }),
+
+  deleteCollaborator: (id: string) =>
+    req<{ ok: boolean; deletedId: string }>(`/api/collaborators/${encodeURIComponent(id)}`, {
+      method: "DELETE",
     }),
 
   importClients: (body: { payload: unknown; actor: ActorInput }) =>

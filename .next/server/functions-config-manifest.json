@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "functions": {
+    "/api/clients": {},
+    "/api/clients/[id]": {},
+    "/api/collaborators": {},
+    "/api/collaborators/heartbeat": {},
+    "/api/events": {},
+    "/api/import": {},
+    "/api/state": {}
+  }
+}
