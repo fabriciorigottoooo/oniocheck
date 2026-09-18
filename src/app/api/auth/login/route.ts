@@ -1,5 +1,5 @@
 import { randomUUID } from "crypto";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { collaborators, users } from "@/db/schema";
 import { publish } from "@/lib/bus";
@@ -14,6 +14,17 @@ function normalize(value: unknown) {
 
 export async function POST(req: Request) {
   try {
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS users (
+        id text PRIMARY KEY,
+        username text NOT NULL UNIQUE,
+        password text NOT NULL,
+        role text NOT NULL DEFAULT 'user',
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )
+    `);
+
     let body: unknown;
     try {
       body = await req.json();
