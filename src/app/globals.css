@@ -18,12 +18,41 @@
   box-sizing: border-box;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   margin: 0;
   font-family:
     var(--font-inter), Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
   color: var(--ink);
   background: var(--bg);
+}
+
+::selection {
+  background: rgba(61, 117, 224, 0.28);
+  color: #081c2f;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(148, 170, 205, 0.12);
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(94, 138, 255, 0.8), rgba(67, 102, 210, 0.8));
+  border-radius: 999px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, rgba(86, 130, 250, 0.92), rgba(58, 92, 193, 0.92));
 }
 
 button,
@@ -162,8 +191,16 @@ button:disabled {
   position: sticky;
   top: 0;
   height: 100vh;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
   transition: all 0.2s ease;
+}
+
+.side .brand-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
 }
 
 .side.collapsed {
@@ -174,21 +211,19 @@ button:disabled {
 .brand-row {
   display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
 }
 
 .brand-wrap {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 0 8px;
+  gap: 12px;
+  padding: 0 4px 0 8px;
   min-width: 0;
   flex: 1;
-}
-
-.side.collapsed .brand-wrap {
-  justify-content: center;
-  padding: 0;
+  overflow: hidden;
 }
 
 .brand-copy {
@@ -197,26 +232,38 @@ button:disabled {
   flex: 1;
 }
 
+.brand-copy .brand {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.side.collapsed .brand-wrap {
+  justify-content: center;
+  padding: 0;
+}
+
 .side.collapsed .brand-copy {
   display: none;
 }
 
 .brand-mark {
-  width: 54px;
-  height: 54px;
+  width: 82px;
+  height: 82px;
   border-radius: 0;
   object-fit: contain;
   box-shadow: none;
   background: transparent;
   padding: 0;
   flex-shrink: 0;
+  filter: drop-shadow(0 12px 20px rgba(66, 117, 219, 0.22));
 }
 
 .brand {
-  font-size: 22px;
-  font-weight: 800;
+  font-size: 26px;
+  font-weight: 900;
   color: #fff;
-  letter-spacing: -0.4px;
+  letter-spacing: -0.7px;
   white-space: nowrap;
   line-height: 1;
 }
@@ -392,14 +439,14 @@ button:disabled {
 .section-body {
   overflow: hidden;
   transition:
-    max-height 0.32s ease,
-    opacity 0.24s ease,
-    transform 0.24s ease;
+    max-height 0.34s ease,
+    opacity 0.22s ease,
+    transform 0.22s ease;
   transform-origin: top center;
 }
 
 .section-body.open {
-  max-height: 320px;
+  max-height: 420px;
   opacity: 1;
   transform: translateY(0);
 }
@@ -407,7 +454,7 @@ button:disabled {
 .section-body.closed {
   max-height: 0;
   opacity: 0;
-  transform: translateY(-4px);
+  transform: translateY(-5px);
 }
 
 .team-list {
@@ -417,6 +464,16 @@ button:disabled {
   overflow-y: auto;
   scrollbar-width: thin;
   scrollbar-color: #ffffff22 transparent;
+}
+
+.feed-list {
+  overflow-y: auto;
+  display: grid;
+  gap: 2px;
+  padding-right: 2px;
+  max-height: 220px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(130, 162, 255, 0.7) rgba(255, 255, 255, 0.04);
 }
 
 .side.collapsed .tabs,
@@ -516,13 +573,11 @@ button.team-row:hover {
   flex-direction: column;
 }
 
-.feed-list {
-  overflow-y: auto;
-  display: grid;
-  gap: 2px;
-  padding-right: 2px;
-  scrollbar-width: thin;
-  scrollbar-color: #ffffff22 transparent;
+.side-section.feed {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
 }
 
 .feed-item {
@@ -564,19 +619,20 @@ button.team-row:hover {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.04);
+  width: 40px;
+  height: 40px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.06);
   color: #edf4ff;
   cursor: pointer;
   flex-shrink: 0;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
 .sidebar-toggle svg {
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
 }
 
 .profile-upload-wrap {
@@ -611,14 +667,14 @@ button.team-row:hover {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 42px;
-  height: 42px;
+  width: 52px;
+  height: 52px;
   padding: 0;
 }
 
 .icon-only svg {
-  width: 20px;
-  height: 20px;
+  width: 28px;
+  height: 28px;
 }
 
 /* ---------- avatar ---------- */
@@ -1053,15 +1109,41 @@ button.team-row:hover {
 }
 
 .task input {
+  appearance: none;
+  -webkit-appearance: none;
   width: 20px;
   height: 20px;
-  accent-color: #2d6fe8;
+  border-radius: 7px;
+  border: 2px solid rgba(59, 95, 177, 0.7);
+  background: linear-gradient(180deg, rgba(255,255,255,0.85), rgba(227,236,255,0.9));
   flex-shrink: 0;
   cursor: pointer;
+  position: relative;
+  transition: all 0.18s ease;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.9);
+}
+
+.task input:checked {
+  background: linear-gradient(180deg, #2d6fe8, #1d5fd3);
+  border-color: #1d5fd3;
+  box-shadow: 0 0 0 3px rgba(45, 111, 232, 0.12);
+}
+
+.task input:checked::after {
+  content: "";
+  position: absolute;
+  left: 6px;
+  top: 2px;
+  width: 5px;
+  height: 10px;
+  border: solid #fff;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
 }
 
 .task input:disabled {
   cursor: default;
+  opacity: 0.8;
 }
 
 .task-body {
