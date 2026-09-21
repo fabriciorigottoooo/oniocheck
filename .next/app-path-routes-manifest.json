@@ -2,6 +2,7 @@
   "/_global-error/page": "/_global-error",
   "/_not-found/page": "/_not-found",
   "/api/auth/login/route": "/api/auth/login",
+  "/api/auth/profile/route": "/api/auth/profile",
   "/api/clients/[id]/route": "/api/clients/[id]",
   "/api/clients/route": "/api/clients",
   "/api/collaborators/[id]/route": "/api/collaborators/[id]",

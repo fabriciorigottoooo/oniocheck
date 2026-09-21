@@ -23,6 +23,7 @@ export function toCollab(r: CollabRow): Collab {
     id: r.id,
     name: r.name,
     color: r.color,
+    avatarUrl: (r as typeof r & { avatarUrl?: string | null }).avatarUrl ?? null,
     createdAt: r.createdAt.toISOString(),
     lastSeenAt: r.lastSeenAt.toISOString(),
   };

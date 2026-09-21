@@ -17,6 +17,7 @@ import {
   AdminDialog,
   ClientDialog,
   FinishDialog,
+  ProfileDialog,
   SetupDialog,
 } from "./Dialogs";
 import Toasts, { type ToastItem } from "./Toasts";
@@ -54,6 +55,8 @@ export default function App() {
   >(null);
   const [finishFor, setFinishFor] = useState<ClientT | null>(null);
   const [adminOpen, setAdminOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [darkMode, setDarkMode] = useState(false);
   const [saving, setSaving] = useState(false);
   const [now, setNow] = useState(() => Date.now());
 
@@ -160,6 +163,15 @@ export default function App() {
     return () => clearInterval(t);
   }, []);
 
+  useEffect(() => {
+    const storedTheme = localStorage.getItem("oniocheck-theme");
+    if (storedTheme === "dark") setDarkMode(true);
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem("oniocheck-theme", darkMode ? "dark" : "light");
+  }, [darkMode]);
+
   /* ---------- realtime: SSE + heartbeat + poll ---------- */
 
   useEffect(() => {
@@ -218,6 +230,7 @@ export default function App() {
   const clients = data?.clients;
   const collaborators = data?.collaborators ?? [];
   const activities = data?.activities ?? [];
+  const meAvatarUrl = collaborators.find((c) => c.id === me?.id)?.avatarUrl ?? null;
 
   const activeClients = useMemo(
     () => (clients ?? []).filter((c) => !c.finishedAt),
@@ -253,6 +266,34 @@ export default function App() {
     setView(v);
     setSearch("");
     setSelectedId(null);
+  };
+
+  const updateProfile = async ({ password, avatarUrl }: { password?: string; avatarUrl?: string | null }) => {
+    const meNow = meRef.current;
+    if (!meNow) return;
+    setSaving(true);
+    try {
+      const { collaborator } = await api.updateProfile({
+        id: meNow.id,
+        username: meNow.username,
+        password: password && password.trim() ? password.trim() : undefined,
+        avatarUrl: avatarUrl && avatarUrl.trim() ? avatarUrl.trim() : null,
+      });
+      const nextMe = { ...meNow, name: collaborator.name, color: collaborator.color };
+      setMe(nextMe);
+      try {
+        localStorage.setItem(ME_KEY, JSON.stringify(nextMe));
+      } catch {
+        // sem armazenamento disponível
+      }
+      await fetchState();
+      setProfileOpen(false);
+      pushToast("Perfil atualizado.");
+    } catch (e) {
+      pushToast(errMsg(e, "Não foi possível atualizar o perfil."));
+    } finally {
+      setSaving(false);
+    }
   };
 
   const login = async (username: string, password?: string) => {
@@ -628,7 +669,7 @@ export default function App() {
   }
 
   return (
-    <div className="app">
+    <div className={`app${darkMode ? " dark" : ""}`}>
       <Sidebar
         view={view}
         counts={{ active: activeClients.length, done: doneClients.length }}
@@ -636,9 +677,12 @@ export default function App() {
         collaborators={collaborators}
         activities={activities}
         meId={me?.id ?? null}
+        meAvatarUrl={meAvatarUrl}
+        meName={me?.name ?? null}
         now={now}
         onEditIdentity={() => setNeedSetup(true)}
         onOpenAdmin={() => setAdminOpen(true)}
+        onOpenProfile={() => setProfileOpen(true)}
       />
 
       <main className="main">
@@ -653,6 +697,14 @@ export default function App() {
             </p>
           </div>
           <div className="top-actions">
+            <button
+              type="button"
+              className="secondary small"
+              onClick={() => setDarkMode((v) => !v)}
+              aria-label="Alternar modo escuro"
+            >
+              {darkMode ? "☀️ Claro" : "🌙 Escuro"}
+            </button>
             <span
               className={`pill ${live ? "on" : "off"}`}
               title={
@@ -770,6 +822,16 @@ export default function App() {
           busy={saving}
           onDelete={deleteCollaborator}
           onClose={() => setAdminOpen(false)}
+        />
+      )}
+
+      {profileOpen && (
+        <ProfileDialog
+          currentName={me?.name ?? ""}
+          currentAvatarUrl={meAvatarUrl ?? ""}
+          busy={saving}
+          onCancel={() => setProfileOpen(false)}
+          onSubmit={updateProfile}
         />
       )}
 

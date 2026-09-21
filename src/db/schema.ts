@@ -6,6 +6,7 @@ export const collaborators = pgTable("collaborators", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
   color: text("color").notNull(),
+  avatarUrl: text("avatar_url"),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),

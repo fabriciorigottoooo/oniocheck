@@ -51,6 +51,95 @@ button:disabled {
   display: grid;
   grid-template-columns: 252px 1fr;
   min-height: 100vh;
+  background: var(--bg);
+  color: var(--ink);
+}
+
+.app.dark {
+  --bg: #091421;
+  --ink: #edf4ff;
+  --muted: #9cb1cf;
+  --line: #1f2e46;
+  --navy: #081a2c;
+  --navy-2: #061521;
+  background: var(--bg);
+  color: var(--ink);
+}
+
+.app.dark .main,
+.app.dark .panel,
+.app.dark .stat,
+.app.dark .list-head,
+.app.dark .detail-head,
+.app.dark .detail-foot,
+.app.dark .footer,
+.app.dark .topbar,
+.app.dark .side,
+.app.dark .tab,
+.app.dark .team-row,
+.app.dark .client,
+.app.dark .search,
+.app.dark input,
+.app.dark .rename-btn,
+.app.dark .secondary,
+.app.dark .primary,
+.app.dark .danger {
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.app.dark .main {
+  background: #0d1b2a;
+}
+
+.app.dark .panel,
+.app.dark .stat,
+.app.dark .search,
+.app.dark .rename-btn,
+.app.dark .client,
+.app.dark .detail-foot,
+.app.dark .footer,
+.app.dark .modal {
+  background: #101d2f;
+  border-color: #1d2f46;
+  color: var(--ink);
+}
+
+.app.dark .search,
+.app.dark input {
+  background: #0f1b2a;
+  color: var(--ink);
+  border-color: #23395b;
+}
+
+.app.dark .client:hover {
+  background: #12223a;
+}
+
+.app.dark .client.selected {
+  background: #102748;
+  border-color: #2d6fe8;
+}
+
+.app.dark .muted,
+.app.dark .task-name,
+.app.dark .step,
+.app.dark .byline,
+.app.dark .progress-label,
+.app.dark .side-note,
+.app.dark .team-empty,
+.app.dark .feed-empty,
+.app.dark .detail-foot p,
+.app.dark .empty {
+  color: var(--muted);
+}
+
+.app.dark .secondary {
+  background: #162b46;
+  color: #dfeeff;
+}
+
+.app.dark .secondary:hover {
+  background: #1b3354;
 }
 
 /* ---------- sidebar ---------- */
@@ -71,18 +160,27 @@ button:disabled {
 .brand-wrap {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 0 12px;
+  gap: 10px;
+  padding: 0 8px;
+  min-width: 0;
+  width: 100%;
+}
+
+.brand-copy {
+  min-width: 0;
+  overflow: hidden;
+  flex: 1;
 }
 
 .brand-mark {
-  width: 110px;
-  height: 110px;
+  width: 54px;
+  height: 54px;
   border-radius: 0;
   object-fit: contain;
   box-shadow: none;
   background: transparent;
   padding: 0;
+  flex-shrink: 0;
 }
 
 .brand {
@@ -90,6 +188,8 @@ button:disabled {
   font-weight: 800;
   color: #fff;
   letter-spacing: -0.4px;
+  white-space: nowrap;
+  line-height: 1;
 }
 
 .brand span {
@@ -100,6 +200,56 @@ button:disabled {
   font-size: 34px;
   padding: 0;
   color: var(--navy);
+}
+
+.profile-summary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 10px 12px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  width: 100%;
+}
+
+.profile-summary:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.profile-summary .avatar {
+  flex-shrink: 0;
+}
+
+.profile-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  border: 2px solid rgba(255, 255, 255, 0.45);
+  background: #fff;
+}
+
+.profile-meta {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.profile-meta strong {
+  font-size: 13px;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.profile-meta span {
+  font-size: 10px;
+  color: #a9bdd8;
 }
 
 .subtitle {

@@ -19,6 +19,7 @@ export type Collab = {
   id: string;
   name: string;
   color: string;
+  avatarUrl?: string | null;
   createdAt: string;
   lastSeenAt: string;
 };

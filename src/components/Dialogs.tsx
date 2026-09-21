@@ -265,6 +265,80 @@ export function FinishDialog({
   );
 }
 
+export function ProfileDialog({
+  currentName,
+  currentAvatarUrl,
+  busy,
+  onCancel,
+  onSubmit,
+}: {
+  currentName: string;
+  currentAvatarUrl: string;
+  busy: boolean;
+  onCancel: () => void;
+  onSubmit: (payload: { password?: string; avatarUrl?: string | null }) => void;
+}) {
+  const [password, setPassword] = useState("");
+  const [avatarUrl, setAvatarUrl] = useState(currentAvatarUrl ?? "");
+
+  const submit = (e: FormEvent) => {
+    e.preventDefault();
+    onSubmit({
+      password: password.trim() || undefined,
+      avatarUrl: avatarUrl.trim() || null,
+    });
+  };
+
+  return (
+    <Modal label="Configurar perfil" onClose={onCancel}>
+      <div className="dialog-icon">
+        <Users size={22} />
+      </div>
+      <h2>Perfil do usuário</h2>
+      <p>Atualize sua senha e adicione uma foto para aparecer na equipe.</p>
+      <form onSubmit={submit}>
+        <label className="field-label" htmlFor="profile-name">
+          Nome atual
+        </label>
+        <input id="profile-name" type="text" value={currentName} disabled />
+
+        <label className="field-label" htmlFor="profile-password">
+          Nova senha
+        </label>
+        <input
+          id="profile-password"
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          placeholder="Deixe em branco para manter a atual"
+          autoComplete="new-password"
+        />
+
+        <label className="field-label" htmlFor="profile-avatar">
+          URL da foto de perfil
+        </label>
+        <input
+          id="profile-avatar"
+          type="url"
+          value={avatarUrl}
+          onChange={(e) => setAvatarUrl(e.target.value)}
+          placeholder="https://.../avatar.png"
+          autoComplete="off"
+        />
+
+        <div className="actions">
+          <button type="button" className="secondary" onClick={onCancel} disabled={busy}>
+            Fechar
+          </button>
+          <button className="primary" type="submit" disabled={busy}>
+            {busy ? "Salvando…" : "Salvar perfil"}
+          </button>
+        </div>
+      </form>
+    </Modal>
+  );
+}
+
 export function AdminDialog({
   collaborators,
   busy,

@@ -51,6 +51,17 @@ export const api = {
       body: JSON.stringify({ id }),
     }),
 
+  updateProfile: (body: {
+    id: string;
+    username?: string;
+    password?: string;
+    avatarUrl?: string | null;
+  }) =>
+    req<{ ok: boolean; collaborator: Collab }>("/api/auth/profile", {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
+
   createClient: (body: {
     name: string;
     economicGroup?: string | null;

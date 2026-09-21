@@ -10,9 +10,12 @@ type Props = {
   collaborators: Collab[];
   activities: Activity[];
   meId: string | null;
+  meAvatarUrl?: string | null;
+  meName?: string | null;
   now: number;
   onEditIdentity: () => void;
   onOpenAdmin: () => void;
+  onOpenProfile: () => void;
 };
 
 export default function Sidebar({
@@ -22,9 +25,12 @@ export default function Sidebar({
   collaborators,
   activities,
   meId,
+  meAvatarUrl,
+  meName,
   now,
   onEditIdentity,
   onOpenAdmin,
+  onOpenProfile,
 }: Props) {
   const onlineN = collaborators.filter((c) => isOnline(c, now)).length;
   const sorted = [...collaborators].sort((a, b) => {
@@ -44,10 +50,24 @@ export default function Sidebar({
           alt="Logo OnioCheck"
           className="brand-mark"
         />
-        <div>
+        <div className="brand-copy">
           <div className="brand">
             onio<span>check</span>
           </div>
+        </div>
+      </div>
+
+      <div className="profile-summary" onClick={onOpenProfile} role="button" tabIndex={0} onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") onOpenProfile();
+      }}>
+        {meAvatarUrl ? (
+          <img src={meAvatarUrl} alt={meName ?? "Perfil"} className="profile-avatar" />
+        ) : (
+          <Avatar name={meName ?? "Você"} color={"#2d6fe8"} size={38} />
+        )}
+        <div className="profile-meta">
+          <strong>{meName ?? "Você"}</strong>
+          <span>Configurar perfil</span>
         </div>
       </div>
 
@@ -82,7 +102,7 @@ export default function Sidebar({
               const online = isOnline(c, now);
               const inner = (
                 <>
-                  <Avatar name={c.name} color={c.color} size={26} online={online} />
+                  <Avatar name={c.name} color={c.color} size={26} online={online} imageUrl={c.avatarUrl ?? null} />
                   <span className="team-meta">
                     <span className="name">
                       {c.name}
@@ -134,7 +154,7 @@ export default function Sidebar({
               const { actor, msg } = activityParts(a);
               return (
                 <div key={a.id} className="feed-item">
-                  <Avatar name={a.actorName} color={a.actorColor} size={22} />
+                  <Avatar name={a.actorName} color={a.actorColor} size={22} imageUrl={null} />
                   <div>
                     <p>
                       <strong>{actor}</strong> {msg}
