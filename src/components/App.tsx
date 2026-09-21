@@ -35,7 +35,12 @@ type Me = {
 let toastSeq = 1;
 
 export default function App() {
-  const [data, setData] = useState<AppState | null>(null);
+  const [data, setData] = useState<AppState>({
+    clients: [],
+    collaborators: [],
+    activities: [],
+    serverTime: new Date().toISOString(),
+  });
   const [me, setMe] = useState<Me | null>(null);
   const [needSetup, setNeedSetup] = useState(false);
   const [live, setLive] = useState(false);
@@ -118,8 +123,11 @@ export default function App() {
       } catch {
         // identidade corrompida -> pede novamente
       }
+
+      // Não bloqueia a tela de login enquanto o servidor responde.
+      // O estado pode continuar carregando em background sem travar a UI.
       setNeedSetup(true);
-      await fetchState();
+      void fetchState();
     };
 
     void bootstrap();
@@ -517,21 +525,6 @@ export default function App() {
   };
 
   /* ---------- render ---------- */
-
-  if (!data) {
-    return (
-      <div className="loading-screen">
-        <div className="brand xl">
-          onio<span>check</span>
-        </div>
-        <div className="loading-bar">
-          <i />
-        </div>
-        <p>Conectando ao servidor…</p>
-        {needSetup && <SetupDialog busy={saving} onSubmit={login} />}
-      </div>
-    );
-  }
 
   const emptyText = search.trim()
     ? "Nenhum cliente encontrado."
