@@ -396,10 +396,12 @@ export default function App() {
     name,
     economicGroup,
     attendanceUnit,
+    phone,
   }: {
     name: string;
     economicGroup?: string | null;
     attendanceUnit?: string | null;
+    phone?: string | null;
   }) => {
     const meNow = meRef.current;
     if (!meNow) return;
@@ -409,6 +411,7 @@ export default function App() {
         name,
         economicGroup,
         attendanceUnit,
+        phone,
         actor: { id: meNow.id, name: meNow.name },
       });
       setData((prev) => {
@@ -438,10 +441,12 @@ export default function App() {
     name,
     economicGroup,
     attendanceUnit,
+    phone,
   }: {
     name: string;
     economicGroup?: string | null;
     attendanceUnit?: string | null;
+    phone?: string | null;
   }) => {
     const meNow = meRef.current;
     if (!meNow || !clientDialog || clientDialog.mode !== "rename") return;
@@ -453,6 +458,7 @@ export default function App() {
         name,
         economicGroup,
         attendanceUnit,
+        phone,
         actor: { id: meNow.id, name: meNow.name },
       });
       replaceClient(client);
@@ -855,6 +861,7 @@ export default function App() {
           initialAttendanceUnit={
             clientDialog.mode === "rename" ? clientDialog.client.attendanceUnit ?? "" : ""
           }
+          initialPhone={clientDialog.mode === "rename" ? clientDialog.client.phone ?? "" : ""}
           busy={saving}
           onCancel={() => setClientDialog(null)}
           onSubmit={clientDialog.mode === "new" ? createClient : renameClient}

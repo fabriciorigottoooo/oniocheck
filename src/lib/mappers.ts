@@ -11,6 +11,7 @@ export function toClient(r: ClientRow): ClientT {
     name: r.name,
     economicGroup: (r as typeof r & { economicGroup?: string | null }).economicGroup ?? null,
     attendanceUnit: (r as typeof r & { attendanceUnit?: string | null }).attendanceUnit ?? null,
+    phone: (r as typeof r & { phone?: string | null }).phone ?? null,
     checks: Array.isArray(r.checks) ? r.checks : [],
     finishedAt: r.finishedAt ? r.finishedAt.toISOString() : null,
     createdAt: r.createdAt.toISOString(),

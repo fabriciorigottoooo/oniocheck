@@ -41,10 +41,11 @@ export default function ClientDetail({
           {done ? "FINALIZADO" : n === 10 ? "PRONTO PARA FINALIZAR" : "EM ANDAMENTO"}
         </span>
         <h2>{c.name}</h2>
-        {(c.economicGroup || c.attendanceUnit) && (
+        {(c.economicGroup || c.attendanceUnit || c.phone) && (
           <div className="client-identity">
             {c.economicGroup && <span>Grupo econômico: {c.economicGroup}</span>}
             {c.attendanceUnit && <span>Unidade de atendimento: {c.attendanceUnit}</span>}
+            {c.phone && <span>Telefone: {c.phone}</span>}
           </div>
         )}
         <button className="rename-btn" onClick={onRename}>
@@ -84,12 +85,6 @@ export default function ClientDetail({
               <span className="task-body">
                 <span className="step">ETAPA {String(i + 1).padStart(2, "0")}</span>
                 <span className="task-name">{s}</span>
-                {st.done && st.by ? (
-                  <span className="byline">
-                    por {st.by}
-                    {st.at ? " · " + timeShort(st.at) : ""}
-                  </span>
-                ) : null}
               </span>
             </label>
           );

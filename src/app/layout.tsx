@@ -30,11 +30,16 @@ export const metadata: Metadata = {
         sizes: "256x256",
         type: "image/png",
       },
+      {
+        url: "/logo_oniocheck_png.png",
+        sizes: "192x192",
+        type: "image/png",
+      },
     ],
     shortcut: "/logo_oniocheck_png.png",
     apple: {
       url: "/logo_oniocheck_png.png",
-      sizes: "180x180",
+      sizes: "256x256",
       type: "image/png",
     },
   },

@@ -33,6 +33,7 @@ export const clients = pgTable("clients", {
   name: text("name").notNull(),
   economicGroup: text("economic_group"),
   attendanceUnit: text("attendance_unit"),
+  phone: text("phone"),
   checks: jsonb("checks").$type<StepState[]>().notNull(),
   finishedAt: timestamp("finished_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true })

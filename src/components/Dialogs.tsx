@@ -133,6 +133,7 @@ export function ClientDialog({
   initialName = "",
   initialEconomicGroup = "",
   initialAttendanceUnit = "",
+  initialPhone = "",
   busy,
   onCancel,
   onSubmit,
@@ -141,17 +142,20 @@ export function ClientDialog({
   initialName?: string;
   initialEconomicGroup?: string;
   initialAttendanceUnit?: string;
+  initialPhone?: string;
   busy: boolean;
   onCancel: () => void;
   onSubmit: (payload: {
     name: string;
     economicGroup?: string | null;
     attendanceUnit?: string | null;
+    phone?: string | null;
   }) => void;
 }) {
   const [name, setName] = useState(initialName);
   const [economicGroup, setEconomicGroup] = useState(initialEconomicGroup);
   const [attendanceUnit, setAttendanceUnit] = useState(initialAttendanceUnit);
+  const [phone, setPhone] = useState(initialPhone);
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
@@ -161,6 +165,7 @@ export function ClientDialog({
         name: n,
         economicGroup: economicGroup.trim() || null,
         attendanceUnit: attendanceUnit.trim() || null,
+        phone: phone.trim() || null,
       });
     }
   };
@@ -214,6 +219,19 @@ export function ClientDialog({
           maxLength={80}
           placeholder="Ex.: Unidade Centro"
           autoComplete="off"
+        />
+
+        <label className="field-label" htmlFor="client-phone">
+          Telefone de contato
+        </label>
+        <input
+          id="client-phone"
+          type="tel"
+          value={phone}
+          onChange={(e) => setPhone(e.target.value)}
+          maxLength={30}
+          placeholder="Ex.: (11) 99999-9999"
+          autoComplete="tel"
         />
 
         <div className="actions">
@@ -297,6 +315,8 @@ export function ProfileDialog({
     reader.readAsDataURL(file);
   };
 
+  const clearAvatar = () => setAvatarUrl("");
+
   const submit = (e: FormEvent) => {
     e.preventDefault();
     onSubmit({
@@ -351,8 +371,13 @@ export function ProfileDialog({
             {avatarUrl && (
               <img src={avatarUrl} alt="Preview do perfil" className="profile-upload-preview" />
             )}
+            {avatarUrl && (
+              <button type="button" className="secondary" onClick={clearAvatar} disabled={busy}>
+                Remover foto
+              </button>
+            )}
           </div>
-          <small className="field-help">A imagem fica salva no perfil do usuário e é exibida para a equipe.</small>
+          <small className="field-help">A imagem fica salva no perfil do usuário e é exibida para a equipe. Use “Remover foto” para voltar ao avatar padrão.</small>
         </div>
 
         <div className="actions">

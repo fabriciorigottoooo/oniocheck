@@ -87,6 +87,7 @@ export async function PATCH(req: Request, ctx: Ctx) {
       name?: unknown;
       economicGroup?: unknown;
       attendanceUnit?: unknown;
+      phone?: unknown;
       index?: unknown;
       value?: unknown;
       actor?: unknown;
@@ -121,6 +122,7 @@ export async function PATCH(req: Request, ctx: Ctx) {
           typeof raw.economicGroup === "string" ? raw.economicGroup.trim() : "";
         const attendanceUnit =
           typeof raw.attendanceUnit === "string" ? raw.attendanceUnit.trim() : "";
+        const phone = typeof raw.phone === "string" ? raw.phone.trim() : "";
 
         const [updated] = await tx
           .update(clients)
@@ -128,6 +130,7 @@ export async function PATCH(req: Request, ctx: Ctx) {
             name,
             economicGroup: economicGroup || null,
             attendanceUnit: attendanceUnit || null,
+            phone: phone || null,
             updatedAt: now,
           })
           .where(eq(clients.id, id))

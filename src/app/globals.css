@@ -179,6 +179,25 @@ button:disabled {
   background: #1b3354;
 }
 
+.app.dark ::-webkit-scrollbar-track {
+  background: rgba(12, 21, 33, 0.88);
+  box-shadow: inset 0 0 0 1px rgba(142, 173, 218, 0.08);
+}
+
+.app.dark ::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(115, 164, 255, 0.92), rgba(62, 104, 226, 0.9));
+  border-radius: 999px;
+  border: 2px solid rgba(9, 17, 26, 0.8);
+}
+
+.app.dark ::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, rgba(138, 182, 255, 1), rgba(80, 127, 238, 1));
+}
+
+.app.dark {
+  scrollbar-color: rgba(115, 164, 255, 0.92) rgba(12, 21, 33, 0.88);
+}
+
 /* ---------- sidebar ---------- */
 
 .side {
@@ -219,28 +238,31 @@ button:disabled {
 .brand-wrap {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 0 4px 0 8px;
+  gap: 10px;
   min-width: 0;
   flex: 1;
   overflow: hidden;
+  padding: 0 4px 0 8px;
 }
 
 .brand-copy {
   min-width: 0;
   overflow: hidden;
-  flex: 1;
+  flex: 1 1 auto;
 }
 
 .brand-copy .brand {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  display: inline-block;
+  max-width: 100%;
 }
 
 .side.collapsed .brand-wrap {
   justify-content: center;
   padding: 0;
+  width: 100%;
 }
 
 .side.collapsed .brand-copy {
@@ -248,8 +270,9 @@ button:disabled {
 }
 
 .brand-mark {
-  width: 82px;
-  height: 82px;
+  width: 62px;
+  height: 62px;
+  min-width: 62px;
   border-radius: 0;
   object-fit: contain;
   box-shadow: none;
@@ -692,15 +715,30 @@ button.team-row:hover {
   user-select: none;
 }
 
+.avatar-photo {
+  overflow: visible;
+  padding: 0;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+}
+
+.avatar-photo img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
 .presence {
   position: absolute;
-  right: -1px;
-  bottom: -1px;
+  right: -2px;
+  bottom: -2px;
   width: 9px;
   height: 9px;
   border-radius: 50%;
   border: 2px solid var(--navy);
   background: #546a82;
+  z-index: 2;
 }
 
 .presence.on {
