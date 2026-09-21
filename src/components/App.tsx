@@ -23,6 +23,7 @@ import Toasts, { type ToastItem } from "./Toasts";
 import Avatar from "./Avatar";
 
 const ME_KEY = "oniocheck-me-v1";
+const CLIENT_BACKUP_KEY = "oniocheck-client-backup-v1";
 
 type Me = {
   id: string;
@@ -80,7 +81,26 @@ export default function App() {
     try {
       const s = await api.state();
       for (const a of s.activities) seenRef.current.add(a.id);
+
+      try {
+        const raw = localStorage.getItem(CLIENT_BACKUP_KEY);
+        if (raw && s.clients.length === 0) {
+          const backup = JSON.parse(raw) as Partial<AppState>;
+          if (Array.isArray(backup.clients) && backup.clients.length) {
+            setData({ ...s, clients: backup.clients as ClientT[] });
+            return;
+          }
+        }
+      } catch {
+        // backup local inválido; ignora e mantém o servidor
+      }
+
       setData(s);
+      try {
+        localStorage.setItem(CLIENT_BACKUP_KEY, JSON.stringify(s));
+      } catch {
+        // sem armazenamento disponível
+      }
     } catch {
       // mantém dados anteriores; o indicador de conexão avisa
     }
@@ -110,13 +130,15 @@ export default function App() {
         if (raw) {
           const p = JSON.parse(raw) as Partial<Me>;
           if (p && typeof p.id === "string" && typeof p.name === "string" && p.name) {
-            setMe({
+            const nextMe = {
               id: p.id,
               name: p.name,
               color: p.color ?? "#2a9b81",
               username: p.username ?? p.name,
               role: p.role ?? "user",
-            });
+            };
+            setMe(nextMe);
+            void fetchState();
             return;
           }
         }
@@ -342,9 +364,17 @@ export default function App() {
         attendanceUnit,
         actor: { id: meNow.id, name: meNow.name },
       });
-      setData((prev) =>
-        prev ? { ...prev, clients: [...prev.clients, client] } : prev,
-      );
+      setData((prev) => {
+        const next = prev ? { ...prev, clients: [...prev.clients, client] } : prev;
+        if (next) {
+          try {
+            localStorage.setItem(CLIENT_BACKUP_KEY, JSON.stringify(next));
+          } catch {
+            // sem armazenamento disponível
+          }
+        }
+        return next;
+      });
       setView("active");
       setSearch("");
       setSelectedId(client.id);
@@ -379,8 +409,15 @@ export default function App() {
         actor: { id: meNow.id, name: meNow.name },
       });
       replaceClient(client);
+      try {
+        const snapshot = data ?? { clients: [], collaborators: [], activities: [], serverTime: new Date().toISOString() };
+        const next = { ...snapshot, clients: snapshot.clients.map((x) => (x.id === client.id ? client : x)) };
+        localStorage.setItem(CLIENT_BACKUP_KEY, JSON.stringify(next));
+      } catch {
+        // sem armazenamento disponível
+      }
       setClientDialog(null);
-      pushToast("Nome atualizado.");
+      pushToast("Dados do cliente atualizados.");
     } catch (e) {
       pushToast(errMsg(e, "Não foi possível renomear."));
       void fetchState();

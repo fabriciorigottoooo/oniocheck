@@ -1,6 +1,6 @@
 import { randomUUID } from "crypto";
 import { asc, count, desc } from "drizzle-orm";
-import { db } from "@/db";
+import { db, ensureDatabaseCompatibility } from "@/db";
 import { activities, clients, collaborators } from "@/db/schema";
 import { toActivity, toClient, toCollab } from "@/lib/mappers";
 import { SEED, checksFromBits } from "@/lib/steps";
@@ -9,10 +9,13 @@ import type { AppState } from "@/lib/types";
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
-const g = globalThis as { __checkflowSeeded?: boolean };
+const g = globalThis as {
+  __oniocheckSeeded?: boolean;
+  __checkflowSeeded?: boolean;
+};
 
 async function ensureSeed() {
-  if (g.__checkflowSeeded) return;
+  if (g.__oniocheckSeeded || g.__checkflowSeeded) return;
   const [{ n: nClients }] = await db.select({ n: count() }).from(clients);
   const [{ n: nCollabs }] = await db.select({ n: count() }).from(collaborators);
   if (nClients === 0 && nCollabs === 0) {
@@ -24,11 +27,13 @@ async function ensureSeed() {
       })),
     );
   }
+  g.__oniocheckSeeded = true;
   g.__checkflowSeeded = true;
 }
 
 export async function GET() {
   try {
+    await ensureDatabaseCompatibility();
     await ensureSeed();
     const [clientRows, collabRows, activityRows] = await Promise.all([
       db.select().from(clients).orderBy(asc(clients.createdAt)),

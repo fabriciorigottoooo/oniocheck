@@ -1,5 +1,5 @@
 import { eq } from "drizzle-orm";
-import { db } from "@/db";
+import { db, ensureDatabaseCompatibility } from "@/db";
 import { clients } from "@/db/schema";
 import { publish } from "@/lib/bus";
 import { logActivity, resolveActor } from "@/lib/collab";
@@ -14,6 +14,7 @@ type Ctx = { params: Promise<{ id: string }> };
 
 export async function PATCH(req: Request, ctx: Ctx) {
   try {
+    await ensureDatabaseCompatibility();
     const { id } = await ctx.params;
     let body: unknown;
     try {

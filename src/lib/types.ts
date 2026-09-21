@@ -7,8 +7,8 @@ export type StepState = {
 export type ClientT = {
   id: string;
   name: string;
-  economicGroup: string | null;
-  attendanceUnit: string | null;
+  economicGroup?: string | null;
+  attendanceUnit?: string | null;
   checks: StepState[];
   finishedAt: string | null;
   createdAt: string;

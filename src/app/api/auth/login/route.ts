@@ -1,6 +1,6 @@
 import { randomUUID } from "crypto";
 import { eq, sql } from "drizzle-orm";
-import { db } from "@/db";
+import { db, ensureDatabaseCompatibility } from "@/db";
 import { collaborators, users } from "@/db/schema";
 import { publish } from "@/lib/bus";
 import { toCollab } from "@/lib/mappers";
@@ -14,6 +14,7 @@ function normalize(value: unknown) {
 
 export async function POST(req: Request) {
   try {
+    await ensureDatabaseCompatibility();
     await db.execute(sql`
       CREATE TABLE IF NOT EXISTS users (
         id text PRIMARY KEY,

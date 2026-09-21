@@ -1,6 +1,6 @@
 import { randomUUID } from "crypto";
 import { count, eq } from "drizzle-orm";
-import { db } from "@/db";
+import { db, ensureDatabaseCompatibility } from "@/db";
 import { collaborators } from "@/db/schema";
 import { publish } from "@/lib/bus";
 import { toCollab } from "@/lib/mappers";
@@ -11,6 +11,7 @@ export const runtime = "nodejs";
 
 export async function POST(req: Request) {
   try {
+    await ensureDatabaseCompatibility();
     let body: unknown;
     try {
       body = await req.json();

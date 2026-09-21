@@ -1,5 +1,5 @@
 import { randomUUID } from "crypto";
-import { db } from "@/db";
+import { db, ensureDatabaseCompatibility } from "@/db";
 import { clients } from "@/db/schema";
 import { publish } from "@/lib/bus";
 import { logActivity, resolveActor } from "@/lib/collab";
@@ -11,6 +11,7 @@ export const runtime = "nodejs";
 
 export async function POST(req: Request) {
   try {
+    await ensureDatabaseCompatibility();
     let body: unknown;
     try {
       body = await req.json();
