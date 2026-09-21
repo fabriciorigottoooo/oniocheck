@@ -668,7 +668,7 @@ export default function App() {
   if (booting) {
     return (
       <div className="loading-screen">
-        <img src="/logo_oniocheck_png.png" alt="OnioCheck" className="loading-logo" />
+        <img src="/logo_oniocheck_transparente.svg" alt="OnioCheck" className="loading-logo" />
         <p>Conectando ao servidor...</p>
         <div className="loading-bar" aria-label="Carregando">
           <i />

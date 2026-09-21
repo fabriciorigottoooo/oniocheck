@@ -66,7 +66,7 @@ export default function Sidebar({
       <div className="brand-row">
         <div className="brand-wrap">
           <img
-            src="/logo_oniocheck_png.png"
+            src="/logo_oniocheck_transparente.svg"
             alt="Logo OnioCheck"
             className="brand-mark"
           />

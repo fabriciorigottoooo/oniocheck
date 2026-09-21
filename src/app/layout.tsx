@@ -16,9 +16,9 @@ export const metadata: Metadata = {
   icons: {
     icon: [
       {
-        url: "/logo_oniocheck_png.png",
-        sizes: "1024x1024",
-        type: "image/png",
+        url: "/logo_oniocheck_transparente.svg",
+        type: "image/svg+xml",
+        sizes: "any",
       },
       {
         url: "/logo_oniocheck_png.png",
@@ -36,11 +36,11 @@ export const metadata: Metadata = {
         type: "image/png",
       },
     ],
-    shortcut: "/logo_oniocheck_png.png",
+    shortcut: "/logo_oniocheck_transparente.svg",
     apple: {
-      url: "/logo_oniocheck_png.png",
-      sizes: "256x256",
-      type: "image/png",
+      url: "/logo_oniocheck_transparente.svg",
+      type: "image/svg+xml",
+      sizes: "any",
     },
   },
 };

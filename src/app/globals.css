@@ -260,7 +260,8 @@ button:disabled {
 }
 
 .brand-wrap {
-  display: flex;
+  display: grid;
+  grid-template-columns: 54px minmax(0, 1fr);
   align-items: center;
   gap: 10px;
   min-width: 0;
@@ -272,22 +273,25 @@ button:disabled {
 
 .brand-copy {
   min-width: 0;
-  overflow: visible;
+  overflow: hidden;
   flex: 1 1 auto;
   display: flex;
   align-items: center;
+  padding-right: 4px;
 }
 
 .brand-copy .brand {
-  overflow: visible;
+  overflow: hidden;
   text-overflow: clip;
   white-space: nowrap;
   display: inline-block;
   max-width: 100%;
   line-height: 1.1;
+  transform: translateZ(0);
 }
 
 .side.collapsed .brand-wrap {
+  grid-template-columns: 1fr;
   justify-content: center;
   padding: 0;
   width: 100%;
@@ -298,20 +302,20 @@ button:disabled {
 }
 
 .brand-mark {
-  width: 62px;
-  height: 62px;
-  min-width: 62px;
+  width: 52px;
+  height: 52px;
+  min-width: 52px;
   border-radius: 0;
   object-fit: contain;
   box-shadow: none;
   background: transparent;
   padding: 0;
   flex-shrink: 0;
-  filter: drop-shadow(0 12px 20px rgba(66, 117, 219, 0.22));
+  filter: brightness(0) invert(1) drop-shadow(0 8px 16px rgba(66, 117, 219, 0.22));
 }
 
 .brand {
-  font-size: 28px;
+  font-size: 27px;
   font-weight: 900;
   color: #fff;
   letter-spacing: -0.7px;
