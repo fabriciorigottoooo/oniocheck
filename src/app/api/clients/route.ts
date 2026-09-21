@@ -17,7 +17,12 @@ export async function POST(req: Request) {
     } catch {
       return Response.json({ error: "Corpo inválido." }, { status: 400 });
     }
-    const raw = body as { name?: unknown; actor?: unknown };
+    const raw = body as {
+      name?: unknown;
+      economicGroup?: unknown;
+      attendanceUnit?: unknown;
+      actor?: unknown;
+    };
     const actor = await resolveActor(
       (raw?.actor as { id?: unknown; name?: unknown }) ?? {},
     );
@@ -31,9 +36,20 @@ export async function POST(req: Request) {
     if (!name || name.length > 100) {
       return Response.json({ error: "Nome inválido." }, { status: 400 });
     }
+    const economicGroup =
+      typeof raw?.economicGroup === "string" ? raw.economicGroup.trim() : "";
+    const attendanceUnit =
+      typeof raw?.attendanceUnit === "string" ? raw.attendanceUnit.trim() : "";
+
     const [row] = await db
       .insert(clients)
-      .values({ id: randomUUID(), name, checks: emptyChecks() })
+      .values({
+        id: randomUUID(),
+        name,
+        economicGroup: economicGroup || null,
+        attendanceUnit: attendanceUnit || null,
+        checks: emptyChecks(),
+      })
       .returning();
     const activity = await logActivity({
       actor,

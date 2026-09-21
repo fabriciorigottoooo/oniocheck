@@ -24,6 +24,8 @@ export async function PATCH(req: Request, ctx: Ctx) {
     const raw = body as {
       op?: unknown;
       name?: unknown;
+      economicGroup?: unknown;
+      attendanceUnit?: unknown;
       index?: unknown;
       value?: unknown;
       actor?: unknown;
@@ -54,9 +56,19 @@ export async function PATCH(req: Request, ctx: Ctx) {
         if (!name || name.length > 100) {
           return { kind: "bad" as const, error: "Nome inválido." };
         }
+        const economicGroup =
+          typeof raw.economicGroup === "string" ? raw.economicGroup.trim() : "";
+        const attendanceUnit =
+          typeof raw.attendanceUnit === "string" ? raw.attendanceUnit.trim() : "";
+
         const [updated] = await tx
           .update(clients)
-          .set({ name, updatedAt: now })
+          .set({
+            name,
+            economicGroup: economicGroup || null,
+            attendanceUnit: attendanceUnit || null,
+            updatedAt: now,
+          })
           .where(eq(clients.id, id))
           .returning();
         return {

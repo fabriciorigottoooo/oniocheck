@@ -40,9 +40,9 @@ export default function Sidebar({
     <aside className="side">
       <div>
         <div className="brand">
-          check<span>flow.</span>
+          onio<span>check</span>
         </div>
-        <div className="subtitle">ONBOARDING · TEMPO REAL</div>
+        <div className="subtitle">CHECKLIST · TEMPO REAL</div>
       </div>
 
       <nav className="tabs" aria-label="Telas">

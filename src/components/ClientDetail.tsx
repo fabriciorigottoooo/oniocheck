@@ -39,8 +39,14 @@ export default function ClientDetail({
           {done ? "FINALIZADO" : n === 10 ? "PRONTO PARA FINALIZAR" : "EM ANDAMENTO"}
         </span>
         <h2>{c.name}</h2>
+        {(c.economicGroup || c.attendanceUnit) && (
+          <div className="client-identity">
+            {c.economicGroup && <span>Grupo econômico: {c.economicGroup}</span>}
+            {c.attendanceUnit && <span>Unidade de atendimento: {c.attendanceUnit}</span>}
+          </div>
+        )}
         <button className="rename-btn" onClick={onRename}>
-          <PenLine size={12} /> Editar nome
+          <PenLine size={12} /> Editar cliente
         </button>
         <div className="progress-label">
           <span>

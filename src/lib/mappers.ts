@@ -9,6 +9,8 @@ export function toClient(r: ClientRow): ClientT {
   return {
     id: r.id,
     name: r.name,
+    economicGroup: r.economicGroup ?? null,
+    attendanceUnit: r.attendanceUnit ?? null,
     checks: Array.isArray(r.checks) ? r.checks : [],
     finishedAt: r.finishedAt ? r.finishedAt.toISOString() : null,
     createdAt: r.createdAt.toISOString(),

@@ -1,16 +1,16 @@
 @import "tailwindcss";
 
 :root {
-  --navy: #11243b;
-  --navy-2: #0d1c2f;
-  --teal: #167b69;
-  --teal-dark: #116454;
-  --mint: #62d3b5;
-  --green-bar: #2a9b81;
-  --bg: #f5f7fb;
+  --navy: #0f1f3d;
+  --navy-2: #0c1830;
+  --blue: #1d5fd3;
+  --blue-dark: #1649a6;
+  --blue-soft: #dfeeff;
+  --blue-bar: #2d6fe8;
+  --bg: #f4f8ff;
   --ink: #1d293b;
-  --muted: #68788d;
-  --line: #e3e9f0;
+  --muted: #5f7090;
+  --line: #dfe8f5;
   font-synthesis: none;
 }
 
@@ -77,7 +77,7 @@ button:disabled {
 }
 
 .brand span {
-  color: var(--mint);
+  color: #8ebaff;
 }
 
 .brand.xl {
@@ -119,7 +119,7 @@ button:disabled {
 }
 
 .tab[aria-pressed="true"] {
-  background: #23415d;
+  background: rgba(67, 119, 214, 0.28);
   color: #fff;
 }
 
@@ -199,8 +199,8 @@ button.team-row:hover {
   font-weight: 800;
   letter-spacing: 0.8px;
   text-transform: uppercase;
-  color: var(--mint);
-  background: #62d3b522;
+  color: #dfeeff;
+  background: rgba(94, 146, 255, 0.22);
   padding: 2px 6px;
   border-radius: 20px;
   flex-shrink: 0;
@@ -224,7 +224,7 @@ button.team-row:hover {
 }
 
 .status-dot.on {
-  background: #34d399;
+  background: #2d6fe8;
   animation: dot-pulse 2s infinite;
 }
 
@@ -315,7 +315,7 @@ button.team-row:hover {
 }
 
 .presence.on {
-  background: #34d399;
+  background: #2d6fe8;
   animation: dot-pulse 2s infinite;
 }
 
@@ -383,12 +383,12 @@ button.team-row:hover {
 }
 
 .primary {
-  background: var(--teal);
+  background: var(--blue);
   color: #fff;
 }
 
 .primary:hover {
-  background: var(--teal-dark);
+  background: var(--blue-dark);
 }
 
 .secondary {
@@ -412,8 +412,8 @@ button.team-row:hover {
 }
 
 .pill.on {
-  background: #e5f6ed;
-  color: #187a52;
+  background: #eaf3ff;
+  color: #1d5fd3;
 }
 
 .pill.off {
@@ -562,8 +562,8 @@ button.team-row:hover {
 }
 
 .client.selected {
-  background: #edf7f4;
-  border-color: #baded2;
+  background: #edf4ff;
+  border-color: #bfd7ff;
 }
 
 .client-top {
@@ -581,16 +581,16 @@ button.team-row:hover {
 .client-top .pct {
   font-size: 11px;
   font-weight: 700;
-  color: #527087;
-  background: #f0f4f9;
+  color: #355ea9;
+  background: #edf3ff;
   padding: 2px 7px;
   border-radius: 12px;
   flex-shrink: 0;
 }
 
 .client.selected .pct {
-  background: #d7ece5;
-  color: #187a52;
+  background: #dfeeff;
+  color: #1d5fd3;
 }
 
 .client small {
@@ -598,6 +598,11 @@ button.team-row:hover {
   margin: 5px 0;
   color: #748398;
   font-size: 10.5px;
+}
+
+.client-meta {
+  display: grid;
+  gap: 3px;
 }
 
 .bar {
@@ -615,7 +620,7 @@ button.team-row:hover {
 .bar i {
   display: block;
   height: 100%;
-  background: var(--green-bar);
+  background: var(--blue-bar);
   border-radius: 10px;
   transition: width 0.35s ease;
 }
@@ -642,12 +647,21 @@ button.team-row:hover {
   border-radius: 20px;
   padding: 6px 11px;
   background: #eaf3ff;
-  color: #376aaa;
+  color: #235ec9;
 }
 
 .badge.done {
-  background: #e5f6ed;
-  color: #18754e;
+  background: #eaf3ff;
+  color: #1d5fd3;
+}
+
+.client-identity {
+  display: grid;
+  gap: 4px;
+  margin-top: 8px;
+  color: #496487;
+  font-size: 12px;
+  line-height: 1.5;
 }
 
 .rename-btn {
@@ -661,6 +675,7 @@ button.team-row:hover {
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  margin-top: 10px;
   transition: background 0.15s ease;
 }
 
@@ -696,7 +711,7 @@ button.team-row:hover {
 .task input {
   width: 20px;
   height: 20px;
-  accent-color: #198c74;
+  accent-color: #2d6fe8;
   flex-shrink: 0;
   cursor: pointer;
 }
@@ -814,8 +829,8 @@ button.team-row:hover {
 }
 
 .dialog-icon {
-  background: #e6f6ef;
-  color: #15775c;
+  background: #edf4ff;
+  color: #1f5ed4;
   width: 48px;
   height: 48px;
   display: grid;
@@ -846,7 +861,7 @@ button.team-row:hover {
 }
 
 .modal input[type="text"]:focus {
-  border-color: #198c74;
+  border-color: #2d6fe8;
 }
 
 .setup-hint {
@@ -865,7 +880,7 @@ button.team-row:hover {
 .setup-hint svg {
   flex-shrink: 0;
   margin-top: 1px;
-  color: #198c74;
+  color: #2d6fe8;
 }
 
 /* ---------- toasts ---------- */
@@ -934,7 +949,7 @@ button.team-row:hover {
   height: 100%;
   width: 40%;
   border-radius: 10px;
-  background: var(--green-bar);
+  background: var(--blue-bar);
   animation: slide 1.1s ease-in-out infinite alternate;
 }
 
@@ -942,13 +957,13 @@ button.team-row:hover {
 
 @keyframes dot-pulse {
   0% {
-    box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.45);
+    box-shadow: 0 0 0 0 rgba(45, 111, 232, 0.45);
   }
   70% {
-    box-shadow: 0 0 0 7px rgba(52, 211, 153, 0);
+    box-shadow: 0 0 0 7px rgba(45, 111, 232, 0);
   }
   100% {
-    box-shadow: 0 0 0 0 rgba(52, 211, 153, 0);
+    box-shadow: 0 0 0 0 rgba(45, 111, 232, 0);
   }
 }
 

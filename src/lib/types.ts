@@ -7,6 +7,8 @@ export type StepState = {
 export type ClientT = {
   id: string;
   name: string;
+  economicGroup: string | null;
+  attendanceUnit: string | null;
   checks: StepState[];
   finishedAt: string | null;
   createdAt: string;
@@ -56,7 +58,13 @@ export type BusEvent =
 export type ActorInput = { id: string; name: string };
 
 export type PatchBody =
-  | { op: "rename"; name: string; actor: ActorInput }
+  | {
+      op: "rename";
+      name: string;
+      economicGroup?: string | null;
+      attendanceUnit?: string | null;
+      actor: ActorInput;
+    }
   | { op: "step"; index: number; value: boolean; actor: ActorInput }
   | { op: "finish"; actor: ActorInput }
   | { op: "reopen"; actor: ActorInput };

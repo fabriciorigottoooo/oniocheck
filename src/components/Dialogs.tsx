@@ -132,34 +132,50 @@ export function SetupDialog({
 export function ClientDialog({
   mode,
   initialName = "",
+  initialEconomicGroup = "",
+  initialAttendanceUnit = "",
   busy,
   onCancel,
   onSubmit,
 }: {
   mode: "new" | "rename";
   initialName?: string;
+  initialEconomicGroup?: string;
+  initialAttendanceUnit?: string;
   busy: boolean;
   onCancel: () => void;
-  onSubmit: (name: string) => void;
+  onSubmit: (payload: {
+    name: string;
+    economicGroup?: string | null;
+    attendanceUnit?: string | null;
+  }) => void;
 }) {
   const [name, setName] = useState(initialName);
+  const [economicGroup, setEconomicGroup] = useState(initialEconomicGroup);
+  const [attendanceUnit, setAttendanceUnit] = useState(initialAttendanceUnit);
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
     const n = name.trim();
-    if (n) onSubmit(n);
+    if (n) {
+      onSubmit({
+        name: n,
+        economicGroup: economicGroup.trim() || null,
+        attendanceUnit: attendanceUnit.trim() || null,
+      });
+    }
   };
 
   return (
-    <Modal label={mode === "new" ? "Novo cliente" : "Editar nome"} onClose={onCancel}>
+    <Modal label={mode === "new" ? "Novo cliente" : "Editar cliente"} onClose={onCancel}>
       <div className="dialog-icon">
         {mode === "new" ? <UserRoundPlus size={22} /> : <PenLine size={20} />}
       </div>
-      <h2>{mode === "new" ? "Novo cliente" : "Editar nome"}</h2>
+      <h2>{mode === "new" ? "Novo cliente" : "Editar cliente"}</h2>
       <p>
         {mode === "new"
-          ? "O checklist de 10 etapas será criado automaticamente e a equipe será avisada."
-          : "O novo nome aparece imediatamente para toda a equipe."}
+          ? "Cadastre o cliente e vincule o grupo econômico e a unidade de atendimento."
+          : "Atualize os dados do cliente e mantenha tudo vinculado ao grupo econômico."}
       </p>
       <form onSubmit={submit}>
         <label className="field-label" htmlFor="client-name">
@@ -174,6 +190,33 @@ export function ClientDialog({
           autoFocus
           autoComplete="off"
         />
+
+        <label className="field-label" htmlFor="client-economic-group">
+          Grupo econômico
+        </label>
+        <input
+          id="client-economic-group"
+          type="text"
+          value={economicGroup}
+          onChange={(e) => setEconomicGroup(e.target.value)}
+          maxLength={80}
+          placeholder="Ex.: Grupo Onio"
+          autoComplete="off"
+        />
+
+        <label className="field-label" htmlFor="client-attendance-unit">
+          Unidade de atendimento
+        </label>
+        <input
+          id="client-attendance-unit"
+          type="text"
+          value={attendanceUnit}
+          onChange={(e) => setAttendanceUnit(e.target.value)}
+          maxLength={80}
+          placeholder="Ex.: Unidade Centro"
+          autoComplete="off"
+        />
+
         <div className="actions">
           <button type="button" className="secondary" onClick={onCancel} disabled={busy}>
             Cancelar

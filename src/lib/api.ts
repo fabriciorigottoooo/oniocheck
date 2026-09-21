@@ -51,7 +51,12 @@ export const api = {
       body: JSON.stringify({ id }),
     }),
 
-  createClient: (body: { name: string; actor: ActorInput }) =>
+  createClient: (body: {
+    name: string;
+    economicGroup?: string | null;
+    attendanceUnit?: string | null;
+    actor: ActorInput;
+  }) =>
     req<{ client: ClientT }>("/api/clients", {
       method: "POST",
       body: JSON.stringify(body),

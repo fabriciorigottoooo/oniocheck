@@ -10,9 +10,9 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "checkflow. · Checklist de clientes",
+  title: "OnioCheck · Checklist de clientes",
   description:
-    "Gestão colaborativa de checklists de onboarding — a equipe inteira acompanha em tempo real.",
+    "Gestão colaborativa de checklists e unidades de atendimento — a equipe inteira acompanha em tempo real.",
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

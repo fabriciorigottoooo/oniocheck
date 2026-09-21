@@ -1,8 +1,10 @@
 {
   "/_global-error/page": "/_global-error",
   "/_not-found/page": "/_not-found",
+  "/api/auth/login/route": "/api/auth/login",
   "/api/clients/[id]/route": "/api/clients/[id]",
   "/api/clients/route": "/api/clients",
+  "/api/collaborators/[id]/route": "/api/collaborators/[id]",
   "/api/collaborators/heartbeat/route": "/api/collaborators/heartbeat",
   "/api/collaborators/route": "/api/collaborators",
   "/api/events/route": "/api/events",

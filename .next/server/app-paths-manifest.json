@@ -1,8 +1,10 @@
 {
   "/_global-error/page": "app/_global-error/page.js",
   "/_not-found/page": "app/_not-found/page.js",
+  "/api/auth/login/route": "app/api/auth/login/route.js",
   "/api/clients/[id]/route": "app/api/clients/[id]/route.js",
   "/api/clients/route": "app/api/clients/route.js",
+  "/api/collaborators/[id]/route": "app/api/collaborators/[id]/route.js",
   "/api/collaborators/heartbeat/route": "app/api/collaborators/heartbeat/route.js",
   "/api/collaborators/route": "app/api/collaborators/route.js",
   "/api/events/route": "app/api/events/route.js",

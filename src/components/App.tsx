@@ -22,7 +22,7 @@ import {
 import Toasts, { type ToastItem } from "./Toasts";
 import Avatar from "./Avatar";
 
-const ME_KEY = "checkflow-me-v1";
+const ME_KEY = "oniocheck-me-v1";
 
 type Me = {
   id: string;
@@ -315,13 +315,23 @@ export default function App() {
     if (value && checks.every((s) => s.done)) setFinishFor(optimistic);
   };
 
-  const createClient = async (name: string) => {
+  const createClient = async ({
+    name,
+    economicGroup,
+    attendanceUnit,
+  }: {
+    name: string;
+    economicGroup?: string | null;
+    attendanceUnit?: string | null;
+  }) => {
     const meNow = meRef.current;
     if (!meNow) return;
     setSaving(true);
     try {
       const { client } = await api.createClient({
         name,
+        economicGroup,
+        attendanceUnit,
         actor: { id: meNow.id, name: meNow.name },
       });
       setData((prev) =>
@@ -339,7 +349,15 @@ export default function App() {
     }
   };
 
-  const renameClient = async (name: string) => {
+  const renameClient = async ({
+    name,
+    economicGroup,
+    attendanceUnit,
+  }: {
+    name: string;
+    economicGroup?: string | null;
+    attendanceUnit?: string | null;
+  }) => {
     const meNow = meRef.current;
     if (!meNow || !clientDialog || clientDialog.mode !== "rename") return;
     const target = clientDialog.client;
@@ -348,6 +366,8 @@ export default function App() {
       const { client } = await api.patchClient(target.id, {
         op: "rename",
         name,
+        economicGroup,
+        attendanceUnit,
         actor: { id: meNow.id, name: meNow.name },
       });
       replaceClient(client);
@@ -502,7 +522,7 @@ export default function App() {
     return (
       <div className="loading-screen">
         <div className="brand xl">
-          check<span>flow.</span>
+          onio<span>check</span>
         </div>
         <div className="loading-bar">
           <i />
@@ -668,6 +688,12 @@ export default function App() {
         <ClientDialog
           mode={clientDialog.mode}
           initialName={clientDialog.mode === "rename" ? clientDialog.client.name : ""}
+          initialEconomicGroup={
+            clientDialog.mode === "rename" ? clientDialog.client.economicGroup ?? "" : ""
+          }
+          initialAttendanceUnit={
+            clientDialog.mode === "rename" ? clientDialog.client.attendanceUnit ?? "" : ""
+          }
           busy={saving}
           onCancel={() => setClientDialog(null)}
           onSubmit={clientDialog.mode === "new" ? createClient : renameClient}
