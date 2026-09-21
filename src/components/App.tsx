@@ -478,6 +478,47 @@ export default function App() {
       });
   };
 
+  const deleteFinishedClient = async (client: ClientT) => {
+    const meNow = meRef.current;
+    if (!meNow) return;
+    if (
+      !window.confirm(
+        `Deseja excluir permanentemente o cliente finalizado “${client.name}”? Essa ação não poderá ser desfeita.`,
+      )
+    ) {
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const { deletedId } = await api.deleteClient(client.id, {
+        actor: { id: meNow.id, name: meNow.name },
+      });
+
+      setData((prev) => {
+        const next = prev
+          ? { ...prev, clients: prev.clients.filter((x) => x.id !== deletedId) }
+          : prev;
+        try {
+          localStorage.setItem(CLIENT_BACKUP_KEY, JSON.stringify(next ?? prev));
+        } catch {
+          // sem armazenamento disponível
+        }
+        return next;
+      });
+
+      setSelectedId((cur) => (cur === deletedId ? null : cur));
+      setView("done");
+      setSearch("");
+      pushToast("Cliente finalizado excluído.");
+    } catch (e) {
+      pushToast(errMsg(e, "Não foi possível excluir o cliente finalizado."));
+      void fetchState();
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const exportBackup = () => {
     if (!clients) return;
     const payload = {
@@ -663,6 +704,7 @@ export default function App() {
             onRename={() => selected && setClientDialog({ mode: "rename", client: selected })}
             onFinish={() => selected && setFinishFor(selected)}
             onReopen={() => selected && reopenClient(selected)}
+            onDelete={() => selected && deleteFinishedClient(selected)}
           />
         </div>
 

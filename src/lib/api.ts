@@ -68,6 +68,15 @@ export const api = {
       body: JSON.stringify(body),
     }),
 
+  deleteClient: (id: string, body: { actor: ActorInput }) =>
+    req<{ ok: boolean; deletedId: string; client: ClientT }>(
+      `/api/clients/${encodeURIComponent(id)}`,
+      {
+        method: "DELETE",
+        body: JSON.stringify(body),
+      },
+    ),
+
   deleteCollaborator: (id: string) =>
     req<{ ok: boolean; deletedId: string }>(`/api/collaborators/${encodeURIComponent(id)}`, {
       method: "DELETE",

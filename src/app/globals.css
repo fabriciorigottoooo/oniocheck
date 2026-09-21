@@ -68,11 +68,26 @@ button:disabled {
   overflow: hidden;
 }
 
+.brand-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 12px;
+}
+
+.brand-mark {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  object-fit: cover;
+  box-shadow: 0 10px 20px rgba(19, 42, 76, 0.2);
+  background: #fff;
+}
+
 .brand {
   font-size: 22px;
   font-weight: 800;
   color: #fff;
-  padding: 0 12px;
   letter-spacing: -0.4px;
 }
 
@@ -363,7 +378,8 @@ button.team-row:hover {
 }
 
 .primary,
-.secondary {
+.secondary,
+.danger {
   border: 0;
   border-radius: 9px;
   padding: 11px 16px;
@@ -378,7 +394,8 @@ button.team-row:hover {
 }
 
 .primary:active,
-.secondary:active {
+.secondary:active,
+.danger:active {
   transform: translateY(1px);
 }
 
@@ -398,6 +415,15 @@ button.team-row:hover {
 
 .secondary:hover {
   background: #e2e8f2;
+}
+
+.danger {
+  background: #fef2f2;
+  color: #b42318;
+}
+
+.danger:hover {
+  background: #fee2e2;
 }
 
 .pill {
@@ -760,6 +786,7 @@ button.team-row:hover {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
+  flex-wrap: wrap;
 }
 
 .detail-foot p {
@@ -767,6 +794,10 @@ button.team-row:hover {
   color: #738399;
   margin: 0;
   line-height: 1.5;
+}
+
+.detail-foot > :last-child {
+  margin-left: auto;
 }
 
 .empty {
@@ -927,7 +958,15 @@ button.team-row:hover {
   align-items: center;
   justify-content: center;
   gap: 16px;
-  background: var(--bg);
+  background: linear-gradient(180deg, #f4f8ff 0%, #edf5ff 100%);
+}
+
+.loading-logo {
+  width: 76px;
+  height: 76px;
+  border-radius: 22px;
+  object-fit: cover;
+  box-shadow: 0 18px 40px rgba(29, 95, 211, 0.18);
 }
 
 .loading-screen p {

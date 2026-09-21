@@ -1,4 +1,4 @@
-import { PenLine } from "lucide-react";
+import { PenLine, Trash2 } from "lucide-react";
 import { STEPS } from "@/lib/steps";
 import type { ClientT, StepState } from "@/lib/types";
 import { fullDate, timeShort } from "@/lib/format";
@@ -9,6 +9,7 @@ type Props = {
   onRename: () => void;
   onFinish: () => void;
   onReopen: () => void;
+  onDelete: () => void;
 };
 
 export default function ClientDetail({
@@ -17,6 +18,7 @@ export default function ClientDetail({
   onRename,
   onFinish,
   onReopen,
+  onDelete,
 }: Props) {
   if (!client) {
     return (
@@ -103,9 +105,14 @@ export default function ClientDetail({
               : "Marque as etapas conforme forem concluídas."}
         </p>
         {done ? (
-          <button className="secondary" onClick={onReopen}>
-            Reabrir checklist
-          </button>
+          <>
+            <button className="secondary" onClick={onReopen}>
+              Reabrir checklist
+            </button>
+            <button className="danger" onClick={onDelete}>
+              <Trash2 size={12} /> Excluir cliente
+            </button>
+          </>
         ) : (
           <button className="primary" onClick={onFinish} disabled={n < 10}>
             Finalizar cliente

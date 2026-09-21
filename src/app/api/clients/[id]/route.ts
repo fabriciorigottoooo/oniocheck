@@ -12,6 +12,66 @@ export const runtime = "nodejs";
 
 type Ctx = { params: Promise<{ id: string }> };
 
+export async function DELETE(req: Request, ctx: Ctx) {
+  try {
+    await ensureDatabaseCompatibility();
+    const { id } = await ctx.params;
+    let body: unknown;
+    try {
+      body = await req.json();
+    } catch {
+      return Response.json({ error: "Corpo inválido." }, { status: 400 });
+    }
+
+    const raw = body as {
+      actor?: unknown;
+    };
+    const actor = await resolveActor(
+      (raw?.actor as { id?: unknown; name?: unknown }) ?? {},
+    );
+    if (!actor) {
+      return Response.json(
+        { error: "Identifique-se para excluir um cliente finalizado." },
+        { status: 400 },
+      );
+    }
+
+    const rows = await db
+      .select()
+      .from(clients)
+      .where(eq(clients.id, id))
+      .limit(1);
+    const target = rows[0];
+    if (!target) {
+      return Response.json({ error: "Cliente não encontrado." }, { status: 404 });
+    }
+    if (!target.finishedAt) {
+      return Response.json(
+        { error: "A exclusão só é permitida para clientes finalizados." },
+        { status: 409 },
+      );
+    }
+
+    const [deleted] = await db
+      .delete(clients)
+      .where(eq(clients.id, id))
+      .returning();
+
+    const activity = await logActivity({
+      actor,
+      clientId: deleted.id,
+      clientName: deleted.name,
+      action: "deleted",
+    });
+    publish({ type: "change", activity });
+
+    return Response.json({ ok: true, deletedId: deleted.id, client: toClient(deleted) });
+  } catch (e) {
+    console.error(e);
+    return Response.json({ error: "Erro interno." }, { status: 500 });
+  }
+}
+
 export async function PATCH(req: Request, ctx: Ctx) {
   try {
     await ensureDatabaseCompatibility();

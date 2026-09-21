@@ -38,11 +38,18 @@ export default function Sidebar({
 
   return (
     <aside className="side">
-      <div>
-        <div className="brand">
-          onio<span>check</span>
+      <div className="brand-wrap">
+        <img
+          src="/logo_oniocheck_quadrada.jpg"
+          alt="Logo OnioCheck"
+          className="brand-mark"
+        />
+        <div>
+          <div className="brand">
+            onio<span>check</span>
+          </div>
+          <div className="subtitle">CHECKLIST · TEMPO REAL</div>
         </div>
-        <div className="subtitle">CHECKLIST · TEMPO REAL</div>
       </div>
 
       <nav className="tabs" aria-label="Telas">

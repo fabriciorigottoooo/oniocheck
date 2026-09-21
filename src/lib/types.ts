@@ -30,6 +30,7 @@ export type ActivityAction =
   | "step_off"
   | "finished"
   | "reopened"
+  | "deleted"
   | "imported";
 
 export type Activity = {

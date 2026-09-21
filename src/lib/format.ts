@@ -72,6 +72,8 @@ export function activityParts(a: Activity): { actor: string; msg: string } {
       return { actor: a.actorName, msg: `finalizou ${alvo}` };
     case "reopened":
       return { actor: a.actorName, msg: `reabriu o checklist de ${alvo}` };
+    case "deleted":
+      return { actor: a.actorName, msg: `excluiu o cliente ${alvo}` };
     case "imported":
       return {
         actor: a.actorName,
