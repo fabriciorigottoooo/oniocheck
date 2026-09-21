@@ -713,7 +713,7 @@ export default function App() {
               aria-label={darkMode ? "Ativar modo claro" : "Ativar modo escuro"}
               title={darkMode ? "Modo claro" : "Modo escuro"}
             >
-              {darkMode ? <SunMedium size={15} /> : <MoonStar size={15} />}
+              {darkMode ? <SunMedium size={20} /> : <MoonStar size={20} />}
             </button>
             <span
               className={`pill ${live ? "on" : "off"}`}

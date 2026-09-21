@@ -127,90 +127,94 @@ export default function Sidebar({
       <div className="side-section team">
         <button className="side-label section-toggle" onClick={onToggleTeam} aria-expanded={teamOpen}>
           <span className="label-inner">
-            <Users size={11} /> {!collapsed && <>Equipe · {onlineN} online</>}
+            <Users size={12} /> {!collapsed && <>Equipe · {onlineN} online</>}
             {collapsed && <span className="mini-badge">{onlineN}</span>}
           </span>
           {!collapsed && (teamOpen ? <ChevronDown size={12} /> : <ChevronRight size={12} />)}
         </button>
-        {teamOpen && !collapsed && (
-          sorted.length ? (
-            <div className="team-list">
-              {sorted.map((c) => {
-                const online = isOnline(c, now);
-                const inner = (
-                  <>
-                    <Avatar name={c.name} color={c.color} size={26} online={online} imageUrl={c.avatarUrl ?? null} />
-                    <span className="team-meta">
-                      <span className="name">
-                        {c.name}
-                        {c.id === meId && <span className="you">você</span>}
+        {!collapsed && (
+          <div className={`section-body ${teamOpen ? "open" : "closed"}`}>
+            {sorted.length ? (
+              <div className="team-list">
+                {sorted.map((c) => {
+                  const online = isOnline(c, now);
+                  const inner = (
+                    <>
+                      <Avatar name={c.name} color={c.color} size={26} online={online} imageUrl={c.avatarUrl ?? null} />
+                      <span className="team-meta">
+                        <span className="name">
+                          {c.name}
+                          {c.id === meId && <span className="you">você</span>}
+                        </span>
+                        <span className="status">
+                          {online ? (
+                            <>
+                              <span className="status-dot on" /> online agora
+                            </>
+                          ) : (
+                            "visto " + relTime(c.lastSeenAt, now)
+                          )}
+                        </span>
                       </span>
-                      <span className="status">
-                        {online ? (
-                          <>
-                            <span className="status-dot on" /> online agora
-                          </>
-                        ) : (
-                          "visto " + relTime(c.lastSeenAt, now)
-                        )}
-                      </span>
-                    </span>
-                  </>
-                );
-                return c.id === meId ? (
-                  <button
-                    key={c.id}
-                    className="team-row"
-                    onClick={onEditIdentity}
-                    title="Editar meu nome"
-                  >
-                    {inner}
-                  </button>
-                ) : (
-                  <div key={c.id} className="team-row">
-                    {inner}
-                  </div>
-                );
-              })}
-            </div>
-          ) : (
-            <p className="team-empty">
-              Compartilhe o link desta página — cada pessoa entra com o próprio
-              nome e acompanha tudo em tempo real.
-            </p>
-          )
+                    </>
+                  );
+                  return c.id === meId ? (
+                    <button
+                      key={c.id}
+                      className="team-row"
+                      onClick={onEditIdentity}
+                      title="Editar meu nome"
+                    >
+                      {inner}
+                    </button>
+                  ) : (
+                    <div key={c.id} className="team-row">
+                      {inner}
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <p className="team-empty">
+                Compartilhe o link desta página — cada pessoa entra com o próprio
+                nome e acompanha tudo em tempo real.
+              </p>
+            )}
+          </div>
         )}
       </div>
 
       <div className="side-section feed">
         <button className="side-label section-toggle" onClick={onToggleActivity} aria-expanded={activityOpen}>
           <span className="label-inner">
-            <ActivityIcon size={11} /> {!collapsed && "Atividade recente"}
+            <ActivityIcon size={12} /> {!collapsed && "Atividade recente"}
           </span>
           {!collapsed && (activityOpen ? <ChevronDown size={12} /> : <ChevronRight size={12} />)}
         </button>
-        {activityOpen && !collapsed && (
-          <div className="feed-list">
-            {activities.length ? (
-              activities.map((a) => {
-                const { actor, msg } = activityParts(a);
-                return (
-                  <div key={a.id} className="feed-item">
-                    <Avatar name={a.actorName} color={a.actorColor} size={22} imageUrl={null} />
-                    <div>
-                      <p>
-                        <strong>{actor}</strong> {msg}
-                      </p>
-                      <time>{relTime(a.createdAt, now)}</time>
+        {!collapsed && (
+          <div className={`section-body ${activityOpen ? "open" : "closed"}`}>
+            <div className="feed-list">
+              {activities.length ? (
+                activities.map((a) => {
+                  const { actor, msg } = activityParts(a);
+                  return (
+                    <div key={a.id} className="feed-item">
+                      <Avatar name={a.actorName} color={a.actorColor} size={22} imageUrl={null} />
+                      <div>
+                        <p>
+                          <strong>{actor}</strong> {msg}
+                        </p>
+                        <time>{relTime(a.createdAt, now)}</time>
+                      </div>
                     </div>
-                  </div>
-                );
-              })
-            ) : (
-              <p className="feed-empty">
-                As ações da equipe aparecem aqui, em tempo real.
-              </p>
-            )}
+                  );
+                })
+              ) : (
+                <p className="feed-empty">
+                  As ações da equipe aparecem aqui, em tempo real.
+                </p>
+              )}
+            </div>
           </div>
         )}
       </div>

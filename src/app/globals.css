@@ -183,7 +183,7 @@ button:disabled {
   gap: 10px;
   padding: 0 8px;
   min-width: 0;
-  width: 100%;
+  flex: 1;
 }
 
 .side.collapsed .brand-wrap {
@@ -335,8 +335,8 @@ button:disabled {
 }
 
 .side-label {
-  font-size: 9.5px;
-  letter-spacing: 1.8px;
+  font-size: 11px;
+  letter-spacing: 1.4px;
   font-weight: 800;
   color: #7f93ab;
   display: flex;
@@ -355,12 +355,21 @@ button:disabled {
   margin: 0;
   cursor: pointer;
   font: inherit;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  transition: opacity 0.2s ease;
 }
 
 .label-inner {
   display: inline-flex;
   align-items: center;
   gap: 7px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.2px;
+  text-transform: none;
 }
 
 .mini-badge {
@@ -378,6 +387,27 @@ button:disabled {
 
 .side-section.team {
   flex-shrink: 0;
+}
+
+.section-body {
+  overflow: hidden;
+  transition:
+    max-height 0.32s ease,
+    opacity 0.24s ease,
+    transform 0.24s ease;
+  transform-origin: top center;
+}
+
+.section-body.open {
+  max-height: 320px;
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.section-body.closed {
+  max-height: 0;
+  opacity: 0;
+  transform: translateY(-4px);
 }
 
 .team-list {
@@ -534,14 +564,19 @@ button.team-row:hover {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 30px;
-  height: 30px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  width: 36px;
+  height: 36px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 10px;
   background: rgba(255, 255, 255, 0.04);
   color: #edf4ff;
   cursor: pointer;
   flex-shrink: 0;
+}
+
+.sidebar-toggle svg {
+  width: 18px;
+  height: 18px;
 }
 
 .profile-upload-wrap {
@@ -576,9 +611,14 @@ button.team-row:hover {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
+  width: 42px;
+  height: 42px;
   padding: 0;
+}
+
+.icon-only svg {
+  width: 20px;
+  height: 20px;
 }
 
 /* ---------- avatar ---------- */
