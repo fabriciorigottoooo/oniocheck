@@ -64,12 +64,7 @@ export default function Sidebar({
   return (
     <aside className={`side${collapsed ? " collapsed" : ""}`}>
       <div className="brand-row">
-        <div className="brand-wrap">
-          <img
-            src="/logo_oniocheck_transparente.svg"
-            alt="Logo OnioCheck"
-            className="brand-mark"
-          />
+        <div className="brand-wrap no-logo">
           <div className="brand-copy">
             <div className="brand">
               onio<span>check</span>

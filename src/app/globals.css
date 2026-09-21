@@ -267,7 +267,7 @@ button:disabled {
   flex: 1;
   width: 100%;
   overflow: visible;
-  padding: 0 4px 0 8px;
+  padding: 0 6px 0 8px;
 }
 
 .brand-copy {
@@ -288,6 +288,7 @@ button:disabled {
   max-width: 100%;
   line-height: 1.1;
   transform: translateZ(0);
+  letter-spacing: -0.8px;
 }
 
 .side.collapsed .brand-wrap {
@@ -297,6 +298,10 @@ button:disabled {
 }
 
 .side.collapsed .brand-copy {
+  display: none;
+}
+
+.no-logo .brand-mark {
   display: none;
 }
 
