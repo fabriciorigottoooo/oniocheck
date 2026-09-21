@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Download, Plus, Upload } from "lucide-react";
+import { Download, MoonStar, Plus, SunMedium, Upload } from "lucide-react";
 import { api } from "@/lib/api";
 import {
   activityParts,
@@ -57,6 +57,9 @@ export default function App() {
   const [adminOpen, setAdminOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [teamOpen, setTeamOpen] = useState(true);
+  const [activityOpen, setActivityOpen] = useState(true);
   const [saving, setSaving] = useState(false);
   const [now, setNow] = useState(() => Date.now());
 
@@ -669,7 +672,7 @@ export default function App() {
   }
 
   return (
-    <div className={`app${darkMode ? " dark" : ""}`}>
+    <div className={`app${darkMode ? " dark" : ""}${sidebarCollapsed ? " sidebar-collapsed" : ""}`}>
       <Sidebar
         view={view}
         counts={{ active: activeClients.length, done: doneClients.length }}
@@ -680,6 +683,12 @@ export default function App() {
         meAvatarUrl={meAvatarUrl}
         meName={me?.name ?? null}
         now={now}
+        collapsed={sidebarCollapsed}
+        teamOpen={teamOpen}
+        activityOpen={activityOpen}
+        onToggleCollapse={() => setSidebarCollapsed((value) => !value)}
+        onToggleTeam={() => setTeamOpen((value) => !value)}
+        onToggleActivity={() => setActivityOpen((value) => !value)}
         onEditIdentity={() => setNeedSetup(true)}
         onOpenAdmin={() => setAdminOpen(true)}
         onOpenProfile={() => setProfileOpen(true)}
@@ -699,11 +708,12 @@ export default function App() {
           <div className="top-actions">
             <button
               type="button"
-              className="secondary small"
+              className="secondary small icon-only"
               onClick={() => setDarkMode((v) => !v)}
-              aria-label="Alternar modo escuro"
+              aria-label={darkMode ? "Ativar modo claro" : "Ativar modo escuro"}
+              title={darkMode ? "Modo claro" : "Modo escuro"}
             >
-              {darkMode ? "☀️ Claro" : "🌙 Escuro"}
+              {darkMode ? <SunMedium size={15} /> : <MoonStar size={15} />}
             </button>
             <span
               className={`pill ${live ? "on" : "off"}`}

@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState, type FormEvent, type ReactNode } from "react";
-import { CheckCircle2, PenLine, UserRoundPlus, Users } from "lucide-react";
+import { useEffect, useRef, useState, type ChangeEvent, type FormEvent, type ReactNode } from "react";
+import { CheckCircle2, PenLine, UserRoundPlus, Upload, Users } from "lucide-react";
 
 function Modal({
   label,
@@ -280,6 +280,22 @@ export function ProfileDialog({
 }) {
   const [password, setPassword] = useState("");
   const [avatarUrl, setAvatarUrl] = useState(currentAvatarUrl ?? "");
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    setAvatarUrl(currentAvatarUrl ?? "");
+  }, [currentAvatarUrl]);
+
+  const handleFile = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const next = typeof reader.result === "string" ? reader.result : "";
+      setAvatarUrl(next);
+    };
+    reader.readAsDataURL(file);
+  };
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
@@ -295,7 +311,7 @@ export function ProfileDialog({
         <Users size={22} />
       </div>
       <h2>Perfil do usuário</h2>
-      <p>Atualize sua senha e adicione uma foto para aparecer na equipe.</p>
+      <p>Atualize sua senha e escolha uma foto para aparecer na equipe.</p>
       <form onSubmit={submit}>
         <label className="field-label" htmlFor="profile-name">
           Nome atual
@@ -314,17 +330,30 @@ export function ProfileDialog({
           autoComplete="new-password"
         />
 
-        <label className="field-label" htmlFor="profile-avatar">
-          URL da foto de perfil
-        </label>
-        <input
-          id="profile-avatar"
-          type="url"
-          value={avatarUrl}
-          onChange={(e) => setAvatarUrl(e.target.value)}
-          placeholder="https://.../avatar.png"
-          autoComplete="off"
-        />
+        <div className="profile-upload-wrap">
+          <label className="field-label">Foto de perfil</label>
+          <div className="profile-upload-row">
+            <button
+              type="button"
+              className="secondary"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={busy}
+            >
+              <Upload size={14} /> Selecionar arquivo
+            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              hidden
+              onChange={handleFile}
+            />
+            {avatarUrl && (
+              <img src={avatarUrl} alt="Preview do perfil" className="profile-upload-preview" />
+            )}
+          </div>
+          <small className="field-help">A imagem fica salva no perfil do usuário e é exibida para a equipe.</small>
+        </div>
 
         <div className="actions">
           <button type="button" className="secondary" onClick={onCancel} disabled={busy}>

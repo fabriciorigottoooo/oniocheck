@@ -49,10 +49,15 @@ button:disabled {
 
 .app {
   display: grid;
-  grid-template-columns: 252px 1fr;
+  grid-template-columns: 252px minmax(0, 1fr);
   min-height: 100vh;
   background: var(--bg);
   color: var(--ink);
+  transition: grid-template-columns 0.2s ease;
+}
+
+.app.sidebar-collapsed {
+  grid-template-columns: 96px minmax(0, 1fr);
 }
 
 .app.dark {
@@ -62,7 +67,9 @@ button:disabled {
   --line: #1f2e46;
   --navy: #081a2c;
   --navy-2: #061521;
-  background: var(--bg);
+  background:
+    radial-gradient(circle at top left, rgba(54, 104, 196, 0.18), transparent 32%),
+    linear-gradient(180deg, #071827 0%, #0a1524 100%);
   color: var(--ink);
 }
 
@@ -88,7 +95,7 @@ button:disabled {
 }
 
 .app.dark .main {
-  background: #0d1b2a;
+  background: rgba(12, 23, 33, 0.62);
 }
 
 .app.dark .panel,
@@ -99,8 +106,9 @@ button:disabled {
 .app.dark .detail-foot,
 .app.dark .footer,
 .app.dark .modal {
-  background: #101d2f;
-  border-color: #1d2f46;
+  background: linear-gradient(180deg, rgba(19, 30, 45, 0.96), rgba(11, 20, 31, 0.96));
+  border-color: rgba(122, 156, 204, 0.2);
+  box-shadow: 0 12px 24px rgba(2, 6, 12, 0.18);
   color: var(--ink);
 }
 
@@ -155,6 +163,18 @@ button:disabled {
   top: 0;
   height: 100vh;
   overflow: hidden;
+  transition: all 0.2s ease;
+}
+
+.side.collapsed {
+  padding-left: 10px;
+  padding-right: 10px;
+}
+
+.brand-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .brand-wrap {
@@ -166,10 +186,19 @@ button:disabled {
   width: 100%;
 }
 
+.side.collapsed .brand-wrap {
+  justify-content: center;
+  padding: 0;
+}
+
 .brand-copy {
   min-width: 0;
   overflow: hidden;
   flex: 1;
+}
+
+.side.collapsed .brand-copy {
+  display: none;
 }
 
 .brand-mark {
@@ -215,6 +244,11 @@ button:disabled {
   width: 100%;
 }
 
+.side.collapsed .profile-summary {
+  justify-content: center;
+  padding: 10px 8px;
+}
+
 .profile-summary:hover {
   background: rgba(255, 255, 255, 0.1);
 }
@@ -237,6 +271,10 @@ button:disabled {
   display: flex;
   flex-direction: column;
   min-width: 0;
+}
+
+.side.collapsed .profile-meta {
+  display: none;
 }
 
 .profile-meta strong {
@@ -308,6 +346,36 @@ button:disabled {
   margin-bottom: 6px;
 }
 
+.section-toggle {
+  width: 100%;
+  background: transparent;
+  border: 0;
+  color: inherit;
+  padding: 0 6px;
+  margin: 0;
+  cursor: pointer;
+  font: inherit;
+}
+
+.label-inner {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.mini-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 18px;
+  border-radius: 999px;
+  background: rgba(71, 146, 255, 0.2);
+  color: #dfeeff;
+  font-size: 9px;
+  font-weight: 800;
+}
+
 .side-section.team {
   flex-shrink: 0;
 }
@@ -319,6 +387,14 @@ button:disabled {
   overflow-y: auto;
   scrollbar-width: thin;
   scrollbar-color: #ffffff22 transparent;
+}
+
+.side.collapsed .tabs,
+.side.collapsed .secondary,
+.side.collapsed .team,
+.side.collapsed .feed,
+.side.collapsed .side-note {
+  display: none;
 }
 
 .team-row {
@@ -452,6 +528,57 @@ button.team-row:hover {
   padding: 12px 8px 2px;
   border-top: 1px solid #ffffff14;
   margin: 0;
+}
+
+.sidebar-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.04);
+  color: #edf4ff;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.profile-upload-wrap {
+  display: grid;
+  gap: 8px;
+}
+
+.profile-upload-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.profile-upload-preview {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid rgba(45, 111, 232, 0.4);
+  background: #f5f8ff;
+}
+
+.field-help {
+  display: block;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.icon-only {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
 }
 
 /* ---------- avatar ---------- */
