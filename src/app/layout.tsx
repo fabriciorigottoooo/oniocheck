@@ -12,11 +12,26 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "OnioCheck · Checklist de clientes",
   description:
-    "Gestão colaborativa de checklists e unidades de atendimento — a equipe inteira acompanha em tempo real.",
+    "Gestão colaborativa de checklists e unidades de atendimento.",
   icons: {
-    icon: "/logo_oniocheck_quadrada.jpg",
-    shortcut: "/logo_oniocheck_quadrada.jpg",
-    apple: "/logo_oniocheck_quadrada.jpg",
+    icon: [
+      {
+        url: "/logo_oniocheck_png.png",
+        sizes: "128x128",
+        type: "image/png",
+      },
+      {
+        url: "/logo_oniocheck_png.png",
+        sizes: "64x64",
+        type: "image/png",
+      },
+    ],
+    shortcut: "/logo_oniocheck_png.png",
+    apple: {
+      url: "/logo_oniocheck_png.png",
+      sizes: "180x180",
+      type: "image/png",
+    },
   },
 };
 

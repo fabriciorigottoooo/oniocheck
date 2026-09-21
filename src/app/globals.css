@@ -76,12 +76,13 @@ button:disabled {
 }
 
 .brand-mark {
-  width: 44px;
-  height: 44px;
-  border-radius: 14px;
-  object-fit: cover;
+  width: 74px;
+  height: 74px;
+  border-radius: 18px;
+  object-fit: contain;
   box-shadow: 0 10px 20px rgba(19, 42, 76, 0.2);
   background: #fff;
+  padding: 8px;
 }
 
 .brand {
@@ -962,11 +963,13 @@ button.team-row:hover {
 }
 
 .loading-logo {
-  width: 76px;
-  height: 76px;
-  border-radius: 22px;
-  object-fit: cover;
+  width: 120px;
+  height: 120px;
+  border-radius: 28px;
+  object-fit: contain;
   box-shadow: 0 18px 40px rgba(29, 95, 211, 0.18);
+  background: rgba(255, 255, 255, 0.9);
+  padding: 16px;
 }
 
 .loading-screen p {

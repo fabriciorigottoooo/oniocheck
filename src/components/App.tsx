@@ -302,11 +302,14 @@ export default function App() {
       pushToast(
         current
           ? `Usuário atualizado para ${user.username}.`
-          : `Bem-vindo(a), ${user.username}! Suas marcações aparecem para todos.`,
+          : `Bem-vindo(a), ${user.username}!`,
       );
       void fetchState();
     } catch (e) {
-      pushToast(errMsg(e, "Não foi possível entrar. Verifique usuário e senha."));
+      const msg = errMsg(e, "Não foi possível entrar. Verifique usuário e senha.");
+      pushToast(
+        msg === "Senha incorreta." ? "Senha incorreta. Verifique a senha do usuário." : msg,
+      );
     } finally {
       setSaving(false);
     }
@@ -610,6 +613,20 @@ export default function App() {
       ? "Seus clientes finalizados aparecerão aqui."
       : "Nenhum cliente em andamento.";
 
+  const booting = !me && !needSetup;
+
+  if (booting) {
+    return (
+      <div className="loading-screen">
+        <img src="/logo_oniocheck_png.png" alt="OnioCheck" className="loading-logo" />
+        <p>Conectando ao servidor...</p>
+        <div className="loading-bar" aria-label="Carregando">
+          <i />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="app">
       <Sidebar
@@ -631,7 +648,7 @@ export default function App() {
             <h1>{view === "active" ? "Em andamento" : "Finalizados"}</h1>
             <p className="muted">
               {view === "active"
-                ? "Cada etapa marcada é um passo a menos — e a equipe inteira vê na hora."
+                ? "Cada etapa marcada é um passo a menos."
                 : "Histórico de clientes com todas as etapas concluídas."}
             </p>
           </div>

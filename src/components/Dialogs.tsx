@@ -70,7 +70,7 @@ export function SetupDialog({
       <h2>{editing ? "Como você aparece para a equipe" : "Login no checklist"}</h2>
       <p>
         {editing
-          ? "Este checklist é colaborativo: cada pessoa entra com o próprio nome e todas as marcações aparecem para a equipe em tempo real."
+          ? "Este checklist é colaborativo: cada pessoa entra com o próprio nome e todas as marcações ficam organizadas na equipe."
           : "Entre com seu nome de usuário e sua senha para acessar o checklist."}
       </p>
       <form onSubmit={submit}>
@@ -121,8 +121,7 @@ export function SetupDialog({
       <div className="setup-hint">
         <Users size={16} />
         <span>
-          Seu usuário e senha ficam salvos no banco de dados e o acesso é
-          compartilhado em tempo real com a equipe.
+          Seu usuário e senha ficam salvos no banco de dados para acesso da equipe.
         </span>
       </div>
     </Modal>

@@ -40,7 +40,7 @@ export default function Sidebar({
     <aside className="side">
       <div className="brand-wrap">
         <img
-          src="/logo_oniocheck_quadrada.jpg"
+          src="/logo_oniocheck_png.png"
           alt="Logo OnioCheck"
           className="brand-mark"
         />
@@ -48,7 +48,6 @@ export default function Sidebar({
           <div className="brand">
             onio<span>check</span>
           </div>
-          <div className="subtitle">CHECKLIST · TEMPO REAL</div>
         </div>
       </div>
 
