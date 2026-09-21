@@ -17,12 +17,12 @@ export const metadata: Metadata = {
     icon: [
       {
         url: "/logo_oniocheck_png.png",
-        sizes: "128x128",
+        sizes: "512x512",
         type: "image/png",
       },
       {
         url: "/logo_oniocheck_png.png",
-        sizes: "64x64",
+        sizes: "256x256",
         type: "image/png",
       },
     ],
