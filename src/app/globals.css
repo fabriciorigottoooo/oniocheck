@@ -900,6 +900,50 @@ button.team-row:hover {
   line-height: 1.5;
 }
 
+.password-field-wrap {
+  display: grid;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.password-input-shell {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.password-input-shell input {
+  width: 100%;
+  padding-right: 42px;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 32px;
+  height: 32px;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+}
+
+.password-toggle:hover {
+  background: rgba(61, 117, 224, 0.08);
+}
+
+.field-success {
+  margin-top: 8px;
+  color: #0b8a5c;
+  font-size: 12px;
+  font-weight: 700;
+}
+
 .icon-only {
   display: inline-flex;
   align-items: center;
@@ -953,6 +997,10 @@ button.team-row:hover {
   border: 2px solid var(--navy);
   background: #546a82;
   z-index: 2;
+}
+
+.presence.off {
+  background: #dc2626;
 }
 
 .presence.on {
@@ -2052,6 +2100,33 @@ button.team-row:hover {
   background: #f9fbff;
   border-radius: 10px;
   padding: 10px 12px;
+}
+
+.admin-row-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.danger-inline {
+  border-color: rgba(180, 35, 24, 0.15);
+  color: #b42318;
+}
+
+.admin-password-reset {
+  display: grid;
+  gap: 12px;
+  margin-top: 14px;
+  border: 1px solid #e7edf5;
+  background: #f9fbff;
+  border-radius: 12px;
+  padding: 14px;
+}
+
+.admin-password-reset h3 {
+  margin: 0;
+  font-size: 14px;
 }
 
 .admin-extra-actions {

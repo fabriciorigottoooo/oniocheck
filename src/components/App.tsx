@@ -907,6 +907,50 @@ export default function App() {
     }
   };
 
+  const resetPassword = async ({
+    collaboratorId,
+    password,
+    confirmPassword,
+  }: {
+    collaboratorId: string;
+    password: string;
+    confirmPassword: string;
+  }) => {
+    const meNow = meRef.current;
+    if (!meNow) return;
+
+    if (!collaboratorId || !password || !confirmPassword) {
+      throw new Error("Preencha a nova senha e confirme.");
+    }
+
+    if (password.length < 4) {
+      throw new Error("A nova senha deve ter pelo menos 4 caracteres.");
+    }
+
+    const res = await fetch("/api/admin/reset-password", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ collaboratorId, password, confirmPassword }),
+    });
+
+    const json = (await res.json().catch(() => ({}))) as { error?: string };
+    if (!res.ok) {
+      throw new Error(json.error ?? "Não foi possível redefinir a senha.");
+    }
+
+    if (collaboratorId === meNow.id) {
+      const nextMe = { ...meNow };
+      try {
+        localStorage.setItem(ME_KEY, JSON.stringify(nextMe));
+      } catch {
+        // sem armazenamento disponível
+      }
+    }
+
+    await fetchState();
+    pushToast("Senha redefinida com sucesso.");
+  };
+
   const deleteCollaborator = async (id: string) => {
     const meNow = meRef.current;
     if (!meNow) return;
@@ -1266,6 +1310,7 @@ export default function App() {
           collaborators={collaborators.map((c) => ({ id: c.id, name: c.name }))}
           busy={saving}
           onDelete={deleteCollaborator}
+          onResetPassword={resetPassword}
           onClose={() => setAdminOpen(false)}
         />
       )}

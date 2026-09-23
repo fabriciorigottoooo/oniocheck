@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState, type ChangeEvent, type FormEvent, type ReactNode } from "react";
-import { CheckCircle2, PenLine, Trash2, UserRoundPlus, Upload, Users } from "lucide-react";
+import { CheckCircle2, Eye, EyeOff, PenLine, Trash2, UserRoundPlus, Upload, Users } from "lucide-react";
 import { activityParts, relTime } from "@/lib/format";
+import Avatar from "./Avatar";
 
 function Modal({
   label,
@@ -31,6 +32,54 @@ function Modal({
     >
       <div className="modal" role="dialog" aria-modal="true" aria-label={label}>
         {children}
+      </div>
+    </div>
+  );
+}
+
+function PasswordField({
+  id,
+  label,
+  value,
+  onChange,
+  placeholder,
+  autoFocus,
+  autoComplete,
+}: {
+  id: string;
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  placeholder?: string;
+  autoFocus?: boolean;
+  autoComplete?: string;
+}) {
+  const [show, setShow] = useState(false);
+
+  return (
+    <div className="password-field-wrap">
+      <label className="field-label" htmlFor={id}>
+        {label}
+      </label>
+      <div className="password-input-shell">
+        <input
+          id={id}
+          type={show ? "text" : "password"}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          autoFocus={autoFocus}
+          autoComplete={autoComplete}
+          placeholder={placeholder}
+        />
+        <button
+          type="button"
+          className="password-toggle"
+          onClick={() => setShow((current) => !current)}
+          aria-label={show ? "Ocultar senha" : "Mostrar senha"}
+          title={show ? "Ocultar senha" : "Mostrar senha"}
+        >
+          {show ? <EyeOff size={16} /> : <Eye size={16} />}
+        </button>
       </div>
     </div>
   );
@@ -91,20 +140,14 @@ export function SetupDialog({
           />
         </div>
         {!editing && (
-          <div className="login-fieldset">
-            <label className="field-label" htmlFor="setup-password">
-              Senha
-            </label>
-            <input
-              id="setup-password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              maxLength={50}
-              autoComplete="current-password"
-              placeholder="Digite sua senha"
-            />
-          </div>
+          <PasswordField
+            id="setup-password"
+            label="Senha"
+            value={password}
+            onChange={setPassword}
+            placeholder="Digite sua senha"
+            autoComplete="current-password"
+          />
         )}
         {!editing && (
           <button
@@ -353,14 +396,11 @@ export function ProfileDialog({
         </label>
         <input id="profile-name" type="text" value={currentName} disabled />
 
-        <label className="field-label" htmlFor="profile-password">
-          Nova senha
-        </label>
-        <input
+        <PasswordField
           id="profile-password"
-          type="password"
+          label="Nova senha"
           value={password}
-          onChange={(e) => setPassword(e.target.value)}
+          onChange={setPassword}
           placeholder="Deixe em branco para manter a atual"
           autoComplete="new-password"
         />
@@ -704,7 +744,14 @@ export function TeamModal({
           const isOnline = Date.now() - new Date(person.lastSeenAt).getTime() < 45_000;
           return (
             <button key={person.id} type="button" className="modal-row" onClick={() => onSelect(person.id)}>
-              <span className="user-bullet" style={{ background: person.color }} />
+              <Avatar
+                name={person.name}
+                color={person.color}
+                size={34}
+                online={isOnline}
+                imageUrl={person.avatarUrl ?? null}
+                lightBorder
+              />
               <span className="modal-row-main">
                 <strong>{person.name}</strong>
                 <small>{isOnline ? "Online agora" : "Offline"}{person.id === meId ? " · você" : ""}</small>
@@ -783,16 +830,23 @@ export function AdminDialog({
   collaborators,
   busy,
   onDelete,
+  onResetPassword,
   onClose,
 }: {
   collaborators: { id: string; name: string }[];
   busy: boolean;
   onDelete: (id: string) => void;
+  onResetPassword: (payload: { collaboratorId: string; password: string; confirmPassword: string }) => Promise<void>;
   onClose: () => void;
 }) {
   const [password, setPassword] = useState("");
   const [authorized, setAuthorized] = useState(false);
   const [error, setError] = useState("");
+  const [selectedId, setSelectedId] = useState<string>("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [resetError, setResetError] = useState("");
+  const [resetSuccess, setResetSuccess] = useState("");
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
@@ -804,6 +858,26 @@ export function AdminDialog({
     setError("Senha incorreta.");
   };
 
+  const handleReset = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!selectedId) return;
+    setResetError("");
+    setResetSuccess("");
+
+    try {
+      await onResetPassword({
+        collaboratorId: selectedId,
+        password: newPassword,
+        confirmPassword,
+      });
+      setResetSuccess("Senha redefinida com sucesso.");
+      setNewPassword("");
+      setConfirmPassword("");
+    } catch (err) {
+      setResetError(err instanceof Error ? err.message : "Não foi possível redefinir a senha.");
+    }
+  };
+
   return (
     <Modal label="Acesso administrativo" onClose={onClose}>
       <div className="dialog-icon">
@@ -812,14 +886,11 @@ export function AdminDialog({
       <h2>Área administrativa</h2>
       {!authorized ? (
         <form onSubmit={submit}>
-          <label className="field-label" htmlFor="admin-password">
-            Senha do administrador
-          </label>
-          <input
+          <PasswordField
             id="admin-password"
-            type="password"
+            label="Senha do administrador"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={setPassword}
             autoFocus
             placeholder="Digite a senha"
           />
@@ -841,20 +912,71 @@ export function AdminDialog({
               collaborators.map((person) => (
                 <div key={person.id} className="admin-row">
                   <span>{person.name}</span>
-                  <button
-                    type="button"
-                    className="secondary"
-                    onClick={() => onDelete(person.id)}
-                    disabled={busy}
-                  >
-                    Excluir
-                  </button>
+                  <div className="admin-row-actions">
+                    <button
+                      type="button"
+                      className="secondary"
+                      onClick={() => {
+                        setSelectedId(person.id);
+                        setResetError("");
+                        setResetSuccess("");
+                      }}
+                      disabled={busy}
+                    >
+                      Resetar senha
+                    </button>
+                    <button
+                      type="button"
+                      className="secondary danger-inline"
+                      onClick={() => onDelete(person.id)}
+                      disabled={busy}
+                    >
+                      Excluir
+                    </button>
+                  </div>
                 </div>
               ))
             ) : (
               <p>Nenhum colaborador cadastrado.</p>
             )}
           </div>
+
+          {selectedId && (
+            <form onSubmit={handleReset} className="admin-password-reset">
+              <h3>Redefinir senha</h3>
+              <PasswordField
+                id="admin-reset-password"
+                label="Nova senha"
+                value={newPassword}
+                onChange={setNewPassword}
+                placeholder="Digite a nova senha"
+              />
+              <PasswordField
+                id="admin-reset-confirm"
+                label="Confirmar nova senha"
+                value={confirmPassword}
+                onChange={setConfirmPassword}
+                placeholder="Repita a nova senha"
+              />
+              {resetError && <p className="field-error">{resetError}</p>}
+              {resetSuccess && <p className="field-success">{resetSuccess}</p>}
+              <div className="actions">
+                <button type="button" className="secondary" onClick={() => {
+                  setSelectedId("");
+                  setNewPassword("");
+                  setConfirmPassword("");
+                  setResetError("");
+                  setResetSuccess("");
+                }} disabled={busy}>
+                  Cancelar
+                </button>
+                <button className="primary" type="submit" disabled={busy || !newPassword.trim() || !confirmPassword.trim()}>
+                  {busy ? "Salvando…" : "Salvar nova senha"}
+                </button>
+              </div>
+            </form>
+          )}
+
           <div className="admin-extra-actions">
             <button
               type="button"

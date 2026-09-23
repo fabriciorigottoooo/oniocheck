@@ -30,7 +30,7 @@ export default function Avatar({
         <img src={imageUrl} alt={name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
         {online !== undefined && (
           <span
-            className={`presence${online ? " on" : ""}`}
+            className={`presence${online ? " on" : " off"}`}
             style={lightBorder ? { borderColor: "#fff" } : undefined}
           />
         )}
@@ -51,7 +51,7 @@ export default function Avatar({
       {initials(name)}
       {online !== undefined && (
         <span
-          className={`presence${online ? " on" : ""}`}
+          className={`presence${online ? " on" : " off"}`}
           style={lightBorder ? { borderColor: "#fff" } : undefined}
         />
       )}
