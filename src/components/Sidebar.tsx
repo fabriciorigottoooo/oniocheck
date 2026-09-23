@@ -7,6 +7,7 @@ import {
   CircleDashed,
   PanelLeftClose,
   PanelLeftOpen,
+  Settings,
   Users,
 } from "lucide-react";
 import type { Activity, Collab } from "@/lib/types";
@@ -135,7 +136,7 @@ export default function Sidebar({
       >
         <span className="tab-icon"><CalendarDays size={14} /></span>
         <span>Agenda</span>
-        <span className="count">{agendaCount}</span>
+        {agendaCount > 0 && <span className="count">{agendaCount}</span>}
       </button>
 
       <div className="side-section team">
@@ -246,6 +247,7 @@ export default function Sidebar({
 
       {!collapsed && (
         <button className="secondary admin-low" onClick={onOpenAdmin}>
+          <Settings size={14} />
           Administrador
         </button>
       )}

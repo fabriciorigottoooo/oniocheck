@@ -61,6 +61,8 @@ export const agendaEvents = pgTable("agenda_events", {
   startTime: text("start_time").notNull(),
   endTime: text("end_time").notNull(),
   notes: text("notes"),
+  meetingUrl: text("meeting_url"),
+  finishedAt: timestamp("finished_at", { withTimezone: true }),
   organizerId: text("organizer_id").notNull(),
   organizerName: text("organizer_name").notNull(),
   createdAt: timestamp("created_at", { withTimezone: true })

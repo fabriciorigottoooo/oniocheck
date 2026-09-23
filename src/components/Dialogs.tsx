@@ -490,6 +490,8 @@ export function AgendaEventDialog({
   initialStartTime = "09:00",
   initialEndTime = "10:00",
   initialNotes = "",
+  initialMeetingUrl = "",
+  initialFinished = false,
   busy,
   onCancel,
   onDelete,
@@ -502,6 +504,8 @@ export function AgendaEventDialog({
   initialStartTime?: string;
   initialEndTime?: string;
   initialNotes?: string;
+  initialMeetingUrl?: string;
+  initialFinished?: boolean;
   busy: boolean;
   onCancel: () => void;
   onDelete?: () => void;
@@ -512,6 +516,8 @@ export function AgendaEventDialog({
     startTime: string;
     endTime: string;
     notes?: string | null;
+    meetingUrl?: string | null;
+    finished?: boolean;
   }) => void;
 }) {
   const [title, setTitle] = useState(initialTitle);
@@ -520,6 +526,8 @@ export function AgendaEventDialog({
   const [startTime, setStartTime] = useState(initialStartTime);
   const [endTime, setEndTime] = useState(initialEndTime);
   const [notes, setNotes] = useState(initialNotes);
+  const [meetingUrl, setMeetingUrl] = useState(initialMeetingUrl);
+  const [finished, setFinished] = useState(initialFinished);
 
   useEffect(() => {
     setTitle(initialTitle);
@@ -528,12 +536,21 @@ export function AgendaEventDialog({
     setStartTime(initialStartTime);
     setEndTime(initialEndTime);
     setNotes(initialNotes);
-  }, [initialTitle, initialTypeId, initialDate, initialStartTime, initialEndTime, initialNotes]);
+    setMeetingUrl(initialMeetingUrl);
+    setFinished(initialFinished);
+  }, [initialTitle, initialTypeId, initialDate, initialStartTime, initialEndTime, initialNotes, initialMeetingUrl, initialFinished]);
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
     if (!title.trim() || !typeId || !date || !startTime || !endTime) return;
-    onSubmit({ title, typeId, date, startTime, endTime, notes: notes.trim() || null });
+    const safeEndTime = endTime <= startTime ? (() => {
+      const [hour, minute] = startTime.split(":").map(Number);
+      const next = new Date();
+      next.setHours(hour, minute, 0, 0);
+      next.setHours(next.getHours() + 1);
+      return `${String(next.getHours()).padStart(2, "0")}:${String(next.getMinutes()).padStart(2, "0")}`;
+    })() : endTime;
+    onSubmit({ title, typeId, date, startTime, endTime: safeEndTime, notes: notes.trim() || null, meetingUrl: meetingUrl.trim() || null, finished });
   };
 
   return (
@@ -569,6 +586,14 @@ export function AgendaEventDialog({
             <input type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} />
           </label>
         </div>
+
+        <label className="field-label" htmlFor="agenda-event-meeting">Google Meet</label>
+        <input id="agenda-event-meeting" type="url" value={meetingUrl} onChange={(e) => setMeetingUrl(e.target.value)} placeholder="https://meet.google.com/..." />
+
+        <label className="agenda-check-row">
+          <input type="checkbox" checked={finished} onChange={(e) => setFinished(e.target.checked)} />
+          <span>Marcar como finalizado</span>
+        </label>
 
         <label className="field-label" htmlFor="agenda-event-notes">Observações</label>
         <textarea id="agenda-event-notes" value={notes} onChange={(e) => setNotes(e.target.value)} rows={4} placeholder="Detalhes do evento..." />

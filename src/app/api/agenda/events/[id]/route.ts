@@ -27,6 +27,8 @@ export async function PATCH(req: Request, ctx: Ctx) {
       startTime?: unknown;
       endTime?: unknown;
       notes?: unknown;
+      meetingUrl?: unknown;
+      finished?: unknown;
       actor?: { id?: unknown; name?: unknown };
     };
 
@@ -41,6 +43,8 @@ export async function PATCH(req: Request, ctx: Ctx) {
     const startTime = typeof raw.startTime === "string" ? raw.startTime.trim() : "";
     const endTime = typeof raw.endTime === "string" ? raw.endTime.trim() : "";
     const notes = typeof raw.notes === "string" ? raw.notes.trim() : null;
+    const meetingUrl = typeof raw.meetingUrl === "string" ? raw.meetingUrl.trim() : null;
+    const finished = raw.finished === true;
 
     if (!title || title.length > 100) {
       return Response.json({ error: "Título do evento inválido." }, { status: 400 });
@@ -68,6 +72,8 @@ export async function PATCH(req: Request, ctx: Ctx) {
         startTime,
         endTime,
         notes: notes || null,
+        meetingUrl: meetingUrl || null,
+        finishedAt: finished ? new Date() : null,
         organizerId: actor.id,
         organizerName: actor.name,
       })
@@ -92,6 +98,8 @@ export async function PATCH(req: Request, ctx: Ctx) {
         startTime: row.startTime,
         endTime: row.endTime,
         notes: row.notes,
+        meetingUrl: row.meetingUrl,
+        finishedAt: row.finishedAt ? row.finishedAt.toISOString() : null,
         organizerId: row.organizerId,
         organizerName: row.organizerName,
         createdAt: row.createdAt.toISOString(),

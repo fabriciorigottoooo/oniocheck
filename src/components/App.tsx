@@ -3,11 +3,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   CalendarDays,
+  CheckCheck,
   Clock3,
   MoonStar,
   NotebookPen,
   PencilLine,
   Plus,
+  Settings,
   SunMedium,
   Trash2,
 } from "lucide-react";
@@ -93,6 +95,8 @@ export default function App() {
     startTime: "09:00",
     endTime: "10:00",
     notes: "",
+    meetingUrl: "",
+    finished: false,
   });
   const [saving, setSaving] = useState(false);
   const [now, setNow] = useState(() => Date.now());
@@ -116,6 +120,32 @@ export default function App() {
 
   const errMsg = (e: unknown, fallback: string) =>
     e instanceof Error && e.message ? e.message : fallback;
+
+  const normalizeAgendaTimeWindow = (startTime: string, endTime: string) => {
+    if (!startTime || !endTime) return { startTime, endTime };
+    const [startHour, startMinute] = startTime.split(":").map(Number);
+    const [endHour, endMinute] = endTime.split(":").map(Number);
+    const startTotal = startHour * 60 + startMinute;
+    const endTotal = endHour * 60 + endMinute;
+    if (endTotal <= startTotal) {
+      return { startTime, endTime: addOneHour(startTime) };
+    }
+    return { startTime, endTime };
+  };
+
+  const addOneHour = (time: string) => {
+    const [h, m] = time.split(":").map(Number);
+    const start = new Date();
+    start.setHours(h, m, 0, 0);
+    start.setHours(start.getHours() + 1);
+    return `${String(start.getHours()).padStart(2, "0")}:${String(start.getMinutes()).padStart(2, "0")}`;
+  };
+
+  const buildMeetLink = () => {
+    const base = "abcdefghijklmnopqrstuvwxyz";
+    const chunk = () => Array.from({ length: 3 }, () => base[Math.floor(Math.random() * base.length)]).join("");
+    return `https://meet.google.com/${chunk()}-${chunk()}-${chunk()}`;
+  };
 
   const fetchState = useCallback(async () => {
     try {
@@ -402,17 +432,22 @@ export default function App() {
     startTime: string;
     endTime: string;
     notes?: string | null;
+    meetingUrl?: string | null;
+    finished?: boolean;
   }) => {
     if (!me) return;
+    const normalized = normalizeAgendaTimeWindow(payload.startTime, payload.endTime);
     setSaving(true);
     try {
       await api.updateAgendaEvent(eventId, {
         title: payload.title.trim(),
         typeId: payload.typeId,
         date: payload.date,
-        startTime: payload.startTime,
-        endTime: payload.endTime,
+        startTime: normalized.startTime,
+        endTime: normalized.endTime,
         notes: payload.notes?.trim() || null,
+        meetingUrl: payload.meetingUrl?.trim() || null,
+        finished: !!payload.finished,
         actor: { id: me.id, name: me.name },
       });
       setAgendaEventDialog(null);
@@ -442,6 +477,31 @@ export default function App() {
     }
   };
 
+  const toggleAgendaEventStatus = async (event: AgendaEvent) => {
+    if (!me) return;
+    const nextFinished = !event.finishedAt;
+    setSaving(true);
+    try {
+      await api.updateAgendaEvent(event.id, {
+        title: event.title,
+        typeId: event.typeId,
+        date: event.date,
+        startTime: event.startTime,
+        endTime: event.endTime,
+        notes: event.notes,
+        meetingUrl: event.meetingUrl,
+        finished: nextFinished,
+        actor: { id: me.id, name: me.name },
+      });
+      await fetchState();
+      pushToast(nextFinished ? "Evento marcado como finalizado." : "Evento reaberto.");
+    } catch (e) {
+      pushToast(errMsg(e, "Não foi possível atualizar o status do evento."));
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const createAgendaEvent = async () => {
     if (!me) return;
     const cleaned = agendaForm.title.trim();
@@ -450,15 +510,18 @@ export default function App() {
       pushToast("Preencha título, tipo, dia e horário.");
       return;
     }
+    const normalized = normalizeAgendaTimeWindow(agendaForm.startTime, agendaForm.endTime);
     setSaving(true);
     try {
       await api.createAgendaEvent({
         title: cleaned,
         typeId,
         date: agendaForm.date,
-        startTime: agendaForm.startTime,
-        endTime: agendaForm.endTime,
+        startTime: normalized.startTime,
+        endTime: normalized.endTime,
         notes: agendaForm.notes.trim() || null,
+        meetingUrl: agendaForm.meetingUrl.trim() || null,
+        finished: agendaForm.finished,
         actor: { id: me.id, name: me.name },
       });
       setAgendaForm({
@@ -468,6 +531,8 @@ export default function App() {
         startTime: "09:00",
         endTime: "10:00",
         notes: "",
+        meetingUrl: "",
+        finished: false,
       });
       await fetchState();
       pushToast("Evento agendado com sucesso.");
@@ -1077,7 +1142,14 @@ export default function App() {
                     <input
                       type="time"
                       value={agendaForm.startTime}
-                      onChange={(e) => setAgendaForm((prev) => ({ ...prev, startTime: e.target.value }))}
+                      onChange={(e) => {
+                        const nextStart = e.target.value;
+                        setAgendaForm((prev) => ({
+                          ...prev,
+                          startTime: nextStart,
+                          endTime: prev.endTime <= nextStart ? addOneHour(nextStart) : prev.endTime,
+                        }));
+                      }}
                     />
                   </label>
                   <label>
@@ -1085,10 +1157,38 @@ export default function App() {
                     <input
                       type="time"
                       value={agendaForm.endTime}
-                      onChange={(e) => setAgendaForm((prev) => ({ ...prev, endTime: e.target.value }))}
+                      onChange={(e) => {
+                        const nextEnd = e.target.value;
+                        setAgendaForm((prev) => ({
+                          ...prev,
+                          endTime: nextEnd <= prev.startTime ? addOneHour(prev.startTime) : nextEnd,
+                        }));
+                      }}
                     />
                   </label>
                 </div>
+                <label>
+                  <span>Google Meet</span>
+                  <div className="agenda-inline-field">
+                    <input
+                      type="url"
+                      value={agendaForm.meetingUrl}
+                      onChange={(e) => setAgendaForm((prev) => ({ ...prev, meetingUrl: e.target.value }))}
+                      placeholder="https://meet.google.com/..."
+                    />
+                    <button type="button" className="secondary small" onClick={() => setAgendaForm((prev) => ({ ...prev, meetingUrl: buildMeetLink() }))}>
+                      Gerar
+                    </button>
+                  </div>
+                </label>
+                <label className="agenda-check-row">
+                  <input
+                    type="checkbox"
+                    checked={agendaForm.finished}
+                    onChange={(e) => setAgendaForm((prev) => ({ ...prev, finished: e.target.checked }))}
+                  />
+                  <span>Marcar como finalizado</span>
+                </label>
                 <label>
                   <span>Observações</span>
                   <textarea
@@ -1119,12 +1219,15 @@ export default function App() {
                       color: event.typeColor,
                     };
                     return (
-                      <div key={event.id} className="agenda-event-card">
+                      <div key={event.id} className={`agenda-event-card ${event.finishedAt ? "done" : ""}`}>
                         <div className="agenda-event-header">
                           <span className="agenda-event-type" style={{ background: `${type.color}18`, color: type.color }}>
                             {type.name}
                           </span>
                           <div className="agenda-event-actions">
+                            <button type="button" className={`icon-btn ${event.finishedAt ? "done" : ""}`} onClick={() => void toggleAgendaEventStatus(event)} title={event.finishedAt ? "Reabrir evento" : "Marcar como finalizado"}>
+                              <CheckCheck size={14} />
+                            </button>
                             <button type="button" className="icon-btn" onClick={() => setAgendaEventDialog({ mode: "edit", event })} title="Editar evento">
                               <PencilLine size={14} />
                             </button>
@@ -1138,8 +1241,13 @@ export default function App() {
                           <span>{new Date(`${event.date}T00:00:00`).toLocaleDateString("pt-BR", { weekday: "short", day: "2-digit", month: "short" })}</span>
                           <span>{event.startTime} - {event.endTime}</span>
                         </div>
+                        {event.meetingUrl && (
+                          <a href={event.meetingUrl} target="_blank" rel="noreferrer" className="agenda-meet-link">
+                            Abrir reunião do Google Meet
+                          </a>
+                        )}
                         {event.notes && <p>{event.notes}</p>}
-                        <small>Organizador: {event.organizerName}</small>
+                        <small>{event.finishedAt ? "Finalizado" : "Em andamento"} · Organizador: {event.organizerName}</small>
                       </div>
                     );
                   })
@@ -1246,10 +1354,12 @@ export default function App() {
           initialStartTime={agendaEventDialog.event.startTime}
           initialEndTime={agendaEventDialog.event.endTime}
           initialNotes={agendaEventDialog.event.notes ?? ""}
+          initialMeetingUrl={agendaEventDialog.event.meetingUrl ?? ""}
+          initialFinished={!!agendaEventDialog.event.finishedAt}
           busy={saving}
           onCancel={() => setAgendaEventDialog(null)}
           onDelete={() => void deleteAgendaEvent(agendaEventDialog.event)}
-          onSubmit={(payload: { title: string; typeId: string; date: string; startTime: string; endTime: string; notes?: string | null; }) => void updateAgendaEvent(agendaEventDialog.event.id, payload)}
+          onSubmit={(payload: { title: string; typeId: string; date: string; startTime: string; endTime: string; notes?: string | null; meetingUrl?: string | null; finished?: boolean; }) => void updateAgendaEvent(agendaEventDialog.event.id, payload)}
         />
       )}
 

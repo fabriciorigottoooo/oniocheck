@@ -66,6 +66,8 @@ export function toAgendaEvent(r: AgendaEventRow): AgendaEvent {
     startTime: r.startTime,
     endTime: r.endTime,
     notes: r.notes,
+    meetingUrl: r.meetingUrl ?? null,
+    finishedAt: r.finishedAt ? r.finishedAt.toISOString() : null,
     organizerId: r.organizerId,
     organizerName: r.organizerName,
     createdAt: r.createdAt.toISOString(),

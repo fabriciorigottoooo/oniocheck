@@ -55,10 +55,18 @@ export async function ensureDatabaseCompatibility() {
       start_time text NOT NULL,
       end_time text NOT NULL,
       notes text,
+      meeting_url text,
+      finished_at TIMESTAMPTZ,
       organizer_id text NOT NULL,
       organizer_name text NOT NULL,
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
+  `);
+
+  await db.execute(`
+    ALTER TABLE IF EXISTS agenda_events
+      ADD COLUMN IF NOT EXISTS meeting_url text,
+      ADD COLUMN IF NOT EXISTS finished_at TIMESTAMPTZ;
   `);
 
   await db.execute(`

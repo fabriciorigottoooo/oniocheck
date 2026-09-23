@@ -63,6 +63,8 @@ export async function GET() {
         startTime: eventRow.startTime,
         endTime: eventRow.endTime,
         notes: eventRow.notes,
+        meetingUrl: eventRow.meetingUrl ?? null,
+        finishedAt: eventRow.finishedAt ? eventRow.finishedAt.toISOString() : null,
         organizerId: eventRow.organizerId,
         organizerName: eventRow.organizerName,
         createdAt: eventRow.createdAt.toISOString(),

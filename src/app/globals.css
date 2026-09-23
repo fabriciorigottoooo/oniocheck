@@ -235,8 +235,27 @@ button:disabled {
 .app.dark .agenda-event-meta,
 .app.dark .agenda-event-card p,
 .app.dark .agenda-event-card small,
-.app.dark .agenda-controls {
-  color: var(--muted);
+.app.dark .agenda-controls,
+.app.dark .agenda-check-row {
+  color: var(--ink);
+}
+
+.app.dark .agenda-form input,
+.app.dark .agenda-form select,
+.app.dark .agenda-form textarea,
+.app.dark .agenda-form input::placeholder,
+.app.dark .agenda-form textarea::placeholder {
+  color: var(--ink);
+}
+
+.app.dark .agenda-form input[type="date"],
+.app.dark .agenda-form input[type="time"] {
+  color-scheme: dark;
+}
+
+.app.dark .agenda-form input[type="date"]::-webkit-calendar-picker-indicator,
+.app.dark .agenda-form input[type="time"]::-webkit-calendar-picker-indicator {
+  filter: invert(1) brightness(1.6);
 }
 
 .app.dark .agenda-event-card strong,

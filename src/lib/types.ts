@@ -64,6 +64,8 @@ export type AgendaEvent = {
   startTime: string;
   endTime: string;
   notes: string | null;
+  meetingUrl: string | null;
+  finishedAt: string | null;
   organizerId: string;
   organizerName: string;
   createdAt: string;

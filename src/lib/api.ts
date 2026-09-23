@@ -125,6 +125,8 @@ export const api = {
     startTime: string;
     endTime: string;
     notes?: string | null;
+    meetingUrl?: string | null;
+    finished?: boolean;
     actor: ActorInput;
   }) =>
     req<{ ok: boolean; event: {
@@ -137,6 +139,8 @@ export const api = {
       startTime: string;
       endTime: string;
       notes: string | null;
+      meetingUrl: string | null;
+      finishedAt: string | null;
       organizerId: string;
       organizerName: string;
       createdAt: string;
@@ -152,6 +156,8 @@ export const api = {
     startTime: string;
     endTime: string;
     notes?: string | null;
+    meetingUrl?: string | null;
+    finished?: boolean;
     actor: ActorInput;
   }) =>
     req<{ ok: boolean; event: {
@@ -164,6 +170,8 @@ export const api = {
       startTime: string;
       endTime: string;
       notes: string | null;
+      meetingUrl: string | null;
+      finishedAt: string | null;
       organizerId: string;
       organizerName: string;
       createdAt: string;

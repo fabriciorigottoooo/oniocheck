@@ -18,6 +18,8 @@ export async function POST(req: Request) {
       startTime?: unknown;
       endTime?: unknown;
       notes?: unknown;
+      meetingUrl?: unknown;
+      finished?: unknown;
       actor?: { id?: unknown; name?: unknown };
     };
 
@@ -32,6 +34,8 @@ export async function POST(req: Request) {
     const startTime = typeof body.startTime === "string" ? body.startTime.trim() : "";
     const endTime = typeof body.endTime === "string" ? body.endTime.trim() : "";
     const notes = typeof body.notes === "string" ? body.notes.trim() : null;
+    const meetingUrl = typeof body.meetingUrl === "string" ? body.meetingUrl.trim() : null;
+    const finished = body.finished === true;
 
     if (!title || title.length > 100) {
       return Response.json({ error: "Título do evento inválido." }, { status: 400 });
@@ -60,6 +64,8 @@ export async function POST(req: Request) {
         startTime,
         endTime,
         notes: notes || null,
+        meetingUrl: meetingUrl || null,
+        finishedAt: finished ? new Date() : null,
         organizerId: actor.id,
         organizerName: actor.name,
       })
