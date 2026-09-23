@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, type ChangeEvent, type FormEvent, type ReactNode } from "react";
 import { CheckCircle2, PenLine, Trash2, UserRoundPlus, Upload, Users } from "lucide-react";
+import { activityParts, relTime } from "@/lib/format";
 
 function Modal({
   label,
@@ -102,6 +103,18 @@ export function SetupDialog({
               placeholder="Digite sua senha"
             />
           </>
+        )}
+        {!editing && (
+          <button
+            type="button"
+            className="link-btn"
+            onClick={() => {
+              const message = encodeURIComponent("Fabrício, esqeuci minha senha. Poderia resetá-la, por favor?");
+              window.open(`https://wa.me/5517988463129?text=${message}`, "_blank", "noopener,noreferrer");
+            }}
+          >
+            Esqueci minha senha
+          </button>
         )}
         <div className="actions">
           {editing && onCancel && (
@@ -679,6 +692,91 @@ export function CollaboratorDetailDialog({
   );
 }
 
+export function TeamModal({
+  collaborators,
+  meId,
+  now,
+  onSelect,
+  onClose,
+}: {
+  collaborators: { id: string; name: string; color: string; avatarUrl?: string | null; lastSeenAt: string }[];
+  meId: string | null;
+  now: number;
+  onSelect: (id: string) => void;
+  onClose: () => void;
+}) {
+  return (
+    <Modal label="Equipe" onClose={onClose}>
+      <div className="dialog-icon"><Users size={22} /></div>
+      <h2>Equipe</h2>
+      <p>Veja quem está online e acesse os detalhes do time.</p>
+      <div className="modal-list compact">
+        {collaborators.map((person) => {
+          const isOnline = Date.now() - new Date(person.lastSeenAt).getTime() < 45_000;
+          return (
+            <button key={person.id} type="button" className="modal-row" onClick={() => onSelect(person.id)}>
+              <span className="user-bullet" style={{ background: person.color }} />
+              <span className="modal-row-main">
+                <strong>{person.name}</strong>
+                <small>{isOnline ? "Online agora" : "Offline"}{person.id === meId ? " · você" : ""}</small>
+              </span>
+            </button>
+          );
+        })}
+      </div>
+      <div className="actions">
+        <button type="button" className="secondary" onClick={onClose}>Fechar</button>
+      </div>
+    </Modal>
+  );
+}
+
+export function ActivityModal({
+  activities,
+  now,
+  onClose,
+}: {
+  activities: Array<{ id: string; actorName: string; actorColor: string; action: string; clientName: string; detail: string | null; createdAt: string }>;
+  now: number;
+  onClose: () => void;
+}) {
+  return (
+    <Modal label="Atividade recente" onClose={onClose}>
+      <div className="dialog-icon"><CheckCircle2 size={22} /></div>
+      <h2>Atividade recente</h2>
+      <p>Últimas ações da equipe sincronizadas em tempo real.</p>
+      <div className="modal-list compact">
+        {activities.length ? activities.map((item) => {
+          const { actor, msg } = activityParts({
+            ...item,
+            actorId: "",
+            actorName: item.actorName,
+            actorColor: item.actorColor,
+            clientId: null,
+            clientName: item.clientName,
+            action: item.action,
+            detail: item.detail,
+            createdAt: item.createdAt,
+          } as any);
+          return (
+            <div key={item.id} className="modal-row static">
+              <span className="user-bullet" style={{ background: item.actorColor }} />
+              <span className="modal-row-main">
+                <strong>{actor}</strong>
+                <small>{msg}</small>
+                <time>{relTime(item.createdAt, now)}</time>
+              </span>
+            </div>
+          );
+        }) : <p className="empty">Nenhuma atividade recente.</p>}
+      </div>
+      <div className="actions">
+        <button type="button" className="secondary" onClick={onClose}>Fechar</button>
+      </div>
+    </Modal>
+  );
+}
+
 export function AdminDialog({
   collaborators,
   busy,
@@ -754,6 +852,19 @@ export function AdminDialog({
             ) : (
               <p>Nenhum colaborador cadastrado.</p>
             )}
+          </div>
+          <div className="admin-extra-actions">
+            <button
+              type="button"
+              className="secondary"
+              onClick={() => {
+                const message = encodeURIComponent("Fabrício, esqeuci minha senha. Poderia resetá-la, por favor?");
+                window.open(`https://wa.me/5517988463129?text=${message}`, "_blank", "noopener,noreferrer");
+              }}
+              disabled={busy}
+            >
+              Resetar senha via WhatsApp
+            </button>
           </div>
           <div className="actions">
             <button className="secondary" onClick={onClose} disabled={busy}>

@@ -511,6 +511,19 @@ button:disabled {
   justify-content: space-between;
   align-items: center;
   transition: background 0.15s ease;
+  gap: 8px;
+}
+
+.tab .tab-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+}
+
+.tab > span:nth-child(2) {
+  flex: 1;
+  min-width: 0;
 }
 
 .tab:hover {
@@ -1259,6 +1272,29 @@ button.team-row:hover {
   gap: 10px;
 }
 
+.agenda-inline-field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.agenda-inline-field input {
+  flex: 1;
+}
+
+.agenda-check-row {
+  display: flex !important;
+  align-items: center;
+  gap: 10px;
+  padding: 2px 0;
+}
+
+.agenda-check-row input {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+}
+
 .admin-low {
   margin-top: auto;
   width: 100%;
@@ -1290,6 +1326,12 @@ button.team-row:hover {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+}
+
+.agenda-event-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .agenda-event-header strong {

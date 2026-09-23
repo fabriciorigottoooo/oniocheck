@@ -26,6 +26,7 @@ import Sidebar from "./Sidebar";
 import ClientList from "./ClientList";
 import ClientDetail from "./ClientDetail";
 import {
+  ActivityModal,
   AdminDialog,
   AgendaEventDialog,
   AgendaTypeDialog,
@@ -34,6 +35,7 @@ import {
   FinishDialog,
   ProfileDialog,
   SetupDialog,
+  TeamModal,
 } from "./Dialogs";
 import Toasts, { type ToastItem } from "./Toasts";
 import Avatar from "./Avatar";
@@ -141,10 +143,19 @@ export default function App() {
     return `${String(start.getHours()).padStart(2, "0")}:${String(start.getMinutes()).padStart(2, "0")}`;
   };
 
+  const normalizeGoogleMeetUrl = (raw: string) => {
+    const value = raw.trim();
+    if (!value) return "";
+    if (value.startsWith("http://") || value.startsWith("https://")) return value;
+    if (value.startsWith("meet.google.com/")) return `https://${value}`;
+    return `https://meet.google.com/${value.replace(/^\/+/, "")}`;
+  };
+
   const buildMeetLink = () => {
-    const base = "abcdefghijklmnopqrstuvwxyz";
-    const chunk = () => Array.from({ length: 3 }, () => base[Math.floor(Math.random() * base.length)]).join("");
-    return `https://meet.google.com/${chunk()}-${chunk()}-${chunk()}`;
+    const pool = "abcdefghijklmnopqrstuvwxyz0123456789";
+    const randomChunk = (length: number) =>
+      Array.from({ length }, () => pool[Math.floor(Math.random() * pool.length)]).join("");
+    return `https://meet.google.com/${randomChunk(3)}-${randomChunk(4)}-${randomChunk(3)}`;
   };
 
   const fetchState = useCallback(async () => {
@@ -412,10 +423,14 @@ export default function App() {
     if (!me) return;
     const confirmed = window.confirm(`Excluir o tipo “${type.name}”? Eventos existentes continuam visíveis, mas este tipo deixará de aparecer no selector.`);
     if (!confirmed) return;
+    setData((prev) => ({
+      ...prev,
+      agendaTypes: prev.agendaTypes.filter((item) => item.id !== type.id),
+    }));
+    setAgendaForm((prev) => ({ ...prev, typeId: prev.typeId === type.id ? "" : prev.typeId }));
     setSaving(true);
     try {
       await api.deleteAgendaType(type.id, { actor: { id: me.id, name: me.name } });
-      setAgendaForm((prev) => ({ ...prev, typeId: prev.typeId === type.id ? "" : prev.typeId }));
       await fetchState();
       pushToast("Tipo de evento removido.");
     } catch (e) {
@@ -464,10 +479,14 @@ export default function App() {
     if (!me) return;
     const confirmed = window.confirm(`Excluir o evento “${event.title}”?`);
     if (!confirmed) return;
+    setData((prev) => ({
+      ...prev,
+      agendaEvents: prev.agendaEvents.filter((item) => item.id !== event.id),
+    }));
+    setAgendaEventDialog(null);
     setSaving(true);
     try {
       await api.deleteAgendaEvent(event.id, { actor: { id: me.id, name: me.name } });
-      setAgendaEventDialog(null);
       await fetchState();
       pushToast("Evento removido.");
     } catch (e) {
@@ -489,7 +508,7 @@ export default function App() {
         startTime: event.startTime,
         endTime: event.endTime,
         notes: event.notes,
-        meetingUrl: event.meetingUrl,
+        meetingUrl: normalizeGoogleMeetUrl(event.meetingUrl ?? "") || null,
         finished: nextFinished,
         actor: { id: me.id, name: me.name },
       });
@@ -511,6 +530,7 @@ export default function App() {
       return;
     }
     const normalized = normalizeAgendaTimeWindow(agendaForm.startTime, agendaForm.endTime);
+    const normalizedMeetingUrl = normalizeGoogleMeetUrl(agendaForm.meetingUrl);
     setSaving(true);
     try {
       await api.createAgendaEvent({
@@ -520,7 +540,7 @@ export default function App() {
         startTime: normalized.startTime,
         endTime: normalized.endTime,
         notes: agendaForm.notes.trim() || null,
-        meetingUrl: agendaForm.meetingUrl.trim() || null,
+        meetingUrl: normalizedMeetingUrl || null,
         finished: agendaForm.finished,
         actor: { id: me.id, name: me.name },
       });
@@ -910,6 +930,10 @@ export default function App() {
     const meNow = meRef.current;
     if (!meNow) return;
     if (!window.confirm("Deseja excluir este colaborador?")) return;
+    setData((prev) => ({
+      ...prev,
+      collaborators: prev.collaborators.filter((person) => person.id !== id),
+    }));
     try {
       setSaving(true);
       await api.deleteCollaborator(id);
@@ -1177,7 +1201,7 @@ export default function App() {
                       placeholder="https://meet.google.com/..."
                     />
                     <button type="button" className="secondary small" onClick={() => setAgendaForm((prev) => ({ ...prev, meetingUrl: buildMeetLink() }))}>
-                      Gerar
+                      Gerar link
                     </button>
                   </div>
                 </label>
@@ -1316,6 +1340,27 @@ export default function App() {
           busy={saving}
           onCancel={() => setClientDialog(null)}
           onSubmit={clientDialog.mode === "new" ? createClient : renameClient}
+        />
+      )}
+
+      {teamOpen && (
+        <TeamModal
+          collaborators={collaborators}
+          now={now}
+          meId={me?.id ?? null}
+          onClose={() => setTeamOpen(false)}
+          onSelect={(id) => {
+            setSelectedCollaboratorId(id);
+            setTeamOpen(false);
+          }}
+        />
+      )}
+
+      {activityOpen && (
+        <ActivityModal
+          activities={activities}
+          now={now}
+          onClose={() => setActivityOpen(false)}
         />
       )}
 

@@ -139,111 +139,25 @@ export default function Sidebar({
         {agendaCount > 0 && <span className="count">{agendaCount}</span>}
       </button>
 
-      <div className="side-section team">
-        <button className="side-label section-toggle" onClick={onToggleTeam} aria-expanded={teamOpen}>
-          <span className="label-inner">
-            <Users size={12} /> {!collapsed && <>Equipe · {onlineN} online</>}
-            {collapsed && <span className="mini-badge">{onlineN}</span>}
-          </span>
-          {!collapsed && (teamOpen ? <ChevronDown size={12} /> : <ChevronRight size={12} />)}
-        </button>
-        {!collapsed && (
-          <div className={`section-body ${teamOpen ? "open" : "closed"}`}>
-            {sorted.length ? (
-              <div className="team-list">
-                {sorted.map((c) => {
-                  const online = isOnline(c, now);
-                  const inner = (
-                    <>
-                      <Avatar name={c.name} color={c.color} size={26} online={online} imageUrl={c.avatarUrl ?? null} />
-                      <span className="team-meta">
-                        <span className="name">
-                          {c.name}
-                          {c.id === meId && <span className="you">você</span>}
-                        </span>
-                        <span className="status">
-                          {online ? (
-                            <>
-                              <span className="status-dot on" /> online agora
-                            </>
-                          ) : (
-                            "visto " + relTime(c.lastSeenAt, now)
-                          )}
-                        </span>
-                      </span>
-                    </>
-                  );
-                  if (c.id === meId) {
-                    return (
-                      <button
-                        key={c.id}
-                        className="team-row"
-                        onClick={onEditIdentity}
-                        title="Editar meu nome"
-                        type="button"
-                      >
-                        {inner}
-                      </button>
-                    );
-                  }
+      <button
+        className={`tab ${teamOpen ? "active" : ""}`}
+        aria-pressed={teamOpen}
+        onClick={onToggleTeam}
+      >
+        <span className="tab-icon"><Users size={14} /></span>
+        <span>Equipe</span>
+        <span className="count">{onlineN}</span>
+      </button>
 
-                  return (
-                    <button
-                      key={c.id}
-                      className="team-row"
-                      onClick={() => onSelectCollaborator?.(c.id)}
-                      type="button"
-                      title="Ver detalhes do colaborador"
-                    >
-                      {inner}
-                    </button>
-                  );
-                })}
-              </div>
-            ) : (
-              <p className="team-empty">
-                Compartilhe o link desta página — cada pessoa entra com o próprio
-                nome e acompanha tudo em tempo real.
-              </p>
-            )}
-          </div>
-        )}
-      </div>
-
-      <div className="side-section feed">
-        <button className="side-label section-toggle" onClick={onToggleActivity} aria-expanded={activityOpen}>
-          <span className="label-inner">
-            <ActivityIcon size={12} /> {!collapsed && "Atividade recente"}
-          </span>
-          {!collapsed && (activityOpen ? <ChevronDown size={12} /> : <ChevronRight size={12} />)}
-        </button>
-        {!collapsed && (
-          <div className={`section-body ${activityOpen ? "open" : "closed"}`}>
-            <div className="feed-list">
-              {activities.length ? (
-                activities.map((a) => {
-                  const { actor, msg } = activityParts(a);
-                  return (
-                    <div key={a.id} className="feed-item">
-                      <Avatar name={a.actorName} color={a.actorColor} size={22} imageUrl={null} />
-                      <div>
-                        <p>
-                          <strong>{actor}</strong> {msg}
-                        </p>
-                        <time>{relTime(a.createdAt, now)}</time>
-                      </div>
-                    </div>
-                  );
-                })
-              ) : (
-                <p className="feed-empty">
-                  As ações da equipe aparecem aqui, em tempo real.
-                </p>
-              )}
-            </div>
-          </div>
-        )}
-      </div>
+      <button
+        className={`tab ${activityOpen ? "active" : ""}`}
+        aria-pressed={activityOpen}
+        onClick={onToggleActivity}
+      >
+        <span className="tab-icon"><ActivityIcon size={14} /></span>
+        <span>Atividade recente</span>
+        {activities.length > 0 && <span className="count">{Math.min(activities.length, 9)}</span>}
+      </button>
 
       {!collapsed && (
         <button className="secondary admin-low" onClick={onOpenAdmin}>
