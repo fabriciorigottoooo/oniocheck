@@ -111,19 +111,6 @@ export default function Sidebar({
         </div>
       </div>
 
-      <div className="sidebar-logout-wrap">
-        <button
-          type="button"
-          className={`danger logoff-btn${collapsed ? " icon-only" : ""}`}
-          onClick={onLogout}
-          title="Sair"
-          aria-label="Sair da conta"
-        >
-          <LogOut size={14} />
-          {!collapsed && "Sair"}
-        </button>
-      </div>
-
       <nav className="tabs" aria-label="Telas">
         <button
           className="tab"
@@ -174,6 +161,19 @@ export default function Sidebar({
         <span>Atividade recente</span>
         {activities.length > 0 && <span className="count">{Math.min(activities.length, 9)}</span>}
       </button>
+
+      <div className="sidebar-logout-wrap">
+        <button
+          type="button"
+          className={`danger logoff-btn${collapsed ? " icon-only" : ""}`}
+          onClick={onLogout}
+          title="Sair"
+          aria-label="Sair da conta"
+        >
+          <LogOut size={14} />
+          {!collapsed && "Sair"}
+        </button>
+      </div>
 
       <button
         className={`secondary admin-low${collapsed ? " icon-only" : ""}`}
