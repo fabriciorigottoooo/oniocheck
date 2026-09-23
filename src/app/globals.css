@@ -910,11 +910,35 @@ button.team-row:hover {
   position: relative;
   display: flex;
   align-items: center;
+  width: 100%;
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(92, 121, 182, 0.22);
+  border-radius: 12px;
+  box-shadow: inset 0 1px 2px rgba(15, 31, 61, 0.04);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.password-input-shell:focus-within {
+  border-color: rgba(61, 117, 224, 0.56);
+  box-shadow: 0 0 0 4px rgba(61, 117, 224, 0.12);
+  background: rgba(255, 255, 255, 0.96);
 }
 
 .password-input-shell input {
   width: 100%;
-  padding-right: 42px;
+  border: 0;
+  border-radius: 12px 0 0 12px;
+  background: transparent;
+  padding: 12px 14px 12px 14px;
+  color: var(--ink);
+  font-size: 15px;
+  line-height: 1.3;
+  box-shadow: none;
+}
+
+.password-input-shell input::placeholder {
+  color: var(--muted);
+  opacity: 0.9;
 }
 
 .password-toggle {
@@ -924,17 +948,55 @@ button.team-row:hover {
   transform: translateY(-50%);
   width: 32px;
   height: 32px;
-  border: 0;
-  background: transparent;
+  border: 1px solid rgba(92, 121, 182, 0.14);
+  background: rgba(61, 117, 224, 0.06);
   color: var(--muted);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 8px;
+  border-radius: 9px;
+  transition: transform 0.18s ease, background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
 }
 
 .password-toggle:hover {
-  background: rgba(61, 117, 224, 0.08);
+  background: rgba(61, 117, 224, 0.12);
+  border-color: rgba(61, 117, 224, 0.2);
+  transform: translateY(-50%) scale(1.02);
+}
+
+.password-toggle:active {
+  transform: translateY(-50%) scale(0.98);
+}
+
+.app.dark .password-input-shell {
+  background: rgba(10, 18, 28, 0.9);
+  border-color: rgba(142, 175, 230, 0.22);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+.app.dark .password-input-shell:focus-within {
+  background: rgba(12, 22, 34, 0.98);
+  border-color: rgba(120, 169, 255, 0.5);
+  box-shadow: 0 0 0 4px rgba(104, 148, 255, 0.12);
+}
+
+.app.dark .password-input-shell input {
+  color: #edf7ff;
+}
+
+.app.dark .password-input-shell input::placeholder {
+  color: #8ea9d2;
+}
+
+.app.dark .password-toggle {
+  background: rgba(129, 164, 255, 0.12);
+  border-color: rgba(146, 182, 255, 0.18);
+  color: #edf7ff;
+}
+
+.app.dark .password-toggle:hover {
+  background: rgba(129, 164, 255, 0.18);
+  border-color: rgba(146, 182, 255, 0.24);
 }
 
 .field-success {
@@ -1353,6 +1415,41 @@ button.team-row:hover {
 .status-pill.offline {
   background: #edf1f7;
   color: #64748b;
+}
+
+.app.dark .collab-modal-card {
+  color: var(--ink);
+}
+
+.app.dark .collab-modal-identity strong,
+.app.dark .detail-mini-card strong,
+.app.dark .detail-mini-card p,
+.app.dark .collab-modal-identity .status-pill {
+  color: var(--ink);
+}
+
+.app.dark .detail-mini-card {
+  background: rgba(19, 31, 44, 0.9);
+  border-color: rgba(136, 165, 219, 0.18);
+}
+
+.app.dark .detail-mini-icon {
+  background: rgba(90, 129, 220, 0.18);
+  color: #dfeeff;
+}
+
+.app.dark .detail-mini-card p {
+  color: #a9bfd8;
+}
+
+.app.dark .status-pill.online {
+  background: rgba(34, 197, 94, 0.14);
+  color: #79efb3;
+}
+
+.app.dark .status-pill.offline {
+  background: rgba(148, 163, 184, 0.12);
+  color: #dfeaf8;
 }
 
 .agenda-form {

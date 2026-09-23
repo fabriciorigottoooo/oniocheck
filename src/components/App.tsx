@@ -1389,7 +1389,10 @@ export default function App() {
         <CollaboratorDetailDialog
           collaborator={selectedCollaborator}
           now={now}
-          onClose={() => setSelectedCollaboratorId(null)}
+          onClose={() => {
+            setSelectedCollaboratorId(null);
+            setTeamOpen(true);
+          }}
         />
       )}
 
