@@ -440,8 +440,7 @@ button:disabled {
 }
 
 .side.collapsed .profile-summary {
-  justify-content: center;
-  padding: 10px 8px;
+  display: none;
 }
 
 .profile-summary:hover {
@@ -524,6 +523,16 @@ button:disabled {
 .tab > span:nth-child(2) {
   flex: 1;
   min-width: 0;
+}
+
+.side.collapsed .tab {
+  justify-content: center;
+  padding: 12px 10px;
+}
+
+.side.collapsed .tab > span:nth-child(2),
+.side.collapsed .tab .count {
+  display: none;
 }
 
 .tab:hover {
@@ -637,8 +646,17 @@ button:disabled {
   scrollbar-color: rgba(130, 162, 255, 0.7) rgba(255, 255, 255, 0.04);
 }
 
-.side.collapsed .tabs,
-.side.collapsed .secondary,
+.side.collapsed .tabs {
+  display: grid;
+  gap: 8px;
+}
+
+.side.collapsed .secondary {
+  width: 100%;
+  justify-content: center;
+  padding: 12px 10px;
+}
+
 .side.collapsed .team,
 .side.collapsed .feed,
 .side.collapsed .side-note {
@@ -1770,8 +1788,9 @@ button.team-row:hover {
   background: #fff;
   border-radius: 18px;
   padding: 28px;
-  width: 100%;
-  max-width: 440px;
+  width: min(100%, 440px);
+  max-height: 82vh;
+  overflow-y: auto;
   color: #25364c;
   box-shadow: 0 25px 90px rgba(16, 33, 57, 0.4);
   animation: pop-in 0.22s cubic-bezier(0.2, 0.9, 0.3, 1.15) both;

@@ -595,11 +595,6 @@ export function AgendaEventDialog({
           </label>
         </div>
 
-        <label className="agenda-check-row">
-          <input type="checkbox" checked={finished} onChange={(e) => setFinished(e.target.checked)} />
-          <span>Marcar como finalizado</span>
-        </label>
-
         <label className="field-label" htmlFor="agenda-event-notes">Observações</label>
         <textarea id="agenda-event-notes" value={notes} onChange={(e) => setNotes(e.target.value)} rows={4} placeholder="Detalhes do evento..." />
 

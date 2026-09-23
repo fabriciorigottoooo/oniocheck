@@ -159,12 +159,15 @@ export default function Sidebar({
         {activities.length > 0 && <span className="count">{Math.min(activities.length, 9)}</span>}
       </button>
 
-      {!collapsed && (
-        <button className="secondary admin-low" onClick={onOpenAdmin}>
-          <Settings size={14} />
-          Administrador
-        </button>
-      )}
+      <button
+        className={`secondary admin-low${collapsed ? " icon-only" : ""}`}
+        onClick={onOpenAdmin}
+        title="Administrador"
+        aria-label="Administrador"
+      >
+        <Settings size={14} />
+        {!collapsed && "Administrador"}
+      </button>
     </aside>
   );
 }

@@ -1172,14 +1172,6 @@ export default function App() {
                     />
                   </label>
                 </div>
-                <label className="agenda-check-row">
-                  <input
-                    type="checkbox"
-                    checked={agendaForm.finished}
-                    onChange={(e) => setAgendaForm((prev) => ({ ...prev, finished: e.target.checked }))}
-                  />
-                  <span>Marcar como finalizado</span>
-                </label>
                 <label>
                   <span>Observações</span>
                   <textarea
