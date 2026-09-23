@@ -109,7 +109,7 @@ export function SetupDialog({
             type="button"
             className="link-btn"
             onClick={() => {
-              const message = encodeURIComponent("Fabrício, esqeuci minha senha. Poderia resetá-la, por favor?");
+              const message = encodeURIComponent("Fabrício, esqueci minha senha. Poderia resetá-la, por favor?");
               window.open(`https://wa.me/5517988463129?text=${message}`, "_blank", "noopener,noreferrer");
             }}
           >
@@ -503,7 +503,6 @@ export function AgendaEventDialog({
   initialStartTime = "09:00",
   initialEndTime = "10:00",
   initialNotes = "",
-  initialMeetingUrl = "",
   initialFinished = false,
   busy,
   onCancel,
@@ -517,7 +516,6 @@ export function AgendaEventDialog({
   initialStartTime?: string;
   initialEndTime?: string;
   initialNotes?: string;
-  initialMeetingUrl?: string;
   initialFinished?: boolean;
   busy: boolean;
   onCancel: () => void;
@@ -529,7 +527,6 @@ export function AgendaEventDialog({
     startTime: string;
     endTime: string;
     notes?: string | null;
-    meetingUrl?: string | null;
     finished?: boolean;
   }) => void;
 }) {
@@ -539,7 +536,6 @@ export function AgendaEventDialog({
   const [startTime, setStartTime] = useState(initialStartTime);
   const [endTime, setEndTime] = useState(initialEndTime);
   const [notes, setNotes] = useState(initialNotes);
-  const [meetingUrl, setMeetingUrl] = useState(initialMeetingUrl);
   const [finished, setFinished] = useState(initialFinished);
 
   useEffect(() => {
@@ -549,9 +545,8 @@ export function AgendaEventDialog({
     setStartTime(initialStartTime);
     setEndTime(initialEndTime);
     setNotes(initialNotes);
-    setMeetingUrl(initialMeetingUrl);
     setFinished(initialFinished);
-  }, [initialTitle, initialTypeId, initialDate, initialStartTime, initialEndTime, initialNotes, initialMeetingUrl, initialFinished]);
+  }, [initialTitle, initialTypeId, initialDate, initialStartTime, initialEndTime, initialNotes, initialFinished]);
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
@@ -563,7 +558,7 @@ export function AgendaEventDialog({
       next.setHours(next.getHours() + 1);
       return `${String(next.getHours()).padStart(2, "0")}:${String(next.getMinutes()).padStart(2, "0")}`;
     })() : endTime;
-    onSubmit({ title, typeId, date, startTime, endTime: safeEndTime, notes: notes.trim() || null, meetingUrl: meetingUrl.trim() || null, finished });
+    onSubmit({ title, typeId, date, startTime, endTime: safeEndTime, notes: notes.trim() || null, finished });
   };
 
   return (
@@ -599,9 +594,6 @@ export function AgendaEventDialog({
             <input type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} />
           </label>
         </div>
-
-        <label className="field-label" htmlFor="agenda-event-meeting">Google Meet</label>
-        <input id="agenda-event-meeting" type="url" value={meetingUrl} onChange={(e) => setMeetingUrl(e.target.value)} placeholder="https://meet.google.com/..." />
 
         <label className="agenda-check-row">
           <input type="checkbox" checked={finished} onChange={(e) => setFinished(e.target.checked)} />
@@ -858,7 +850,7 @@ export function AdminDialog({
               type="button"
               className="secondary"
               onClick={() => {
-                const message = encodeURIComponent("Fabrício, esqeuci minha senha. Poderia resetá-la, por favor?");
+                const message = encodeURIComponent("Fabrício, esqueci minha senha. Poderia resetá-la, por favor?");
                 window.open(`https://wa.me/5517988463129?text=${message}`, "_blank", "noopener,noreferrer");
               }}
               disabled={busy}
