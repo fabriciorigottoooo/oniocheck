@@ -5,6 +5,7 @@ import {
   ChevronDown,
   ChevronRight,
   CircleDashed,
+  LogOut,
   PanelLeftClose,
   PanelLeftOpen,
   Settings,
@@ -113,11 +114,12 @@ export default function Sidebar({
       <div className="sidebar-logout-wrap">
         <button
           type="button"
-          className={`secondary logoff-btn${collapsed ? " icon-only" : ""}`}
+          className={`danger logoff-btn${collapsed ? " icon-only" : ""}`}
           onClick={onLogout}
           title="Sair"
           aria-label="Sair da conta"
         >
+          <LogOut size={14} />
           {!collapsed && "Sair"}
         </button>
       </div>

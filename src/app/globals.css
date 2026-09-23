@@ -565,7 +565,8 @@ button:disabled {
 
 .tab .tab-icon svg,
 .sidebar-toggle svg,
-.secondary.admin-low svg {
+.secondary.admin-low svg,
+.logoff-btn svg {
   width: 18px;
   height: 18px;
 }
@@ -1517,8 +1518,36 @@ button.team-row:hover {
   margin: 0;
 }
 
-.admin-low {
+.sidebar-logout-wrap {
   margin-top: auto;
+}
+
+.logoff-btn {
+  width: 100%;
+  justify-content: center;
+  background: rgba(220, 53, 69, 0.1);
+  border-color: rgba(220, 53, 69, 0.28);
+  color: #d93d4d;
+  font-weight: 700;
+}
+
+.logoff-btn:hover {
+  background: rgba(220, 53, 69, 0.16);
+  border-color: rgba(220, 53, 69, 0.32);
+}
+
+.side.collapsed .logoff-btn {
+  width: 52px;
+  min-width: 52px;
+  padding: 12px 0;
+}
+
+.side.collapsed .logoff-btn span,
+.side.collapsed .logoff-btn .text {
+  display: none;
+}
+
+.admin-low {
   width: 100%;
   justify-content: center;
 }
