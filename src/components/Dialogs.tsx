@@ -74,22 +74,24 @@ export function SetupDialog({
           ? "Este checklist é colaborativo: cada pessoa entra com o próprio nome e todas as marcações ficam organizadas na equipe."
           : "Entre com seu nome de usuário e sua senha para acessar o checklist."}
       </p>
-      <form onSubmit={submit}>
-        <label className="field-label" htmlFor="setup-name">
-          Nome de usuário
-        </label>
-        <input
-          id="setup-name"
-          type="text"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          maxLength={40}
-          autoFocus
-          autoComplete="off"
-          placeholder="Ex.: ana.souza"
-        />
+      <form onSubmit={submit} className="login-form">
+        <div className="login-fieldset">
+          <label className="field-label" htmlFor="setup-name">
+            Nome de usuário
+          </label>
+          <input
+            id="setup-name"
+            type="text"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            maxLength={40}
+            autoFocus
+            autoComplete="off"
+            placeholder="Ex.: ana.souza"
+          />
+        </div>
         {!editing && (
-          <>
+          <div className="login-fieldset">
             <label className="field-label" htmlFor="setup-password">
               Senha
             </label>
@@ -102,7 +104,7 @@ export function SetupDialog({
               autoComplete="current-password"
               placeholder="Digite sua senha"
             />
-          </>
+          </div>
         )}
         {!editing && (
           <button
@@ -727,12 +729,28 @@ export function ActivityModal({
   now: number;
   onClose: () => void;
 }) {
+  const [expanded, setExpanded] = useState(false);
+
   return (
     <Modal label="Atividade recente" onClose={onClose}>
-      <div className="dialog-icon"><CheckCircle2 size={22} /></div>
-      <h2>Atividade recente</h2>
-      <p>Últimas ações da equipe sincronizadas em tempo real.</p>
-      <div className="modal-list compact">
+      <div className="modal-header-inline">
+        <div className="dialog-icon"><CheckCircle2 size={22} /></div>
+        <div className="modal-header-copy">
+          <h2>Atividade recente</h2>
+          <p>Últimas ações da equipe sincronizadas em tempo real.</p>
+        </div>
+      </div>
+
+      <div className="modal-toolbar">
+        <button type="button" className="secondary" onClick={onClose}>Fechar</button>
+        {activities.length > 0 && (
+          <button type="button" className="secondary" onClick={() => setExpanded((value) => !value)}>
+            {expanded ? "Contrair" : "Ver mais"}
+          </button>
+        )}
+      </div>
+
+      <div className={`modal-list compact ${expanded ? "expanded" : "collapsed"}`}>
         {activities.length ? activities.map((item) => {
           const { actor, msg } = activityParts({
             ...item,
@@ -756,9 +774,6 @@ export function ActivityModal({
             </div>
           );
         }) : <p className="empty">Nenhuma atividade recente.</p>}
-      </div>
-      <div className="actions">
-        <button type="button" className="secondary" onClick={onClose}>Fechar</button>
       </div>
     </Modal>
   );
