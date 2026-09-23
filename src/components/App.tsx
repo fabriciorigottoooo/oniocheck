@@ -1,15 +1,23 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Download, MoonStar, Plus, SunMedium, Upload } from "lucide-react";
+import {
+  CalendarDays,
+  Clock3,
+  MoonStar,
+  NotebookPen,
+  Plus,
+  SunMedium,
+} from "lucide-react";
 import { api } from "@/lib/api";
 import {
   activityParts,
   isOnline,
   norm,
+  relTime,
   stepTotal,
 } from "@/lib/format";
-import type { Activity, AppState, ClientT } from "@/lib/types";
+import type { Activity, AgendaEvent, AgendaType, AppState, ClientT, Collab } from "@/lib/types";
 import Sidebar from "./Sidebar";
 import ClientList from "./ClientList";
 import ClientDetail from "./ClientDetail";
@@ -41,6 +49,8 @@ export default function App() {
     clients: [],
     collaborators: [],
     activities: [],
+    agendaTypes: [],
+    agendaEvents: [],
     serverTime: new Date().toISOString(),
   });
   const [me, setMe] = useState<Me | null>(null);
@@ -60,6 +70,18 @@ export default function App() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [teamOpen, setTeamOpen] = useState(true);
   const [activityOpen, setActivityOpen] = useState(true);
+  const [agendaOpen, setAgendaOpen] = useState(false);
+  const [selectedCollaboratorId, setSelectedCollaboratorId] = useState<string | null>(null);
+  const [agendaTypeName, setAgendaTypeName] = useState("");
+  const [agendaTypeColor, setAgendaTypeColor] = useState("#2d6fe8");
+  const [agendaForm, setAgendaForm] = useState({
+    title: "",
+    typeId: "",
+    date: new Date().toISOString().slice(0, 10),
+    startTime: "09:00",
+    endTime: "10:00",
+    notes: "",
+  });
   const [saving, setSaving] = useState(false);
   const [now, setNow] = useState(() => Date.now());
 
@@ -233,6 +255,8 @@ export default function App() {
   const clients = data?.clients;
   const collaborators = data?.collaborators ?? [];
   const activities = data?.activities ?? [];
+  const agendaTypes = data?.agendaTypes ?? [];
+  const agendaEvents = data?.agendaEvents ?? [];
   const meAvatarUrl = collaborators.find((c) => c.id === me?.id)?.avatarUrl ?? null;
 
   const activeClients = useMemo(
@@ -262,13 +286,93 @@ export default function App() {
     null;
   const onlineCollabs = collaborators.filter((c) => isOnline(c, now));
   const stepsDone = activeClients.reduce((n, c) => n + stepTotal(c), 0);
+  const selectedCollaborator =
+    collaborators.find((c) => c.id === selectedCollaboratorId) ?? null;
+  const agendaTypeMap = useMemo(
+    () => new Map(agendaTypes.map((t) => [t.id, t])),
+    [agendaTypes],
+  );
+  const upcomingEvents = useMemo(
+    () =>
+      [...agendaEvents].sort((a, b) => {
+        const left = `${a.date}T${a.startTime}`;
+        const right = `${b.date}T${b.startTime}`;
+        return left.localeCompare(right);
+      }),
+    [agendaEvents],
+  );
 
   /* ---------- actions ---------- */
 
   const changeView = (v: "active" | "done") => {
     setView(v);
+    setAgendaOpen(false);
     setSearch("");
     setSelectedId(null);
+    setSelectedCollaboratorId(null);
+  };
+
+  const openAgenda = () => {
+    setAgendaOpen(true);
+    setSelectedCollaboratorId(null);
+    setSearch("");
+  };
+
+  const createAgendaType = async () => {
+    const name = agendaTypeName.trim();
+    if (!name || !me) return;
+    setSaving(true);
+    try {
+      await api.createAgendaType({
+        name,
+        color: agendaTypeColor,
+        actor: { id: me.id, name: me.name },
+      });
+      setAgendaTypeName("");
+      setAgendaTypeColor("#2d6fe8");
+      await fetchState();
+      pushToast("Tipo de evento adicionado.");
+    } catch (e) {
+      pushToast(errMsg(e, "Não foi possível criar o tipo de evento."));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const createAgendaEvent = async () => {
+    if (!me) return;
+    const cleaned = agendaForm.title.trim();
+    const typeId = agendaForm.typeId || agendaTypes[0]?.id;
+    if (!cleaned || !typeId || !agendaForm.date || !agendaForm.startTime || !agendaForm.endTime) {
+      pushToast("Preencha título, tipo, dia e horário.");
+      return;
+    }
+    setSaving(true);
+    try {
+      await api.createAgendaEvent({
+        title: cleaned,
+        typeId,
+        date: agendaForm.date,
+        startTime: agendaForm.startTime,
+        endTime: agendaForm.endTime,
+        notes: agendaForm.notes.trim() || null,
+        actor: { id: me.id, name: me.name },
+      });
+      setAgendaForm({
+        title: "",
+        typeId: agendaTypes[0]?.id ?? "",
+        date: new Date().toISOString().slice(0, 10),
+        startTime: "09:00",
+        endTime: "10:00",
+        notes: "",
+      });
+      await fetchState();
+      pushToast("Evento agendado com sucesso.");
+    } catch (e) {
+      pushToast(errMsg(e, "Não foi possível agendar o evento."));
+    } finally {
+      setSaving(false);
+    }
   };
 
   const updateProfile = async ({ password, avatarUrl }: { password?: string; avatarUrl?: string | null }) => {
@@ -665,6 +769,70 @@ export default function App() {
 
   const booting = !me && !needSetup;
 
+  const agendaTitle = agendaOpen ? "Agenda" : view === "active" ? "Em andamento" : "Finalizados";
+
+  const renderRightPanel = () => {
+    if (selectedCollaborator) {
+      const status = isOnline(selectedCollaborator, now) ? "online" : "offline";
+      return (
+        <div className="panel">
+          <div className="detail-head">
+            <span className={`badge ${status === "online" ? "done" : ""}`}>
+              {status === "online" ? "Online agora" : "Offline"}
+            </span>
+            <div className="collab-header">
+              <Avatar
+                name={selectedCollaborator.name}
+                color={selectedCollaborator.color}
+                size={54}
+                imageUrl={selectedCollaborator.avatarUrl ?? null}
+              />
+              <div>
+                <h2>{selectedCollaborator.name}</h2>
+                <p className="muted">Colaborador da equipe</p>
+              </div>
+            </div>
+            <div className="client-identity">
+              <span>Última atividade: {relTime(selectedCollaborator.lastSeenAt, now)}</span>
+              <span>Status: {status === "online" ? "Disponível" : "Não está online no momento"}</span>
+            </div>
+          </div>
+          <div className="tasks">
+            <div className="detail-mini-card">
+              <div className="detail-mini-icon">
+                <CalendarDays size={18} />
+              </div>
+              <div>
+                <strong>Participa do ciclo</strong>
+                <p>Acompanhar movimentações do time e manter o processo em andamento.</p>
+              </div>
+            </div>
+            <div className="detail-mini-card">
+              <div className="detail-mini-icon">
+                <Clock3 size={18} />
+              </div>
+              <div>
+                <strong>Última presença</strong>
+                <p>{new Date(selectedCollaborator.lastSeenAt).toLocaleString("pt-BR")}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <ClientDetail
+        client={selected}
+        onToggle={(i, v) => selected && toggleStep(selected, i, v)}
+        onRename={() => selected && setClientDialog({ mode: "rename", client: selected })}
+        onFinish={() => selected && setFinishFor(selected)}
+        onReopen={() => selected && reopenClient(selected)}
+        onDelete={() => selected && deleteFinishedClient(selected)}
+      />
+    );
+  };
+
   if (booting) {
     return (
       <div className="loading-screen">
@@ -683,6 +851,8 @@ export default function App() {
         view={view}
         counts={{ active: activeClients.length, done: doneClients.length }}
         onView={changeView}
+        onOpenAgenda={openAgenda}
+        agendaActive={agendaOpen}
         collaborators={collaborators}
         activities={activities}
         meId={me?.id ?? null}
@@ -698,17 +868,20 @@ export default function App() {
         onEditIdentity={() => setNeedSetup(true)}
         onOpenAdmin={() => setAdminOpen(true)}
         onOpenProfile={() => setProfileOpen(true)}
+        onSelectCollaborator={setSelectedCollaboratorId}
       />
 
       <main className="main">
         <header className="topbar">
           <div>
             <div className="eyebrow">GESTÃO DE CHECKLISTS · COLABORATIVO</div>
-            <h1>{view === "active" ? "Em andamento" : "Finalizados"}</h1>
+            <h1>{agendaTitle}</h1>
             <p className="muted">
-              {view === "active"
-                ? "Cada etapa marcada é um passo a menos."
-                : "Histórico de clientes com todas as etapas concluídas."}
+              {agendaOpen
+                ? "Planeje reuniões e eventos, com tipos personalizáveis e visualização por toda a equipe."
+                : view === "active"
+                  ? "Cada etapa marcada é um passo a menos."
+                  : "Histórico de clientes com todas as etapas concluídas."}
             </p>
           </div>
           <div className="top-actions">
@@ -773,53 +946,170 @@ export default function App() {
           </div>
         </section>
 
-        <div className="workspace">
-          <ClientList
-            title="Seus clientes"
-            search={search}
-            onSearch={setSearch}
-            clients={visible}
-            selectedId={selectedId}
-            onSelect={setSelectedId}
-            emptyText={emptyText}
-          />
-          <ClientDetail
-            client={selected}
-            onToggle={(i, v) => selected && toggleStep(selected, i, v)}
-            onRename={() => selected && setClientDialog({ mode: "rename", client: selected })}
-            onFinish={() => selected && setFinishFor(selected)}
-            onReopen={() => selected && reopenClient(selected)}
-            onDelete={() => selected && deleteFinishedClient(selected)}
-          />
-        </div>
+        {agendaOpen ? (
+          <section className="agenda-layout">
+            <div className="panel agenda-panel">
+              <div className="list-head">
+                <h2>Tipos de evento</h2>
+              </div>
+              <div className="agenda-controls">
+                <input
+                  type="text"
+                  value={agendaTypeName}
+                  onChange={(e) => setAgendaTypeName(e.target.value)}
+                  placeholder="Ex.: Reunião de BM"
+                  maxLength={40}
+                />
+                <input
+                  type="color"
+                  value={agendaTypeColor}
+                  onChange={(e) => setAgendaTypeColor(e.target.value)}
+                  aria-label="Cor do tipo de evento"
+                />
+                <button className="primary" onClick={createAgendaType} disabled={saving || !agendaTypeName.trim()}>
+                  <Plus size={14} /> Adicionar
+                </button>
+              </div>
+              <div className="agenda-tag-list">
+                {agendaTypes.length ? (
+                  agendaTypes.map((type) => (
+                    <button
+                      key={type.id}
+                      className="agenda-tag"
+                      type="button"
+                      onClick={() => setAgendaForm((prev) => ({ ...prev, typeId: type.id }))}
+                      style={{ background: `${type.color}15`, color: type.color, borderColor: `${type.color}50` }}
+                    >
+                      {type.name}
+                    </button>
+                  ))
+                ) : (
+                  <p className="muted small-copy">Cadastre o primeiro tipo para começar.</p>
+                )}
+              </div>
+            </div>
 
-        <div className="footer">
-          Dados iniciais transcritos da imagem. O nome de MultiDrogas aparece
-          cortado na origem; use “Editar nome” para ajustá-lo. As cores da
-          planilha não foram interpretadas como status.
-          <br />
-          Agora tudo é salvo no servidor e compartilhado com a equipe em tempo
-          real — o que você marca aparece para todos, e o que todos marcam
-          aparece para você.
-          <br />
-          <button className="secondary" onClick={exportBackup}>
-            <Download size={12} /> Baixar backup JSON
-          </button>
-          <button className="secondary" onClick={() => fileRef.current?.click()}>
-            <Upload size={12} /> Restaurar backup
-          </button>
-          <input
-            ref={fileRef}
-            type="file"
-            accept="application/json,.json"
-            hidden
-            onChange={(e) => {
-              const file = e.target.files?.[0];
-              if (file) void importBackup(file);
-              e.target.value = "";
-            }}
-          />
-        </div>
+            <div className="panel agenda-panel">
+              <div className="list-head">
+                <h2>Novo evento</h2>
+              </div>
+              <div className="agenda-form">
+                <label>
+                  <span>Título</span>
+                  <input
+                    type="text"
+                    value={agendaForm.title}
+                    onChange={(e) => setAgendaForm((prev) => ({ ...prev, title: e.target.value }))}
+                    placeholder="Ex.: Revisão de integração"
+                  />
+                </label>
+                <label>
+                  <span>Tipo</span>
+                  <select
+                    value={agendaForm.typeId}
+                    onChange={(e) => setAgendaForm((prev) => ({ ...prev, typeId: e.target.value }))}
+                  >
+                    {agendaTypes.length ? (
+                      agendaTypes.map((type) => (
+                        <option key={type.id} value={type.id}>{type.name}</option>
+                      ))
+                    ) : (
+                      <option value="">Cadastre um tipo primeiro</option>
+                    )}
+                  </select>
+                </label>
+                <div className="agenda-grid">
+                  <label>
+                    <span>Dia</span>
+                    <input
+                      type="date"
+                      value={agendaForm.date}
+                      onChange={(e) => setAgendaForm((prev) => ({ ...prev, date: e.target.value }))}
+                    />
+                  </label>
+                  <label>
+                    <span>Início</span>
+                    <input
+                      type="time"
+                      value={agendaForm.startTime}
+                      onChange={(e) => setAgendaForm((prev) => ({ ...prev, startTime: e.target.value }))}
+                    />
+                  </label>
+                  <label>
+                    <span>Fim</span>
+                    <input
+                      type="time"
+                      value={agendaForm.endTime}
+                      onChange={(e) => setAgendaForm((prev) => ({ ...prev, endTime: e.target.value }))}
+                    />
+                  </label>
+                </div>
+                <label>
+                  <span>Observações</span>
+                  <textarea
+                    value={agendaForm.notes}
+                    onChange={(e) => setAgendaForm((prev) => ({ ...prev, notes: e.target.value }))}
+                    rows={4}
+                    placeholder="Agenda, pauta, detalhes específicos..."
+                  />
+                </label>
+                <div className="actions agenda-actions">
+                  <button className="primary" onClick={createAgendaEvent} disabled={saving || !agendaTypes.length}>
+                    <NotebookPen size={14} /> Salvar evento
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div className="panel agenda-panel event-list-panel">
+              <div className="list-head">
+                <h2>Próximos eventos</h2>
+              </div>
+              <div className="agenda-events">
+                {upcomingEvents.length ? (
+                  upcomingEvents.map((event) => {
+                    const type = agendaTypeMap.get(event.typeId) ?? {
+                      id: event.typeId,
+                      name: event.typeName,
+                      color: event.typeColor,
+                    };
+                    return (
+                      <div key={event.id} className="agenda-event-card">
+                        <div className="agenda-event-header">
+                          <span className="agenda-event-type" style={{ background: `${type.color}18`, color: type.color }}>
+                            {type.name}
+                          </span>
+                          <strong>{event.title}</strong>
+                        </div>
+                        <div className="agenda-event-meta">
+                          <span>{new Date(`${event.date}T00:00:00`).toLocaleDateString("pt-BR", { weekday: "short", day: "2-digit", month: "short" })}</span>
+                          <span>{event.startTime} - {event.endTime}</span>
+                        </div>
+                        {event.notes && <p>{event.notes}</p>}
+                        <small>Organizador: {event.organizerName}</small>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <p className="empty">Nenhum evento programado ainda.</p>
+                )}
+              </div>
+            </div>
+          </section>
+        ) : (
+          <div className="workspace">
+            <ClientList
+              title="Seus clientes"
+              search={search}
+              onSearch={setSearch}
+              clients={visible}
+              selectedId={selectedId}
+              onSelect={setSelectedId}
+              emptyText={emptyText}
+            />
+            {renderRightPanel()}
+          </div>
+        )}
       </main>
 
       {needSetup && (
@@ -865,6 +1155,20 @@ export default function App() {
           busy={saving}
           onCancel={() => setClientDialog(null)}
           onSubmit={clientDialog.mode === "new" ? createClient : renameClient}
+        />
+      )}
+
+      {!agendaOpen && !selectedCollaborator && (
+        <input
+          ref={fileRef}
+          type="file"
+          accept="application/json,.json"
+          hidden
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file) void importBackup(file);
+            e.target.value = "";
+          }}
         />
       )}
 

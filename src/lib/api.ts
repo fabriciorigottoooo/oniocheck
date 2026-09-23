@@ -94,8 +94,44 @@ export const api = {
       method: "DELETE",
     }),
 
+  createAgendaType: (body: { name: string; color: string; actor?: ActorInput }) =>
+    req<{ ok: boolean; agendaType: { id: string; name: string; color: string; createdAt: string } }>(
+      "/api/agenda/types",
+      {
+        method: "POST",
+        body: JSON.stringify(body),
+      },
+    ),
+
+  createAgendaEvent: (body: {
+    title: string;
+    typeId: string;
+    date: string;
+    startTime: string;
+    endTime: string;
+    notes?: string | null;
+    actor: ActorInput;
+  }) =>
+    req<{ ok: boolean; event: {
+      id: string;
+      title: string;
+      typeId: string;
+      typeName: string;
+      typeColor: string;
+      date: string;
+      startTime: string;
+      endTime: string;
+      notes: string | null;
+      organizerId: string;
+      organizerName: string;
+      createdAt: string;
+    } }>("/api/agenda/events", {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
+
   importClients: (body: { payload: unknown; actor: ActorInput }) =>
-    req<{ ok: boolean; count: number }>("/api/import", {
+    req<{ ok: boolean; count: number }> ("/api/import", {
       method: "POST",
       body: JSON.stringify(body),
     }),

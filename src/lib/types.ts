@@ -47,10 +47,34 @@ export type Activity = {
   createdAt: string;
 };
 
+export type AgendaType = {
+  id: string;
+  name: string;
+  color: string;
+  createdAt: string;
+};
+
+export type AgendaEvent = {
+  id: string;
+  title: string;
+  typeId: string;
+  typeName: string;
+  typeColor: string;
+  date: string;
+  startTime: string;
+  endTime: string;
+  notes: string | null;
+  organizerId: string;
+  organizerName: string;
+  createdAt: string;
+};
+
 export type AppState = {
   clients: ClientT[];
   collaborators: Collab[];
   activities: Activity[];
+  agendaTypes: AgendaType[];
+  agendaEvents: AgendaEvent[];
   serverTime: string;
 };
 

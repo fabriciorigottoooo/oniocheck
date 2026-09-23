@@ -1,9 +1,11 @@
-import type { activities, clients, collaborators } from "@/db/schema";
-import type { Activity, ActivityAction, ClientT, Collab } from "./types";
+import type { activities, agendaEventTypes, agendaEvents, clients, collaborators } from "@/db/schema";
+import type { Activity, ActivityAction, AgendaEvent, AgendaType, ClientT, Collab } from "./types";
 
 type ClientRow = typeof clients.$inferSelect;
 type CollabRow = typeof collaborators.$inferSelect;
 type ActivityRow = typeof activities.$inferSelect;
+type AgendaTypeRow = typeof agendaEventTypes.$inferSelect;
+type AgendaEventRow = typeof agendaEvents.$inferSelect;
 
 export function toClient(r: ClientRow): ClientT {
   return {
@@ -40,6 +42,32 @@ export function toActivity(r: ActivityRow): Activity {
     clientName: r.clientName,
     action: r.action as ActivityAction,
     detail: r.detail,
+    createdAt: r.createdAt.toISOString(),
+  };
+}
+
+export function toAgendaType(r: AgendaTypeRow): AgendaType {
+  return {
+    id: r.id,
+    name: r.name,
+    color: r.color,
+    createdAt: r.createdAt.toISOString(),
+  };
+}
+
+export function toAgendaEvent(r: AgendaEventRow): AgendaEvent {
+  return {
+    id: r.id,
+    title: r.title,
+    typeId: r.eventTypeId,
+    typeName: r.eventTypeId,
+    typeColor: "#2d6fe8",
+    date: r.date,
+    startTime: r.startTime,
+    endTime: r.endTime,
+    notes: r.notes,
+    organizerId: r.organizerId,
+    organizerName: r.organizerName,
     createdAt: r.createdAt.toISOString(),
   };
 }

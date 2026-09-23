@@ -44,6 +44,30 @@ export const clients = pgTable("clients", {
     .defaultNow(),
 });
 
+export const agendaEventTypes = pgTable("agenda_event_types", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  color: text("color").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+export const agendaEvents = pgTable("agenda_events", {
+  id: text("id").primaryKey(),
+  title: text("title").notNull(),
+  eventTypeId: text("event_type_id").notNull(),
+  date: text("date").notNull(),
+  startTime: text("start_time").notNull(),
+  endTime: text("end_time").notNull(),
+  notes: text("notes"),
+  organizerId: text("organizer_id").notNull(),
+  organizerName: text("organizer_name").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
 export const activities = pgTable("activities", {
   id: text("id")
     .primaryKey()

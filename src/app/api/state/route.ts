@@ -1,8 +1,8 @@
 import { randomUUID } from "crypto";
 import { asc, count, desc } from "drizzle-orm";
 import { db, ensureDatabaseCompatibility } from "@/db";
-import { activities, clients, collaborators } from "@/db/schema";
-import { toActivity, toClient, toCollab } from "@/lib/mappers";
+import { activities, agendaEventTypes, agendaEvents, clients, collaborators } from "@/db/schema";
+import { toActivity, toAgendaType, toClient, toCollab } from "@/lib/mappers";
 import { SEED, checksFromBits } from "@/lib/steps";
 import type { AppState } from "@/lib/types";
 
@@ -35,7 +35,7 @@ export async function GET() {
   try {
     await ensureDatabaseCompatibility();
     await ensureSeed();
-    const [clientRows, collabRows, activityRows] = await Promise.all([
+    const [clientRows, collabRows, activityRows, typeRows, eventRows] = await Promise.all([
       db.select().from(clients).orderBy(asc(clients.createdAt)),
       db.select().from(collaborators).orderBy(asc(collaborators.createdAt)),
       db
@@ -43,11 +43,37 @@ export async function GET() {
         .from(activities)
         .orderBy(desc(activities.createdAt))
         .limit(30),
+      db.select().from(agendaEventTypes).orderBy(asc(agendaEventTypes.name)),
+      db.select().from(agendaEvents).orderBy(asc(agendaEvents.date), asc(agendaEvents.startTime)),
     ]);
+    const typeMap = new Map(typeRows.map((typeRow) => [typeRow.id, typeRow]));
+    const agendaEventsPayload = eventRows.map((eventRow) => {
+      const type = typeMap.get(eventRow.eventTypeId) ?? {
+        id: eventRow.eventTypeId,
+        name: "Evento",
+        color: "#2d6fe8",
+      };
+      return {
+        id: eventRow.id,
+        title: eventRow.title,
+        typeId: eventRow.eventTypeId,
+        typeName: type.name,
+        typeColor: type.color,
+        date: eventRow.date,
+        startTime: eventRow.startTime,
+        endTime: eventRow.endTime,
+        notes: eventRow.notes,
+        organizerId: eventRow.organizerId,
+        organizerName: eventRow.organizerName,
+        createdAt: eventRow.createdAt.toISOString(),
+      };
+    });
     const payload: AppState = {
       clients: clientRows.map(toClient),
       collaborators: collabRows.map(toCollab),
       activities: activityRows.map(toActivity),
+      agendaTypes: typeRows.map(toAgendaType),
+      agendaEvents: agendaEventsPayload,
       serverTime: new Date().toISOString(),
     };
     return Response.json(payload);

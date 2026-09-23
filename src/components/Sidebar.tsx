@@ -14,6 +14,8 @@ type Props = {
   view: "active" | "done";
   counts: { active: number; done: number };
   onView: (v: "active" | "done") => void;
+  onOpenAgenda: () => void;
+  agendaActive: boolean;
   collaborators: Collab[];
   activities: Activity[];
   meId: string | null;
@@ -29,12 +31,15 @@ type Props = {
   onEditIdentity: () => void;
   onOpenAdmin: () => void;
   onOpenProfile: () => void;
+  onSelectCollaborator?: (id: string) => void;
 };
 
 export default function Sidebar({
   view,
   counts,
   onView,
+  onOpenAgenda,
+  agendaActive,
   collaborators,
   activities,
   meId,
@@ -50,6 +55,7 @@ export default function Sidebar({
   onEditIdentity,
   onOpenAdmin,
   onOpenProfile,
+  onSelectCollaborator,
 }: Props) {
   const onlineN = collaborators.filter((c) => isOnline(c, now)).length;
   const sorted = [...collaborators].sort((a, b) => {
@@ -115,6 +121,15 @@ export default function Sidebar({
         </button>
       </nav>
 
+      <button
+        className={`tab ${agendaActive ? "active" : ""}`}
+        aria-pressed={agendaActive}
+        onClick={onOpenAgenda}
+      >
+        <span>Agenda</span>
+        <span className="count">{collaborators.length}</span>
+      </button>
+
       <button className="secondary" onClick={onOpenAdmin}>
         Administrador
       </button>
@@ -153,19 +168,30 @@ export default function Sidebar({
                       </span>
                     </>
                   );
-                  return c.id === meId ? (
+                  if (c.id === meId) {
+                    return (
+                      <button
+                        key={c.id}
+                        className="team-row"
+                        onClick={onEditIdentity}
+                        title="Editar meu nome"
+                        type="button"
+                      >
+                        {inner}
+                      </button>
+                    );
+                  }
+
+                  return (
                     <button
                       key={c.id}
                       className="team-row"
-                      onClick={onEditIdentity}
-                      title="Editar meu nome"
+                      onClick={() => onSelectCollaborator?.(c.id)}
+                      type="button"
+                      title="Ver detalhes do colaborador"
                     >
                       {inner}
                     </button>
-                  ) : (
-                    <div key={c.id} className="team-row">
-                      {inner}
-                    </div>
                   );
                 })}
               </div>
