@@ -977,19 +977,6 @@ export function AdminDialog({
             </form>
           )}
 
-          <div className="admin-extra-actions">
-            <button
-              type="button"
-              className="secondary"
-              onClick={() => {
-                const message = encodeURIComponent("Fabrício, esqueci minha senha. Poderia resetá-la, por favor?");
-                window.open(`https://wa.me/5517988463129?text=${message}`, "_blank", "noopener,noreferrer");
-              }}
-              disabled={busy}
-            >
-              Resetar senha via WhatsApp
-            </button>
-          </div>
           <div className="actions">
             <button className="secondary" onClick={onClose} disabled={busy}>
               Fechar

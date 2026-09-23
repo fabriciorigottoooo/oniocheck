@@ -974,9 +974,10 @@ button.team-row:hover {
 }
 
 .avatar-photo {
-  overflow: visible;
+  overflow: hidden;
   padding: 0;
   border: 2px solid rgba(255, 255, 255, 0.35);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.18);
 }
 
 .avatar-photo img {
@@ -989,14 +990,15 @@ button.team-row:hover {
 
 .presence {
   position: absolute;
-  right: -2px;
-  bottom: -2px;
+  right: 0;
+  bottom: 0;
   width: 9px;
   height: 9px;
   border-radius: 50%;
   border: 2px solid var(--navy);
   background: #546a82;
-  z-index: 2;
+  z-index: 3;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.95);
 }
 
 .presence.off {
@@ -1455,6 +1457,20 @@ button.team-row:hover {
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+.agenda-finished-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 8px;
+  border-radius: 999px;
+  background: #eaf9f1;
+  color: #0b8a5c;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
 }
 
 .agenda-event-header strong {

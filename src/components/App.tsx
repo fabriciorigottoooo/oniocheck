@@ -1104,6 +1104,7 @@ export default function App() {
                   color={c.color}
                   size={24}
                   lightBorder
+                  imageUrl={c.avatarUrl ?? null}
                 />
               ))}
               {onlineCollabs.length > 6 && (
@@ -1252,6 +1253,9 @@ export default function App() {
                             {type.name}
                           </span>
                           <div className="agenda-event-actions">
+                            {event.finishedAt && (
+                              <span className="agenda-finished-pill">Finalizado</span>
+                            )}
                             <button type="button" className={`icon-btn ${event.finishedAt ? "done" : ""}`} onClick={() => void toggleAgendaEventStatus(event)} title={event.finishedAt ? "Reabrir evento" : "Marcar como finalizado"}>
                               <CheckCheck size={14} />
                             </button>
