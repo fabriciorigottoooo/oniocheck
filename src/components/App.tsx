@@ -23,7 +23,9 @@ import ClientList from "./ClientList";
 import ClientDetail from "./ClientDetail";
 import {
   AdminDialog,
+  AgendaTypeDialog,
   ClientDialog,
+  CollaboratorDetailDialog,
   FinishDialog,
   ProfileDialog,
   SetupDialog,
@@ -72,8 +74,11 @@ export default function App() {
   const [activityOpen, setActivityOpen] = useState(true);
   const [agendaOpen, setAgendaOpen] = useState(false);
   const [selectedCollaboratorId, setSelectedCollaboratorId] = useState<string | null>(null);
-  const [agendaTypeName, setAgendaTypeName] = useState("");
-  const [agendaTypeColor, setAgendaTypeColor] = useState("#2d6fe8");
+  const [agendaTypeDialog, setAgendaTypeDialog] = useState<
+    | null
+    | { mode: "create"; name: string; color: string }
+    | { mode: "edit"; type: AgendaType }
+  >(null);
   const [agendaForm, setAgendaForm] = useState({
     title: "",
     typeId: "",
@@ -324,23 +329,60 @@ export default function App() {
     setAgendaForm((prev) => ({ ...prev, typeId: agendaTypes[0].id }));
   }, [agendaOpen, agendaForm.typeId, agendaTypes]);
 
-  const createAgendaType = async () => {
-    const name = agendaTypeName.trim();
+  const createAgendaType = async (payload?: { name?: string; color?: string }) => {
+    const name = (payload?.name ?? (agendaTypeDialog?.mode === "create" ? agendaTypeDialog.name : ""))
+      .trim();
+    const color = payload?.color ?? (agendaTypeDialog?.mode === "create" ? agendaTypeDialog.color : "#2d6fe8");
     if (!name || !me) return;
     setSaving(true);
     try {
       const { agendaType } = await api.createAgendaType({
         name,
-        color: agendaTypeColor,
+        color,
         actor: { id: me.id, name: me.name },
       });
-      setAgendaTypeName("");
-      setAgendaTypeColor("#2d6fe8");
+      setAgendaTypeDialog(null);
       setAgendaForm((prev) => ({ ...prev, typeId: prev.typeId || agendaType.id }));
       await fetchState();
       pushToast("Tipo de evento adicionado.");
     } catch (e) {
       pushToast(errMsg(e, "Não foi possível criar o tipo de evento."));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const updateAgendaType = async (id: string, name: string, color: string) => {
+    if (!me) return;
+    setSaving(true);
+    try {
+      await api.updateAgendaType(id, {
+        name: name.trim(),
+        color,
+        actor: { id: me.id, name: me.name },
+      });
+      setAgendaTypeDialog(null);
+      await fetchState();
+      pushToast("Tipo de evento atualizado.");
+    } catch (e) {
+      pushToast(errMsg(e, "Não foi possível atualizar o tipo de evento."));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const deleteAgendaType = async (type: AgendaType) => {
+    if (!me) return;
+    const confirmed = window.confirm(`Excluir o tipo “${type.name}”? Eventos existentes continuam visíveis, mas este tipo deixará de aparecer no selector.`);
+    if (!confirmed) return;
+    setSaving(true);
+    try {
+      await api.deleteAgendaType(type.id, { actor: { id: me.id, name: me.name } });
+      setAgendaForm((prev) => ({ ...prev, typeId: prev.typeId === type.id ? "" : prev.typeId }));
+      await fetchState();
+      pushToast("Tipo de evento removido.");
+    } catch (e) {
+      pushToast(errMsg(e, "Não foi possível excluir o tipo de evento."));
     } finally {
       setSaving(false);
     }
@@ -778,67 +820,16 @@ export default function App() {
 
   const agendaTitle = agendaOpen ? "Agenda" : view === "active" ? "Em andamento" : "Finalizados";
 
-  const renderRightPanel = () => {
-    if (selectedCollaborator) {
-      const status = isOnline(selectedCollaborator, now) ? "online" : "offline";
-      return (
-        <div className="panel">
-          <div className="detail-head">
-            <span className={`badge ${status === "online" ? "done" : ""}`}>
-              {status === "online" ? "Online agora" : "Offline"}
-            </span>
-            <div className="collab-header">
-              <Avatar
-                name={selectedCollaborator.name}
-                color={selectedCollaborator.color}
-                size={54}
-                imageUrl={selectedCollaborator.avatarUrl ?? null}
-              />
-              <div>
-                <h2>{selectedCollaborator.name}</h2>
-                <p className="muted">Colaborador da equipe</p>
-              </div>
-            </div>
-            <div className="client-identity">
-              <span>Última atividade: {relTime(selectedCollaborator.lastSeenAt, now)}</span>
-              <span>Status: {status === "online" ? "Disponível" : "Não está online no momento"}</span>
-            </div>
-          </div>
-          <div className="tasks">
-            <div className="detail-mini-card">
-              <div className="detail-mini-icon">
-                <CalendarDays size={18} />
-              </div>
-              <div>
-                <strong>Participa do ciclo</strong>
-                <p>Acompanhar movimentações do time e manter o processo em andamento.</p>
-              </div>
-            </div>
-            <div className="detail-mini-card">
-              <div className="detail-mini-icon">
-                <Clock3 size={18} />
-              </div>
-              <div>
-                <strong>Última presença</strong>
-                <p>{new Date(selectedCollaborator.lastSeenAt).toLocaleString("pt-BR")}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      );
-    }
-
-    return (
-      <ClientDetail
-        client={selected}
-        onToggle={(i, v) => selected && toggleStep(selected, i, v)}
-        onRename={() => selected && setClientDialog({ mode: "rename", client: selected })}
-        onFinish={() => selected && setFinishFor(selected)}
-        onReopen={() => selected && reopenClient(selected)}
-        onDelete={() => selected && deleteFinishedClient(selected)}
-      />
-    );
-  };
+  const renderRightPanel = () => (
+    <ClientDetail
+      client={selected}
+      onToggle={(i, v) => selected && toggleStep(selected, i, v)}
+      onRename={() => selected && setClientDialog({ mode: "rename", client: selected })}
+      onFinish={() => selected && setFinishFor(selected)}
+      onReopen={() => selected && reopenClient(selected)}
+      onDelete={() => selected && deleteFinishedClient(selected)}
+    />
+  );
 
   if (booting) {
     return (
@@ -960,35 +951,31 @@ export default function App() {
                 <h2>Tipos de evento</h2>
               </div>
               <div className="agenda-controls">
-                <input
-                  type="text"
-                  value={agendaTypeName}
-                  onChange={(e) => setAgendaTypeName(e.target.value)}
-                  placeholder="Ex.: Reunião de BM"
-                  maxLength={40}
-                />
-                <input
-                  type="color"
-                  value={agendaTypeColor}
-                  onChange={(e) => setAgendaTypeColor(e.target.value)}
-                  aria-label="Cor do tipo de evento"
-                />
-                <button className="primary" onClick={createAgendaType} disabled={saving || !agendaTypeName.trim()}>
+                <button
+                  className="primary"
+                  onClick={() => setAgendaTypeDialog({ mode: "create", name: "", color: "#2d6fe8" })}
+                  disabled={saving}
+                >
                   <Plus size={14} /> Adicionar
                 </button>
               </div>
               <div className="agenda-tag-list">
                 {agendaTypes.length ? (
                   agendaTypes.map((type) => (
-                    <button
-                      key={type.id}
-                      className="agenda-tag"
-                      type="button"
-                      onClick={() => setAgendaForm((prev) => ({ ...prev, typeId: type.id }))}
-                      style={{ background: `${type.color}15`, color: type.color, borderColor: `${type.color}50` }}
-                    >
-                      {type.name}
-                    </button>
+                    <div key={type.id} className="agenda-tag-wrap">
+                      <button
+                        className="agenda-tag"
+                        type="button"
+                        onClick={() => setAgendaForm((prev) => ({ ...prev, typeId: type.id }))}
+                        style={{ background: `${type.color}15`, color: type.color, borderColor: `${type.color}50` }}
+                      >
+                        {type.name}
+                      </button>
+                      <div className="agenda-tag-tools">
+                        <button type="button" className="mini-action" onClick={() => setAgendaTypeDialog({ mode: "edit", type })}>Editar</button>
+                        <button type="button" className="mini-action danger-mini" onClick={() => void deleteAgendaType(type)}>Excluir</button>
+                      </div>
+                    </div>
                   ))
                 ) : (
                   <p className="muted small-copy">Cadastre o primeiro tipo para começar.</p>
@@ -1162,6 +1149,31 @@ export default function App() {
           busy={saving}
           onCancel={() => setClientDialog(null)}
           onSubmit={clientDialog.mode === "new" ? createClient : renameClient}
+        />
+      )}
+
+      {selectedCollaborator && (
+        <CollaboratorDetailDialog
+          collaborator={selectedCollaborator}
+          now={now}
+          onClose={() => setSelectedCollaboratorId(null)}
+        />
+      )}
+
+      {agendaTypeDialog && (
+        <AgendaTypeDialog
+          mode={agendaTypeDialog.mode}
+          initialName={agendaTypeDialog.mode === "edit" ? agendaTypeDialog.type.name : agendaTypeDialog.name}
+          initialColor={agendaTypeDialog.mode === "edit" ? agendaTypeDialog.type.color : agendaTypeDialog.color}
+          busy={saving}
+          onCancel={() => setAgendaTypeDialog(null)}
+          onConfirm={(name, color) => {
+            if (agendaTypeDialog.mode === "create") {
+              void createAgendaType({ name, color });
+              return;
+            }
+            void updateAgendaType(agendaTypeDialog.type.id, name, color);
+          }}
         />
       )}
 

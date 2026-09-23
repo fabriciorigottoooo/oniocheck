@@ -103,6 +103,21 @@ export const api = {
       },
     ),
 
+  updateAgendaType: (id: string, body: { name: string; color: string; actor?: ActorInput }) =>
+    req<{ ok: boolean; agendaType: { id: string; name: string; color: string; createdAt: string } }>(
+      `/api/agenda/types/${encodeURIComponent(id)}`,
+      {
+        method: "PATCH",
+        body: JSON.stringify(body),
+      },
+    ),
+
+  deleteAgendaType: (id: string, body?: { actor?: ActorInput }) =>
+    req<{ ok: boolean; deletedId: string }>(`/api/agenda/types/${encodeURIComponent(id)}`, {
+      method: "DELETE",
+      body: body ? JSON.stringify(body) : undefined,
+    }),
+
   createAgendaEvent: (body: {
     title: string;
     typeId: string;

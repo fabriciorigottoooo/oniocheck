@@ -393,6 +393,153 @@ export function ProfileDialog({
   );
 }
 
+export function AgendaTypeDialog({
+  mode,
+  initialName = "",
+  initialColor = "#2d6fe8",
+  busy,
+  onCancel,
+  onConfirm,
+}: {
+  mode: "create" | "edit";
+  initialName?: string;
+  initialColor?: string;
+  busy: boolean;
+  onCancel: () => void;
+  onConfirm: (name: string, color: string) => void;
+}) {
+  const [name, setName] = useState(initialName);
+  const [color, setColor] = useState(initialColor);
+
+  useEffect(() => {
+    setName(initialName);
+    setColor(initialColor);
+  }, [initialName, initialColor]);
+
+  const submit = (e: FormEvent) => {
+    e.preventDefault();
+    const cleaned = name.trim();
+    if (!cleaned) return;
+    onConfirm(cleaned, color);
+  };
+
+  return (
+    <Modal label={mode === "create" ? "Criar tipo de evento" : "Editar tipo de evento"} onClose={onCancel}>
+      <div className="dialog-icon">
+        <Users size={22} />
+      </div>
+      <h2>{mode === "create" ? "Novo tipo de evento" : "Editar tipo de evento"}</h2>
+      <p>
+        {mode === "create"
+          ? "Antes de confirmar, a criação desse tipo fica bloqueada apenas para esse passo de validação."
+          : "Atualize o nome e a cor do tipo para manter a agenda organizada."}
+      </p>
+      <form onSubmit={submit}>
+        <label className="field-label" htmlFor="agenda-type-name">
+          Nome do tipo
+        </label>
+        <input
+          id="agenda-type-name"
+          type="text"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          maxLength={40}
+          autoFocus
+          placeholder="Ex.: Reunião de BM"
+        />
+
+        <label className="field-label" htmlFor="agenda-type-color">
+          Cor
+        </label>
+        <div className="agenda-color-row">
+          <input
+            id="agenda-type-color"
+            type="color"
+            value={color}
+            onChange={(e) => setColor(e.target.value)}
+            aria-label="Cor do tipo de evento"
+          />
+          <span>{color}</span>
+        </div>
+
+        <div className="actions">
+          <button type="button" className="secondary" onClick={onCancel} disabled={busy}>
+            Cancelar
+          </button>
+          <button className="primary" type="submit" disabled={busy || !name.trim()}>
+            {busy ? "Salvando…" : mode === "create" ? "Criar tipo" : "Salvar alterações"}
+          </button>
+        </div>
+      </form>
+    </Modal>
+  );
+}
+
+export function CollaboratorDetailDialog({
+  collaborator,
+  now,
+  onClose,
+}: {
+  collaborator: { id: string; name: string; color: string; avatarUrl?: string | null; lastSeenAt: string };
+  now: number;
+  onClose: () => void;
+}) {
+  const status = Date.now() - new Date(collaborator.lastSeenAt).getTime() < 45_000 ? "online" : "offline";
+
+  return (
+    <Modal label={`Detalhes de ${collaborator.name}`} onClose={onClose}>
+      <div className="dialog-icon">
+        <Users size={22} />
+      </div>
+      <h2>{collaborator.name}</h2>
+      <p>Detalhes do colaborador da equipe.</p>
+      <div className="collab-modal-card">
+        <div className="collab-modal-identity">
+          {collaborator.avatarUrl ? (
+            <img src={collaborator.avatarUrl} alt={collaborator.name} className="profile-upload-preview" />
+          ) : (
+            <div
+              className="avatar avatar-photo"
+              style={{ width: 52, height: 52, background: collaborator.color, fontSize: 18 }}
+            >
+              {collaborator.name.charAt(0).toUpperCase()}
+            </div>
+          )}
+          <div>
+            <strong>{collaborator.name}</strong>
+            <span className={`status-pill ${status === "online" ? "online" : "offline"}`}>
+              {status === "online" ? "Online agora" : "Offline"}
+            </span>
+          </div>
+        </div>
+        <div className="detail-mini-card">
+          <div className="detail-mini-icon">
+            <Users size={18} />
+          </div>
+          <div>
+            <strong>Última atividade</strong>
+            <p>{new Date(collaborator.lastSeenAt).toLocaleString("pt-BR")}</p>
+          </div>
+        </div>
+        <div className="detail-mini-card">
+          <div className="detail-mini-icon">
+            <CheckCircle2 size={18} />
+          </div>
+          <div>
+            <strong>Status</strong>
+            <p>{status === "online" ? "Disponível para colaborar no momento." : "Não está ativo neste momento."}</p>
+          </div>
+        </div>
+      </div>
+      <div className="actions">
+        <button type="button" className="secondary" onClick={onClose}>
+          Fechar
+        </button>
+      </div>
+    </Modal>
+  );
+}
+
 export function AdminDialog({
   collaborators,
   busy,
