@@ -1,6 +1,8 @@
 {
   "/_global-error/page": "/_global-error",
   "/_not-found/page": "/_not-found",
+  "/api/agenda/events/route": "/api/agenda/events",
+  "/api/agenda/types/route": "/api/agenda/types",
   "/api/auth/login/route": "/api/auth/login",
   "/api/auth/profile/route": "/api/auth/profile",
   "/api/clients/[id]/route": "/api/clients/[id]",

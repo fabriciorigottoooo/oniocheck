@@ -1,6 +1,8 @@
 {
   "version": 1,
   "functions": {
+    "/api/agenda/events": {},
+    "/api/agenda/types": {},
     "/api/auth/login": {},
     "/api/auth/profile": {},
     "/api/clients": {},

@@ -59,6 +59,18 @@
       "namedRegex": "^/_not\\-found(?:/)?$"
     },
     {
+      "page": "/api/agenda/events",
+      "regex": "^/api/agenda/events(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/agenda/events(?:/)?$"
+    },
+    {
+      "page": "/api/agenda/types",
+      "regex": "^/api/agenda/types(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/agenda/types(?:/)?$"
+    },
+    {
       "page": "/api/auth/login",
       "regex": "^/api/auth/login(?:/)?$",
       "routeKeys": {},

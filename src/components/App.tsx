@@ -315,21 +315,28 @@ export default function App() {
   const openAgenda = () => {
     setAgendaOpen(true);
     setSelectedCollaboratorId(null);
+    setSelectedId(null);
     setSearch("");
   };
+
+  useEffect(() => {
+    if (!agendaOpen || !agendaTypes.length || agendaForm.typeId) return;
+    setAgendaForm((prev) => ({ ...prev, typeId: agendaTypes[0].id }));
+  }, [agendaOpen, agendaForm.typeId, agendaTypes]);
 
   const createAgendaType = async () => {
     const name = agendaTypeName.trim();
     if (!name || !me) return;
     setSaving(true);
     try {
-      await api.createAgendaType({
+      const { agendaType } = await api.createAgendaType({
         name,
         color: agendaTypeColor,
         actor: { id: me.id, name: me.name },
       });
       setAgendaTypeName("");
       setAgendaTypeColor("#2d6fe8");
+      setAgendaForm((prev) => ({ ...prev, typeId: prev.typeId || agendaType.id }));
       await fetchState();
       pushToast("Tipo de evento adicionado.");
     } catch (e) {
