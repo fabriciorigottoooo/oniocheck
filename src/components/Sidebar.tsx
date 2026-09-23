@@ -36,6 +36,7 @@ type Props = {
   onEditIdentity: () => void;
   onOpenAdmin: () => void;
   onOpenProfile: () => void;
+  onLogout: () => void;
   onSelectCollaborator?: (id: string) => void;
 };
 
@@ -61,6 +62,7 @@ export default function Sidebar({
   onEditIdentity,
   onOpenAdmin,
   onOpenProfile,
+  onLogout,
   onSelectCollaborator,
 }: Props) {
   const onlineN = collaborators.filter((c) => isOnline(c, now)).length;
@@ -106,6 +108,18 @@ export default function Sidebar({
           <strong>{meName ?? "Você"}</strong>
           <span>Configurar perfil</span>
         </div>
+      </div>
+
+      <div className="sidebar-logout-wrap">
+        <button
+          type="button"
+          className={`secondary logoff-btn${collapsed ? " icon-only" : ""}`}
+          onClick={onLogout}
+          title="Sair"
+          aria-label="Sair da conta"
+        >
+          {!collapsed && "Sair"}
+        </button>
       </div>
 
       <nav className="tabs" aria-label="Telas">

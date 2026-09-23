@@ -968,6 +968,20 @@ export default function App() {
     pushToast("Senha redefinida com sucesso.");
   };
 
+  const logout = useCallback(() => {
+    localStorage.removeItem(ME_KEY);
+    setMe(null);
+    setNeedSetup(true);
+    setProfileOpen(false);
+    setAdminOpen(false);
+    setTeamOpen(false);
+    setActivityOpen(false);
+    setSelectedCollaboratorId(null);
+    setSelectedId(null);
+    setSearch("");
+    pushToast("Você saiu da conta.");
+  }, [pushToast]);
+
   const deleteCollaborator = async (id: string) => {
     const meNow = meRef.current;
     if (!meNow) return;
@@ -1052,6 +1066,7 @@ export default function App() {
         onEditIdentity={() => setNeedSetup(true)}
         onOpenAdmin={() => setAdminOpen(true)}
         onOpenProfile={() => setProfileOpen(true)}
+        onLogout={logout}
         onSelectCollaborator={setSelectedCollaboratorId}
       />
 
