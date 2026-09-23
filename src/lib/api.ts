@@ -145,8 +145,41 @@ export const api = {
       body: JSON.stringify(body),
     }),
 
+  updateAgendaEvent: (id: string, body: {
+    title: string;
+    typeId: string;
+    date: string;
+    startTime: string;
+    endTime: string;
+    notes?: string | null;
+    actor: ActorInput;
+  }) =>
+    req<{ ok: boolean; event: {
+      id: string;
+      title: string;
+      typeId: string;
+      typeName: string;
+      typeColor: string;
+      date: string;
+      startTime: string;
+      endTime: string;
+      notes: string | null;
+      organizerId: string;
+      organizerName: string;
+      createdAt: string;
+    } }>(`/api/agenda/events/${encodeURIComponent(id)}`, {
+      method: "PATCH",
+      body: JSON.stringify(body),
+    }),
+
+  deleteAgendaEvent: (id: string, body?: { actor?: ActorInput }) =>
+    req<{ ok: boolean; deletedId: string }>(`/api/agenda/events/${encodeURIComponent(id)}`, {
+      method: "DELETE",
+      body: body ? JSON.stringify(body) : undefined,
+    }),
+
   importClients: (body: { payload: unknown; actor: ActorInput }) =>
-    req<{ ok: boolean; count: number }> ("/api/import", {
+    req<{ ok: boolean; count: number }>("/api/import", {
       method: "POST",
       body: JSON.stringify(body),
     }),

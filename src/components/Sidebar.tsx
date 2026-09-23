@@ -1,7 +1,10 @@
 import {
   Activity as ActivityIcon,
+  CalendarDays,
+  CheckCheck,
   ChevronDown,
   ChevronRight,
+  CircleDashed,
   PanelLeftClose,
   PanelLeftOpen,
   Users,
@@ -108,6 +111,7 @@ export default function Sidebar({
           aria-pressed={view === "active"}
           onClick={() => onView("active")}
         >
+          <span className="tab-icon"><CircleDashed size={14} /></span>
           <span>Em andamento</span>
           <span className="count">{counts.active}</span>
         </button>
@@ -116,6 +120,7 @@ export default function Sidebar({
           aria-pressed={view === "done"}
           onClick={() => onView("done")}
         >
+          <span className="tab-icon"><CheckCheck size={14} /></span>
           <span>Finalizados</span>
           <span className="count">{counts.done}</span>
         </button>
@@ -126,6 +131,7 @@ export default function Sidebar({
         aria-pressed={agendaActive}
         onClick={onOpenAgenda}
       >
+        <span className="tab-icon"><CalendarDays size={14} /></span>
         <span>Agenda</span>
         <span className="count">{collaborators.length}</span>
       </button>

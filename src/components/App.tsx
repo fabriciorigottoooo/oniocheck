@@ -6,8 +6,10 @@ import {
   Clock3,
   MoonStar,
   NotebookPen,
+  PencilLine,
   Plus,
   SunMedium,
+  Trash2,
 } from "lucide-react";
 import { api } from "@/lib/api";
 import {
@@ -23,6 +25,7 @@ import ClientList from "./ClientList";
 import ClientDetail from "./ClientDetail";
 import {
   AdminDialog,
+  AgendaEventDialog,
   AgendaTypeDialog,
   ClientDialog,
   CollaboratorDetailDialog,
@@ -78,6 +81,10 @@ export default function App() {
     | null
     | { mode: "create"; name: string; color: string }
     | { mode: "edit"; type: AgendaType }
+  >(null);
+  const [agendaEventDialog, setAgendaEventDialog] = useState<
+    | null
+    | { mode: "edit"; event: AgendaEvent }
   >(null);
   const [agendaForm, setAgendaForm] = useState({
     title: "",
@@ -383,6 +390,53 @@ export default function App() {
       pushToast("Tipo de evento removido.");
     } catch (e) {
       pushToast(errMsg(e, "Não foi possível excluir o tipo de evento."));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const updateAgendaEvent = async (eventId: string, payload: {
+    title: string;
+    typeId: string;
+    date: string;
+    startTime: string;
+    endTime: string;
+    notes?: string | null;
+  }) => {
+    if (!me) return;
+    setSaving(true);
+    try {
+      await api.updateAgendaEvent(eventId, {
+        title: payload.title.trim(),
+        typeId: payload.typeId,
+        date: payload.date,
+        startTime: payload.startTime,
+        endTime: payload.endTime,
+        notes: payload.notes?.trim() || null,
+        actor: { id: me.id, name: me.name },
+      });
+      setAgendaEventDialog(null);
+      await fetchState();
+      pushToast("Evento atualizado.");
+    } catch (e) {
+      pushToast(errMsg(e, "Não foi possível atualizar o evento."));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const deleteAgendaEvent = async (event: AgendaEvent) => {
+    if (!me) return;
+    const confirmed = window.confirm(`Excluir o evento “${event.title}”?`);
+    if (!confirmed) return;
+    setSaving(true);
+    try {
+      await api.deleteAgendaEvent(event.id, { actor: { id: me.id, name: me.name } });
+      setAgendaEventDialog(null);
+      await fetchState();
+      pushToast("Evento removido.");
+    } catch (e) {
+      pushToast(errMsg(e, "Não foi possível excluir o evento."));
     } finally {
       setSaving(false);
     }
@@ -966,15 +1020,11 @@ export default function App() {
                       <button
                         className="agenda-tag"
                         type="button"
-                        onClick={() => setAgendaForm((prev) => ({ ...prev, typeId: type.id }))}
+                        onClick={() => setAgendaTypeDialog({ mode: "edit", type })}
                         style={{ background: `${type.color}15`, color: type.color, borderColor: `${type.color}50` }}
                       >
                         {type.name}
                       </button>
-                      <div className="agenda-tag-tools">
-                        <button type="button" className="mini-action" onClick={() => setAgendaTypeDialog({ mode: "edit", type })}>Editar</button>
-                        <button type="button" className="mini-action danger-mini" onClick={() => void deleteAgendaType(type)}>Excluir</button>
-                      </div>
                     </div>
                   ))
                 ) : (
@@ -1073,8 +1123,16 @@ export default function App() {
                           <span className="agenda-event-type" style={{ background: `${type.color}18`, color: type.color }}>
                             {type.name}
                           </span>
-                          <strong>{event.title}</strong>
+                          <div className="agenda-event-actions">
+                            <button type="button" className="icon-btn" onClick={() => setAgendaEventDialog({ mode: "edit", event })} title="Editar evento">
+                              <PencilLine size={14} />
+                            </button>
+                            <button type="button" className="icon-btn danger-icon" onClick={() => void deleteAgendaEvent(event)} title="Excluir evento">
+                              <Trash2 size={14} />
+                            </button>
+                          </div>
                         </div>
+                        <strong>{event.title}</strong>
                         <div className="agenda-event-meta">
                           <span>{new Date(`${event.date}T00:00:00`).toLocaleDateString("pt-BR", { weekday: "short", day: "2-digit", month: "short" })}</span>
                           <span>{event.startTime} - {event.endTime}</span>
@@ -1167,6 +1225,7 @@ export default function App() {
           initialColor={agendaTypeDialog.mode === "edit" ? agendaTypeDialog.type.color : agendaTypeDialog.color}
           busy={saving}
           onCancel={() => setAgendaTypeDialog(null)}
+          onDelete={agendaTypeDialog.mode === "edit" ? () => { setAgendaTypeDialog(null); void deleteAgendaType(agendaTypeDialog.type); } : undefined}
           onConfirm={(name, color) => {
             if (agendaTypeDialog.mode === "create") {
               void createAgendaType({ name, color });
@@ -1174,6 +1233,22 @@ export default function App() {
             }
             void updateAgendaType(agendaTypeDialog.type.id, name, color);
           }}
+        />
+      )}
+
+      {agendaEventDialog && (
+        <AgendaEventDialog
+          typeOptions={agendaTypes}
+          initialTitle={agendaEventDialog.event.title}
+          initialTypeId={agendaEventDialog.event.typeId}
+          initialDate={agendaEventDialog.event.date}
+          initialStartTime={agendaEventDialog.event.startTime}
+          initialEndTime={agendaEventDialog.event.endTime}
+          initialNotes={agendaEventDialog.event.notes ?? ""}
+          busy={saving}
+          onCancel={() => setAgendaEventDialog(null)}
+          onDelete={() => void deleteAgendaEvent(agendaEventDialog.event)}
+          onSubmit={(payload: { title: string; typeId: string; date: string; startTime: string; endTime: string; notes?: string | null; }) => void updateAgendaEvent(agendaEventDialog.event.id, payload)}
         />
       )}
 

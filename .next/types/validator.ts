@@ -56,10 +56,28 @@ type RouteHandlerConfig<Route extends AppRouteHandlerRoutes = AppRouteHandlerRou
   type __Unused = __Check
 }
 
+// Validate ../../src/app/api/agenda/events/[id]/route.ts
+{
+  type __IsExpected<Specific extends RouteHandlerConfig<"/api/agenda/events/[id]">> = Specific
+  const handler = {} as typeof import("../../src/app/api/agenda/events/[id]/route.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
 // Validate ../../src/app/api/agenda/events/route.ts
 {
   type __IsExpected<Specific extends RouteHandlerConfig<"/api/agenda/events">> = Specific
   const handler = {} as typeof import("../../src/app/api/agenda/events/route.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
+// Validate ../../src/app/api/agenda/types/[id]/route.ts
+{
+  type __IsExpected<Specific extends RouteHandlerConfig<"/api/agenda/types/[id]">> = Specific
+  const handler = {} as typeof import("../../src/app/api/agenda/types/[id]/route.js")
   type __Check = __IsExpected<typeof handler>
   // @ts-ignore
   type __Unused = __Check

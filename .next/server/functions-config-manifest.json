@@ -2,7 +2,9 @@
   "version": 1,
   "functions": {
     "/api/agenda/events": {},
+    "/api/agenda/events/[id]": {},
     "/api/agenda/types": {},
+    "/api/agenda/types/[id]": {},
     "/api/auth/login": {},
     "/api/auth/profile": {},
     "/api/clients": {},

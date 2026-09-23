@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type ChangeEvent, type FormEvent, type ReactNode } from "react";
-import { CheckCircle2, PenLine, UserRoundPlus, Upload, Users } from "lucide-react";
+import { CheckCircle2, PenLine, Trash2, UserRoundPlus, Upload, Users } from "lucide-react";
 
 function Modal({
   label,
@@ -400,6 +400,7 @@ export function AgendaTypeDialog({
   busy,
   onCancel,
   onConfirm,
+  onDelete,
 }: {
   mode: "create" | "edit";
   initialName?: string;
@@ -407,6 +408,7 @@ export function AgendaTypeDialog({
   busy: boolean;
   onCancel: () => void;
   onConfirm: (name: string, color: string) => void;
+  onDelete?: () => void;
 }) {
   const [name, setName] = useState(initialName);
   const [color, setColor] = useState(initialColor);
@@ -466,8 +468,120 @@ export function AgendaTypeDialog({
           <button type="button" className="secondary" onClick={onCancel} disabled={busy}>
             Cancelar
           </button>
+          {mode === "edit" && onDelete && (
+            <button type="button" className="danger" onClick={onDelete} disabled={busy}>
+              <Trash2 size={14} /> Excluir
+            </button>
+          )}
           <button className="primary" type="submit" disabled={busy || !name.trim()}>
             {busy ? "Salvando…" : mode === "create" ? "Criar tipo" : "Salvar alterações"}
+          </button>
+        </div>
+      </form>
+    </Modal>
+  );
+}
+
+export function AgendaEventDialog({
+  typeOptions = [],
+  initialTitle = "",
+  initialTypeId = "",
+  initialDate = "",
+  initialStartTime = "09:00",
+  initialEndTime = "10:00",
+  initialNotes = "",
+  busy,
+  onCancel,
+  onDelete,
+  onSubmit,
+}: {
+  typeOptions?: Array<{ id: string; name: string; color: string }>;
+  initialTitle?: string;
+  initialTypeId?: string;
+  initialDate?: string;
+  initialStartTime?: string;
+  initialEndTime?: string;
+  initialNotes?: string;
+  busy: boolean;
+  onCancel: () => void;
+  onDelete?: () => void;
+  onSubmit: (payload: {
+    title: string;
+    typeId: string;
+    date: string;
+    startTime: string;
+    endTime: string;
+    notes?: string | null;
+  }) => void;
+}) {
+  const [title, setTitle] = useState(initialTitle);
+  const [typeId, setTypeId] = useState(initialTypeId);
+  const [date, setDate] = useState(initialDate);
+  const [startTime, setStartTime] = useState(initialStartTime);
+  const [endTime, setEndTime] = useState(initialEndTime);
+  const [notes, setNotes] = useState(initialNotes);
+
+  useEffect(() => {
+    setTitle(initialTitle);
+    setTypeId(initialTypeId);
+    setDate(initialDate);
+    setStartTime(initialStartTime);
+    setEndTime(initialEndTime);
+    setNotes(initialNotes);
+  }, [initialTitle, initialTypeId, initialDate, initialStartTime, initialEndTime, initialNotes]);
+
+  const submit = (e: FormEvent) => {
+    e.preventDefault();
+    if (!title.trim() || !typeId || !date || !startTime || !endTime) return;
+    onSubmit({ title, typeId, date, startTime, endTime, notes: notes.trim() || null });
+  };
+
+  return (
+    <Modal label="Editar evento agendado" onClose={onCancel}>
+      <div className="dialog-icon">
+        <PenLine size={22} />
+      </div>
+      <h2>Editar evento</h2>
+      <p>Atualize o nome, horário, tipo ou observações deste evento.</p>
+      <form onSubmit={submit}>
+        <label className="field-label" htmlFor="agenda-event-title">Título</label>
+        <input id="agenda-event-title" type="text" value={title} onChange={(e) => setTitle(e.target.value)} maxLength={100} autoFocus />
+
+        <label className="field-label" htmlFor="agenda-event-type">Tipo</label>
+        <select id="agenda-event-type" value={typeId} onChange={(e) => setTypeId(e.target.value)}>
+          <option value="">Selecione</option>
+          {typeOptions.map((type) => (
+            <option key={type.id} value={type.id}>{type.name}</option>
+          ))}
+        </select>
+
+        <div className="agenda-grid">
+          <label>
+            <span>Dia</span>
+            <input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+          </label>
+          <label>
+            <span>Início</span>
+            <input type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} />
+          </label>
+          <label>
+            <span>Fim</span>
+            <input type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} />
+          </label>
+        </div>
+
+        <label className="field-label" htmlFor="agenda-event-notes">Observações</label>
+        <textarea id="agenda-event-notes" value={notes} onChange={(e) => setNotes(e.target.value)} rows={4} placeholder="Detalhes do evento..." />
+
+        <div className="actions">
+          <button type="button" className="secondary" onClick={onCancel} disabled={busy}>Cancelar</button>
+          {onDelete && (
+            <button type="button" className="danger" onClick={onDelete} disabled={busy}>
+              <Trash2 size={14} /> Excluir
+            </button>
+          )}
+          <button className="primary" type="submit" disabled={busy || !title.trim() || !typeId || !date || !startTime || !endTime}>
+            {busy ? "Salvando…" : "Salvar evento"}
           </button>
         </div>
       </form>

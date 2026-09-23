@@ -23,6 +23,22 @@
   },
   "dynamicRoutes": [
     {
+      "page": "/api/agenda/events/[id]",
+      "regex": "^/api/agenda/events/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/api/agenda/events/(?<nxtPid>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/api/agenda/types/[id]",
+      "regex": "^/api/agenda/types/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/api/agenda/types/(?<nxtPid>[^/]+?)(?:/)?$"
+    },
+    {
       "page": "/api/clients/[id]",
       "regex": "^/api/clients/([^/]+?)(?:/)?$",
       "routeKeys": {

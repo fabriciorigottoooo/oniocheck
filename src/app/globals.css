@@ -119,7 +119,17 @@ button:disabled {
 .app.dark .rename-btn,
 .app.dark .secondary,
 .app.dark .primary,
-.app.dark .danger {
+.app.dark .danger,
+.app.dark .agenda-panel,
+.app.dark .agenda-tag-wrap,
+.app.dark .agenda-tag-list,
+.app.dark .agenda-form input,
+.app.dark .agenda-form select,
+.app.dark .agenda-form textarea,
+.app.dark .agenda-event-card,
+.app.dark .agenda-event-meta,
+.app.dark .agenda-color-row,
+.app.dark .mini-action {
   transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
 }
 
@@ -201,6 +211,61 @@ button:disabled {
 
 .app.dark .secondary:hover {
   background: #1b3354;
+}
+
+.app.dark .agenda-panel,
+.app.dark .agenda-tag-wrap,
+.app.dark .agenda-event-card,
+.app.dark .agenda-color-row,
+.app.dark .mini-action,
+.app.dark .agenda-form input,
+.app.dark .agenda-form select,
+.app.dark .agenda-form textarea {
+  background: linear-gradient(180deg, rgba(13, 24, 36, 0.96), rgba(10, 18, 28, 0.98));
+  border-color: rgba(131, 157, 208, 0.18);
+  color: var(--ink);
+}
+
+.app.dark .agenda-tag-wrap {
+  background: rgba(17, 28, 39, 0.9);
+}
+
+.app.dark .agenda-form label,
+.app.dark .agenda-form span,
+.app.dark .agenda-event-meta,
+.app.dark .agenda-event-card p,
+.app.dark .agenda-event-card small,
+.app.dark .agenda-controls {
+  color: var(--muted);
+}
+
+.app.dark .agenda-event-card strong,
+.app.dark .agenda-event-header strong {
+  color: var(--ink);
+}
+
+.app.dark .agenda-event-card {
+  box-shadow: inset 0 0 0 1px rgba(131, 157, 208, 0.08);
+}
+
+.app.dark .agenda-form input::placeholder,
+.app.dark .agenda-form textarea::placeholder {
+  color: #8298bb;
+}
+
+.app.dark .agenda-controls,
+.app.dark .agenda-tag-list {
+  border-color: rgba(131, 157, 208, 0.12);
+}
+
+.app.dark .agenda-tag {
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+.app.dark .icon-btn {
+  background: rgba(14, 25, 37, 0.8);
+  color: var(--ink);
+  border-color: rgba(131, 157, 208, 0.18);
 }
 
 .app.dark ::-webkit-scrollbar-track {
