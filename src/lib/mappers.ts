@@ -25,6 +25,7 @@ export function toCollab(r: CollabRow): Collab {
   return {
     id: r.id,
     name: r.name,
+    displayName: (r as typeof r & { displayName?: string | null }).displayName ?? null,
     color: r.color,
     avatarUrl: (r as typeof r & { avatarUrl?: string | null }).avatarUrl ?? null,
     createdAt: r.createdAt.toISOString(),

@@ -54,6 +54,7 @@ export const api = {
   updateProfile: (body: {
     id: string;
     username?: string;
+    displayName?: string | null;
     password?: string;
     avatarUrl?: string | null;
   }) =>

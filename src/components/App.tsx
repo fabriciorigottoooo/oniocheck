@@ -46,6 +46,7 @@ const CLIENT_BACKUP_KEY = "oniocheck-client-backup-v1";
 type Me = {
   id: string;
   name: string;
+  displayName?: string | null;
   color: string;
   username: string;
   role: string;
@@ -544,7 +545,15 @@ export default function App() {
     }
   };
 
-  const updateProfile = async ({ password, avatarUrl }: { password?: string; avatarUrl?: string | null }) => {
+  const updateProfile = async ({
+    password,
+    displayName,
+    avatarUrl,
+  }: {
+    password?: string;
+    displayName?: string | null;
+    avatarUrl?: string | null;
+  }) => {
     const meNow = meRef.current;
     if (!meNow) return;
     setSaving(true);
@@ -552,10 +561,17 @@ export default function App() {
       const { collaborator } = await api.updateProfile({
         id: meNow.id,
         username: meNow.username,
+        displayName: displayName !== undefined ? (displayName?.trim() ? displayName.trim() : null) : undefined,
         password: password && password.trim() ? password.trim() : undefined,
         avatarUrl: avatarUrl && avatarUrl.trim() ? avatarUrl.trim() : null,
       });
-      const nextMe = { ...meNow, name: collaborator.name, color: collaborator.color };
+      const safeDisplayName = collaborator.displayName?.trim() ? collaborator.displayName.trim() : collaborator.name;
+      const nextMe = {
+        ...meNow,
+        name: safeDisplayName,
+        displayName: collaborator.displayName?.trim() ? collaborator.displayName.trim() : null,
+        color: collaborator.color,
+      };
       setMe(nextMe);
       try {
         localStorage.setItem(ME_KEY, JSON.stringify(nextMe));
@@ -604,7 +620,8 @@ export default function App() {
       const { user, collaborator } = await api.login(payload);
       const next: Me = {
         id: collaborator.id,
-        name: collaborator.name,
+        name: collaborator.displayName?.trim() ? collaborator.displayName.trim() : collaborator.name,
+        displayName: collaborator.displayName?.trim() ? collaborator.displayName.trim() : null,
         color: collaborator.color,
         username: user.username,
         role: user.role,
@@ -1321,7 +1338,8 @@ export default function App() {
 
       {profileOpen && (
         <ProfileDialog
-          currentName={me?.name ?? ""}
+          currentUsername={me?.username ?? ""}
+          currentDisplayName={me?.displayName ?? me?.name ?? ""}
           currentAvatarUrl={meAvatarUrl ?? ""}
           busy={saving}
           onCancel={() => setProfileOpen(false)}

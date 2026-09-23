@@ -5,6 +5,7 @@ import type { StepState } from "../lib/types";
 export const collaborators = pgTable("collaborators", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
+  displayName: text("display_name"),
   color: text("color").notNull(),
   avatarUrl: text("avatar_url"),
   createdAt: timestamp("created_at", { withTimezone: true })

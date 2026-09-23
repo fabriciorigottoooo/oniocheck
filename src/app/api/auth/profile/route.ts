@@ -13,12 +13,14 @@ export async function POST(req: Request) {
     const body = (await req.json().catch(() => ({}))) as {
       id?: unknown;
       username?: unknown;
+      displayName?: unknown;
       password?: unknown;
       avatarUrl?: unknown;
     };
 
     const id = typeof body.id === "string" ? body.id.trim() : "";
     const password = typeof body.password === "string" ? body.password.trim() : "";
+    const displayName = typeof body.displayName === "string" ? body.displayName.trim() : "";
     const avatarUrl = typeof body.avatarUrl === "string" ? body.avatarUrl.trim() : "";
 
     if (!id) {
@@ -36,9 +38,11 @@ export async function POST(req: Request) {
     }
 
     const nextAvatar = avatarUrl || null;
+    const nextDisplayName = displayName || null;
     const [updated] = await db
       .update(collaborators)
       .set({
+        displayName: nextDisplayName,
         avatarUrl: nextAvatar,
         lastSeenAt: new Date(),
       })

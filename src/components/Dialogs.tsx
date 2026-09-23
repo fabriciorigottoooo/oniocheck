@@ -342,25 +342,29 @@ export function FinishDialog({
 }
 
 export function ProfileDialog({
-  currentName,
+  currentUsername,
+  currentDisplayName,
   currentAvatarUrl,
   busy,
   onCancel,
   onSubmit,
 }: {
-  currentName: string;
+  currentUsername: string;
+  currentDisplayName: string;
   currentAvatarUrl: string;
   busy: boolean;
   onCancel: () => void;
-  onSubmit: (payload: { password?: string; avatarUrl?: string | null }) => void;
+  onSubmit: (payload: { password?: string; displayName?: string | null; avatarUrl?: string | null }) => void;
 }) {
   const [password, setPassword] = useState("");
+  const [displayName, setDisplayName] = useState(currentDisplayName ?? "");
   const [avatarUrl, setAvatarUrl] = useState(currentAvatarUrl ?? "");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
+    setDisplayName(currentDisplayName ?? "");
     setAvatarUrl(currentAvatarUrl ?? "");
-  }, [currentAvatarUrl]);
+  }, [currentDisplayName, currentAvatarUrl]);
 
   const handleFile = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -379,6 +383,7 @@ export function ProfileDialog({
     e.preventDefault();
     onSubmit({
       password: password.trim() || undefined,
+      displayName: displayName.trim() || null,
       avatarUrl: avatarUrl.trim() || null,
     });
   };
@@ -389,12 +394,25 @@ export function ProfileDialog({
         <Users size={22} />
       </div>
       <h2>Perfil do usuário</h2>
-      <p>Atualize sua senha e escolha uma foto para aparecer na equipe.</p>
+      <p>Atualize seu nome de exibição, sua senha e escolha uma foto para aparecer na equipe.</p>
       <form onSubmit={submit}>
-        <label className="field-label" htmlFor="profile-name">
-          Nome atual
+        <label className="field-label" htmlFor="profile-username">
+          Nome de usuário
         </label>
-        <input id="profile-name" type="text" value={currentName} disabled />
+        <input id="profile-username" type="text" value={currentUsername} disabled />
+
+        <label className="field-label" htmlFor="profile-display-name">
+          Nome de exibição
+        </label>
+        <input
+          id="profile-display-name"
+          type="text"
+          value={displayName}
+          onChange={(e) => setDisplayName(e.target.value)}
+          maxLength={40}
+          placeholder="Deixe em branco para usar o nome de usuário"
+          autoComplete="nickname"
+        />
 
         <PasswordField
           id="profile-password"
@@ -661,33 +679,34 @@ export function CollaboratorDetailDialog({
   now,
   onClose,
 }: {
-  collaborator: { id: string; name: string; color: string; avatarUrl?: string | null; lastSeenAt: string };
+  collaborator: { id: string; name: string; displayName?: string | null; color: string; avatarUrl?: string | null; lastSeenAt: string };
   now: number;
   onClose: () => void;
 }) {
   const status = Date.now() - new Date(collaborator.lastSeenAt).getTime() < 45_000 ? "online" : "offline";
+  const displayName = collaborator.displayName?.trim() ? collaborator.displayName.trim() : collaborator.name;
 
   return (
-    <Modal label={`Detalhes de ${collaborator.name}`} onClose={onClose}>
+    <Modal label={`Detalhes de ${displayName}`} onClose={onClose}>
       <div className="dialog-icon">
         <Users size={22} />
       </div>
-      <h2>{collaborator.name}</h2>
+      <h2>{displayName}</h2>
       <p>Detalhes do colaborador da equipe.</p>
       <div className="collab-modal-card">
         <div className="collab-modal-identity">
           {collaborator.avatarUrl ? (
-            <img src={collaborator.avatarUrl} alt={collaborator.name} className="profile-upload-preview" />
+            <img src={collaborator.avatarUrl} alt={displayName} className="profile-upload-preview" />
           ) : (
             <div
               className="avatar avatar-photo"
               style={{ width: 52, height: 52, background: collaborator.color, fontSize: 18 }}
             >
-              {collaborator.name.charAt(0).toUpperCase()}
+              {displayName.charAt(0).toUpperCase()}
             </div>
           )}
           <div>
-            <strong>{collaborator.name}</strong>
+            <strong>{displayName}</strong>
             <span className={`status-pill ${status === "online" ? "online" : "offline"}`}>
               {status === "online" ? "Online agora" : "Offline"}
             </span>
@@ -728,7 +747,7 @@ export function TeamModal({
   onSelect,
   onClose,
 }: {
-  collaborators: { id: string; name: string; color: string; avatarUrl?: string | null; lastSeenAt: string }[];
+  collaborators: { id: string; name: string; displayName?: string | null; color: string; avatarUrl?: string | null; lastSeenAt: string }[];
   meId: string | null;
   now: number;
   onSelect: (id: string) => void;
@@ -742,10 +761,11 @@ export function TeamModal({
       <div className="modal-list compact">
         {collaborators.map((person) => {
           const isOnline = Date.now() - new Date(person.lastSeenAt).getTime() < 45_000;
+          const displayName = person.displayName?.trim() ? person.displayName.trim() : person.name;
           return (
             <button key={person.id} type="button" className="modal-row" onClick={() => onSelect(person.id)}>
               <Avatar
-                name={person.name}
+                name={displayName}
                 color={person.color}
                 size={34}
                 online={isOnline}
@@ -753,7 +773,7 @@ export function TeamModal({
                 lightBorder
               />
               <span className="modal-row-main">
-                <strong>{person.name}</strong>
+                <strong>{displayName}</strong>
                 <small>{isOnline ? "Online agora" : "Offline"}{person.id === meId ? " · você" : ""}</small>
               </span>
             </button>
@@ -843,10 +863,17 @@ export function AdminDialog({
   const [authorized, setAuthorized] = useState(false);
   const [error, setError] = useState("");
   const [selectedId, setSelectedId] = useState<string>("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [resetError, setResetError] = useState("");
-  const [resetSuccess, setResetSuccess] = useState("");
+  const [resetOpen, setResetOpen] = useState(false);
+
+  const openReset = (personId: string) => {
+    setSelectedId(personId);
+    setResetOpen(true);
+  };
+
+  const closeReset = () => {
+    setResetOpen(false);
+    setSelectedId("");
+  };
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
@@ -857,6 +884,11 @@ export function AdminDialog({
     }
     setError("Senha incorreta.");
   };
+
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [resetError, setResetError] = useState("");
+  const [resetSuccess, setResetSuccess] = useState("");
 
   const handleReset = async (e: FormEvent) => {
     e.preventDefault();
@@ -873,12 +905,16 @@ export function AdminDialog({
       setResetSuccess("Senha redefinida com sucesso.");
       setNewPassword("");
       setConfirmPassword("");
+      setTimeout(() => {
+        closeReset();
+      }, 700);
     } catch (err) {
       setResetError(err instanceof Error ? err.message : "Não foi possível redefinir a senha.");
     }
   };
 
   return (
+    <>
     <Modal label="Acesso administrativo" onClose={onClose}>
       <div className="dialog-icon">
         <Users size={22} />
@@ -916,11 +952,7 @@ export function AdminDialog({
                     <button
                       type="button"
                       className="secondary"
-                      onClick={() => {
-                        setSelectedId(person.id);
-                        setResetError("");
-                        setResetSuccess("");
-                      }}
+                      onClick={() => openReset(person.id)}
                       disabled={busy}
                     >
                       Resetar senha
@@ -941,42 +973,6 @@ export function AdminDialog({
             )}
           </div>
 
-          {selectedId && (
-            <form onSubmit={handleReset} className="admin-password-reset">
-              <h3>Redefinir senha</h3>
-              <PasswordField
-                id="admin-reset-password"
-                label="Nova senha"
-                value={newPassword}
-                onChange={setNewPassword}
-                placeholder="Digite a nova senha"
-              />
-              <PasswordField
-                id="admin-reset-confirm"
-                label="Confirmar nova senha"
-                value={confirmPassword}
-                onChange={setConfirmPassword}
-                placeholder="Repita a nova senha"
-              />
-              {resetError && <p className="field-error">{resetError}</p>}
-              {resetSuccess && <p className="field-success">{resetSuccess}</p>}
-              <div className="actions">
-                <button type="button" className="secondary" onClick={() => {
-                  setSelectedId("");
-                  setNewPassword("");
-                  setConfirmPassword("");
-                  setResetError("");
-                  setResetSuccess("");
-                }} disabled={busy}>
-                  Cancelar
-                </button>
-                <button className="primary" type="submit" disabled={busy || !newPassword.trim() || !confirmPassword.trim()}>
-                  {busy ? "Salvando…" : "Salvar nova senha"}
-                </button>
-              </div>
-            </form>
-          )}
-
           <div className="actions">
             <button className="secondary" onClick={onClose} disabled={busy}>
               Fechar
@@ -985,5 +981,42 @@ export function AdminDialog({
         </>
       )}
     </Modal>
+
+    {resetOpen && selectedId && (
+      <Modal label="Redefinir senha" onClose={closeReset}>
+        <div className="dialog-icon">
+          <Users size={22} />
+        </div>
+        <h2>Redefinir senha</h2>
+        <p>Defina a nova senha para o colaborador selecionado.</p>
+        <form onSubmit={handleReset} className="admin-password-reset">
+          <PasswordField
+            id="admin-reset-password"
+            label="Nova senha"
+            value={newPassword}
+            onChange={setNewPassword}
+            placeholder="Digite a nova senha"
+          />
+          <PasswordField
+            id="admin-reset-confirm"
+            label="Confirmar nova senha"
+            value={confirmPassword}
+            onChange={setConfirmPassword}
+            placeholder="Repita a nova senha"
+          />
+          {resetError && <p className="field-error">{resetError}</p>}
+          {resetSuccess && <p className="field-success">{resetSuccess}</p>}
+          <div className="actions">
+            <button type="button" className="secondary" onClick={closeReset} disabled={busy}>
+              Cancelar
+            </button>
+            <button className="primary" type="submit" disabled={busy || !newPassword.trim() || !confirmPassword.trim()}>
+              {busy ? "Salvando…" : "Salvar nova senha"}
+            </button>
+          </div>
+        </form>
+      </Modal>
+    )}
+    </>
   );
 }

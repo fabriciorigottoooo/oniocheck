@@ -19,6 +19,7 @@ export type ClientT = {
 export type Collab = {
   id: string;
   name: string;
+  displayName?: string | null;
   color: string;
   avatarUrl?: string | null;
   createdAt: string;

@@ -78,6 +78,7 @@ export async function ensureDatabaseCompatibility() {
 
   await db.execute(`
     ALTER TABLE IF EXISTS collaborators
+      ADD COLUMN IF NOT EXISTS display_name text,
       ADD COLUMN IF NOT EXISTS color text,
       ADD COLUMN IF NOT EXISTS avatar_url text,
       ADD COLUMN IF NOT EXISTS last_seen_at TIMESTAMPTZ;
