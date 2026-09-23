@@ -16,6 +16,7 @@ import Avatar from "./Avatar";
 type Props = {
   view: "active" | "done";
   counts: { active: number; done: number };
+  agendaCount: number;
   onView: (v: "active" | "done") => void;
   onOpenAgenda: () => void;
   agendaActive: boolean;
@@ -40,6 +41,7 @@ type Props = {
 export default function Sidebar({
   view,
   counts,
+  agendaCount,
   onView,
   onOpenAgenda,
   agendaActive,
@@ -133,11 +135,7 @@ export default function Sidebar({
       >
         <span className="tab-icon"><CalendarDays size={14} /></span>
         <span>Agenda</span>
-        <span className="count">{collaborators.length}</span>
-      </button>
-
-      <button className="secondary" onClick={onOpenAdmin}>
-        Administrador
+        <span className="count">{agendaCount}</span>
       </button>
 
       <div className="side-section team">
@@ -247,10 +245,9 @@ export default function Sidebar({
       </div>
 
       {!collapsed && (
-        <p className="side-note">
-          Seu processo, organizado em equipe. As marcações são salvas no servidor
-          e aparecem na hora para todos.
-        </p>
+        <button className="secondary admin-low" onClick={onOpenAdmin}>
+          Administrador
+        </button>
       )}
     </aside>
   );

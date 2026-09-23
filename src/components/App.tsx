@@ -902,6 +902,7 @@ export default function App() {
       <Sidebar
         view={view}
         counts={{ active: activeClients.length, done: doneClients.length }}
+        agendaCount={agendaEvents.length}
         onView={changeView}
         onOpenAgenda={openAgenda}
         agendaActive={agendaOpen}
