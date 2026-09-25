@@ -7,7 +7,11 @@ export function getClientProgress(client = {}) {
 }
 
 export function summarizeDashboard(clients = [], now = new Date()) {
-  const list = Array.isArray(clients) ? clients : [];
+  const list = (Array.isArray(clients) ? clients : []).filter((client) => {
+    if (!client) return false;
+    if (client.deleted === true || client.deletedAt) return false;
+    return true;
+  });
   const currentDate = new Date(now);
   const thisWeekStart = new Date(currentDate);
   thisWeekStart.setHours(0, 0, 0, 0);

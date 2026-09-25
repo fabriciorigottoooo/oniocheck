@@ -29,3 +29,17 @@ test('resume a situação operacional por loja e cliente', () => {
   assert.equal(summary.storesFinishedThisWeek, 1);
   assert.equal(summary.storesFinishedLastWeek, 1);
 });
+
+test('ignora clientes finalizados e excluídos do resumo do dashboard', () => {
+  const now = new Date('2026-09-25T12:00:00Z');
+  const summary = summarizeDashboard([
+    { id: '1', name: 'Loja Ativa', attendanceUnit: 'Loja 01', economicGroup: 'Grupo A', finishedAt: null, checks: [{ done: true }, { done: false }, { done: false }, { done: false }, { done: false }, { done: false }, { done: false }, { done: false }, { done: false }, { done: false }] },
+    { id: '2', name: 'Loja Excluída', attendanceUnit: 'Loja 01', economicGroup: 'Grupo A', finishedAt: '2026-09-24T10:00:00Z', deleted: true, checks: [{ done: true }, { done: true }, { done: true }, { done: true }, { done: true }, { done: true }, { done: true }, { done: true }, { done: true }, { done: true }] },
+    { id: '3', name: 'Loja Finalizada', attendanceUnit: 'Loja 02', economicGroup: 'Grupo B', finishedAt: '2026-09-23T10:00:00Z', checks: [{ done: true }, { done: true }, { done: true }, { done: true }, { done: true }, { done: true }, { done: true }, { done: true }, { done: true }, { done: true }] },
+  ], now);
+
+  assert.equal(summary.totalClients, 2);
+  assert.equal(summary.activeClients, 1);
+  assert.equal(summary.finishedClients, 1);
+  assert.equal(summary.storeSummary.length, 2);
+});

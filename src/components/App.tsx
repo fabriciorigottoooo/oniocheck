@@ -45,6 +45,7 @@ import Avatar from "./Avatar";
 
 const ME_KEY = "oniocheck-me-v1";
 const CLIENT_BACKUP_KEY = "oniocheck-client-backup-v1";
+const DELETED_CLIENTS_KEY = "oniocheck-deleted-clients-v1";
 
 type Me = {
   id: string;
@@ -83,6 +84,18 @@ export default function App() {
   const [profileOpen, setProfileOpen] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [deletedClientIds, setDeletedClientIds] = useState<string[]>(() => {
+    try {
+      const raw = localStorage.getItem(DELETED_CLIENTS_KEY);
+      if (!raw) return [];
+      const parsed = JSON.parse(raw) as unknown;
+      return Array.isArray(parsed)
+        ? parsed.filter((item): item is string => typeof item === "string")
+        : [];
+    } catch {
+      return [];
+    }
+  });
   const [teamOpen, setTeamOpen] = useState(false);
   const [activityOpen, setActivityOpen] = useState(false);
   const [activityAlert, setActivityAlert] = useState(false);
@@ -261,6 +274,14 @@ export default function App() {
     localStorage.setItem("oniocheck-theme", darkMode ? "dark" : "light");
   }, [darkMode]);
 
+  useEffect(() => {
+    try {
+      localStorage.setItem(DELETED_CLIENTS_KEY, JSON.stringify(deletedClientIds));
+    } catch {
+      // sem armazenamento disponível
+    }
+  }, [deletedClientIds]);
+
   /* ---------- realtime: SSE + heartbeat + poll ---------- */
 
   useEffect(() => {
@@ -326,20 +347,25 @@ export default function App() {
   const agendaEvents = data?.agendaEvents ?? [];
   const meAvatarUrl = collaborators.find((c) => c.id === me?.id)?.avatarUrl ?? null;
 
+  const filteredClients = useMemo(
+    () => (clients ?? []).filter((c) => !deletedClientIds.includes(c.id)),
+    [clients, deletedClientIds],
+  );
+
   const activeClients = useMemo(
-    () => (clients ?? []).filter((c) => !c.finishedAt),
-    [clients],
+    () => filteredClients.filter((c) => !c.finishedAt),
+    [filteredClients],
   );
   const doneClients = useMemo(
     () =>
-      (clients ?? [])
+      filteredClients
         .filter((c) => c.finishedAt)
         .slice()
         .sort(
           (a, b) =>
             Date.parse(b.finishedAt as string) - Date.parse(a.finishedAt as string),
         ),
-    [clients],
+    [filteredClients],
   );
   const filteredStepClients = useMemo(() => {
     if (selectedStepFilter === null) return activeClients;
@@ -355,14 +381,14 @@ export default function App() {
   }, [view, search, activeClients, doneClients, filteredStepClients, selectedStepFilter]);
 
   const selected =
-    (clients ?? []).find((c) => c.id === selectedId) ??
+    filteredClients.find((c) => c.id === selectedId) ??
     visible[0] ??
     null;
   const onlineCollabs = collaborators.filter((c) => isOnline(c, now));
   const stepsDone = activeClients.reduce((n, c) => n + stepTotal(c), 0);
   const selectedCollaborator =
     collaborators.find((c) => c.id === selectedCollaboratorId) ?? null;
-  const dashboardSummary = useMemo(() => summarizeDashboard(clients ?? []), [clients]);
+  const dashboardSummary = useMemo(() => summarizeDashboard(filteredClients), [filteredClients]);
   const stepBreakdown = useMemo(
     () =>
       STEPS.map((step, index) => {
@@ -936,6 +962,8 @@ export default function App() {
       const { deletedId } = await api.deleteClient(client.id, {
         actor: { id: meNow.id, name: meNow.name },
       });
+
+      setDeletedClientIds((prev) => (prev.includes(deletedId) ? prev : [...prev, deletedId]));
 
       setData((prev) => {
         const next = prev

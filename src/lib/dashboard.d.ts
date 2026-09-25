@@ -4,6 +4,8 @@ export type DashboardClient = {
   attendanceUnit?: string | null;
   economicGroup?: string | null;
   finishedAt?: string | null;
+  deleted?: boolean | null;
+  deletedAt?: string | null;
   checks?: Array<{ done?: boolean | null } | null>;
 };
 
