@@ -1143,6 +1143,32 @@ export default function App() {
     doc.setTextColor(15, 23, 42);
     doc.setFont("helvetica", "bold");
     doc.setFontSize(14);
+    doc.text("Evolução semanal", margin, y);
+    y += 16;
+
+    const weeklyCards = [
+      { label: "Nesta semana", value: dashboardSummary.storesFinishedThisWeek },
+      { label: "Última semana", value: dashboardSummary.storesFinishedLastWeek },
+    ];
+    const weeklyWidth = (contentWidth - 12) / 2;
+    weeklyCards.forEach((item, index) => {
+      const x = margin + index * (weeklyWidth + 12);
+      doc.setFillColor(246, 249, 255);
+      doc.roundedRect(x, y, weeklyWidth, 34, 8, 8, "F");
+      doc.setTextColor(96, 112, 138);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(9);
+      doc.text(item.label, x + 12, y + 15);
+      doc.setTextColor(15, 23, 42);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(18);
+      doc.text(String(item.value), x + 12, y + 28);
+    });
+    y += 48;
+
+    doc.setTextColor(15, 23, 42);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(14);
     doc.text("Resumo por loja", margin, y);
     y += 16;
 
@@ -1336,6 +1362,38 @@ export default function App() {
               <div className="stat dashboard-card">
                 <small>Lojas monitoradas</small>
                 <strong>{dashboardSummary.storeSummary.length}</strong>
+              </div>
+            </section>
+
+            <section className="dashboard-insights">
+              <div className="panel dashboard-mini-panel">
+                <div className="list-head compact-head">
+                  <h2>Finalizações</h2>
+                </div>
+                <div className="dashboard-insight-grid">
+                  <div className="insight-box">
+                    <small>Esta semana</small>
+                    <strong>{dashboardSummary.storesFinishedThisWeek}</strong>
+                  </div>
+                  <div className="insight-box">
+                    <small>Última semana</small>
+                    <strong>{dashboardSummary.storesFinishedLastWeek}</strong>
+                  </div>
+                </div>
+                <div className="week-bars" aria-label="Comparativo semanal">
+                  <div className="week-bar-group">
+                    <span>Últ. semana</span>
+                    <div className="week-bar-track">
+                      <i style={{ width: `${Math.min(dashboardSummary.storesFinishedLastWeek * 50, 100)}%` }} />
+                    </div>
+                  </div>
+                  <div className="week-bar-group">
+                    <span>Esta semana</span>
+                    <div className="week-bar-track accent">
+                      <i style={{ width: `${Math.min(dashboardSummary.storesFinishedThisWeek * 50, 100)}%` }} />
+                    </div>
+                  </div>
+                </div>
               </div>
             </section>
 

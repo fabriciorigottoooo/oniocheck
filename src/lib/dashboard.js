@@ -6,17 +6,49 @@ export function getClientProgress(client = {}) {
   return Math.round((done / total) * 100);
 }
 
-export function summarizeDashboard(clients = []) {
+export function summarizeDashboard(clients = [], now = new Date()) {
   const list = Array.isArray(clients) ? clients : [];
+  const currentDate = new Date(now);
+  const thisWeekStart = new Date(currentDate);
+  thisWeekStart.setHours(0, 0, 0, 0);
+  const dayOfWeek = (thisWeekStart.getDay() + 6) % 7;
+  thisWeekStart.setDate(thisWeekStart.getDate() - dayOfWeek);
+
+  const rollingLastWeekStart = new Date(currentDate);
+  rollingLastWeekStart.setDate(currentDate.getDate() - 6);
+  rollingLastWeekStart.setHours(0, 0, 0, 0);
+
+  const getStoreKey = (client) => String(client.attendanceUnit ?? client.economicGroup ?? 'Sem unidade').trim() || 'Sem unidade';
+
+  const countStoresFinishedBetween = (start, end) => {
+    const unique = new Set();
+    for (const client of list) {
+      if (!client.finishedAt) continue;
+      const finishedAt = new Date(client.finishedAt);
+      if (Number.isNaN(finishedAt.getTime())) continue;
+      if (finishedAt >= start && finishedAt <= end) {
+        unique.add(getStoreKey(client));
+      }
+    }
+    return unique.size;
+  };
+
   const totalClients = list.length;
   const activeClients = list.filter((client) => !client.finishedAt).length;
   const finishedClients = list.filter((client) => client.finishedAt).length;
   const completionRate = totalClients ? Math.round((finishedClients / totalClients) * 100) : 0;
 
+  const thisWeekEnd = new Date(thisWeekStart);
+  thisWeekEnd.setDate(thisWeekStart.getDate() + 7);
+  thisWeekEnd.setMilliseconds(-1);
+
+  const storesFinishedThisWeek = countStoresFinishedBetween(thisWeekStart, thisWeekEnd);
+  const storesFinishedLastWeek = countStoresFinishedBetween(rollingLastWeekStart, currentDate);
+
   const storeMap = new Map();
 
   for (const client of list) {
-    const name = String(client.attendanceUnit ?? client.economicGroup ?? 'Sem unidade').trim() || 'Sem unidade';
+    const name = getStoreKey(client);
     const current = storeMap.get(name) ?? {
       name,
       total: 0,
@@ -53,7 +85,7 @@ export function summarizeDashboard(clients = []) {
     .map((client) => ({
       id: client.id,
       name: client.name,
-      unit: String(client.attendanceUnit ?? client.economicGroup ?? 'Sem unidade').trim() || 'Sem unidade',
+      unit: getStoreKey(client),
       progress: getClientProgress(client),
     }));
 
@@ -63,6 +95,8 @@ export function summarizeDashboard(clients = []) {
     finishedClients,
     completionRate,
     storeSummary,
+    storesFinishedThisWeek,
+    storesFinishedLastWeek,
     bestStore: storeSummary[0] ?? null,
     priorityClients,
   };

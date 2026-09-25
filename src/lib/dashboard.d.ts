@@ -28,10 +28,12 @@ export type DashboardSummary = {
   activeClients: number;
   finishedClients: number;
   completionRate: number;
+  storesFinishedThisWeek: number;
+  storesFinishedLastWeek: number;
   storeSummary: DashboardStoreSummary[];
   bestStore: DashboardStoreSummary | null;
   priorityClients: DashboardPriorityClient[];
 };
 
 export function getClientProgress(client?: Partial<DashboardClient>): number;
-export function summarizeDashboard(clients?: DashboardClient[]): DashboardSummary;
+export function summarizeDashboard(clients?: DashboardClient[], now?: Date): DashboardSummary;

@@ -1325,8 +1325,106 @@ button.team-row:hover {
   gap: 18px;
 }
 
+.dashboard-insights {
+  display: grid;
+  margin-top: 8px;
+}
+
+.dashboard-mini-panel {
+  padding: 18px;
+}
+
+.compact-head {
+  margin-bottom: 12px;
+}
+
+.compact-head h2 {
+  margin: 0;
+  font-size: 1rem;
+  letter-spacing: -0.03em;
+}
+
+.dashboard-insight-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.insight-box {
+  display: grid;
+  gap: 6px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: linear-gradient(180deg, rgba(235, 245, 255, 0.9), rgba(255, 255, 255, 0.9));
+}
+
+.insight-box small {
+  color: var(--muted);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.insight-box strong {
+  font-size: 1.6rem;
+  letter-spacing: -0.05em;
+}
+
+.week-bars {
+  display: grid;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.week-bar-group {
+  display: grid;
+  gap: 6px;
+}
+
+.week-bar-group span {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.week-bar-track {
+  width: 100%;
+  height: 12px;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.16);
+  overflow: hidden;
+  border: 1px solid rgba(148, 163, 184, 0.1);
+}
+
+.week-bar-track i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, rgba(69, 122, 236, 0.7), rgba(42, 83, 209, 1));
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.18);
+}
+
+.week-bar-track.accent i {
+  background: linear-gradient(90deg, rgba(60, 133, 255, 0.7), rgba(84, 182, 255, 1));
+}
+
 .dashboard-panel {
   overflow: hidden;
+}
+
+.app.dark .dashboard-mini-panel,
+.app.dark .insight-box {
+  background: linear-gradient(180deg, rgba(12, 21, 31, 0.98), rgba(18, 27, 38, 0.98));
+  border-color: rgba(132, 162, 214, 0.16);
+}
+
+.app.dark .insight-box strong {
+  color: #eaf2ff;
+}
+
+.app.dark .week-bar-track {
+  background: rgba(19, 33, 47, 0.9);
+  border-color: rgba(141, 168, 214, 0.18);
 }
 
 .dashboard-list {
