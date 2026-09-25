@@ -56,11 +56,19 @@ export function activityParts(a: Activity): { actor: string; msg: string } {
   switch (a.action) {
     case "created":
       return { actor: a.actorName, msg: `adicionou o cliente ${alvo}` };
-    case "renamed":
+    case "renamed": {
+      const previous = (a.detail ?? "").trim();
+      if (previous && previous !== a.clientName) {
+        return {
+          actor: a.actorName,
+          msg: `renomeou “${previous}” para ${alvo}`,
+        };
+      }
       return {
         actor: a.actorName,
-        msg: `renomeou “${a.detail ?? "?"}” para ${alvo}`,
+        msg: `atualizou os dados de ${alvo}`,
       };
+    }
     case "step_on":
       return { actor: a.actorName, msg: `marcou “${a.detail ?? ""}” em ${alvo}` };
     case "step_off":

@@ -142,7 +142,7 @@ export async function PATCH(req: Request, ctx: Ctx) {
           kind: "ok" as const,
           client: updated,
           action: "renamed" as ActivityAction,
-          detail: c.name,
+          detail: c.name !== name ? c.name : null,
         };
       }
 
