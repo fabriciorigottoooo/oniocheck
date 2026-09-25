@@ -34,6 +34,7 @@ type Props = {
   collapsed: boolean;
   teamOpen: boolean;
   activityOpen: boolean;
+  activityAlert: boolean;
   onToggleCollapse: () => void;
   onToggleTeam: () => void;
   onToggleActivity: () => void;
@@ -62,6 +63,7 @@ export default function Sidebar({
   collapsed,
   teamOpen,
   activityOpen,
+  activityAlert,
   onToggleCollapse,
   onToggleTeam,
   onToggleActivity,
@@ -167,13 +169,16 @@ export default function Sidebar({
       </button>
 
       <button
-        className={`tab ${activityOpen ? "active" : ""}`}
+        className={`tab ${activityOpen ? "active" : ""} ${activityAlert ? "has-alert" : ""}`}
         aria-pressed={activityOpen}
         onClick={onToggleActivity}
       >
         <span className="tab-icon"><ActivityIcon size={14} /></span>
         <span>Atividade recente</span>
-        {activities.length > 0 && <span className="count">{Math.min(activities.length, 9)}</span>}
+        <span className="tab-meta">
+          {activities.length > 0 && <span className="count">{Math.min(activities.length, 9)}</span>}
+          {activityAlert && <span className="activity-alert" aria-label="Novas atividades" />}
+        </span>
       </button>
 
       <div className="sidebar-logout-wrap">

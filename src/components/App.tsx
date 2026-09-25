@@ -84,6 +84,7 @@ export default function App() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [teamOpen, setTeamOpen] = useState(false);
   const [activityOpen, setActivityOpen] = useState(false);
+  const [activityAlert, setActivityAlert] = useState(false);
   const [agendaOpen, setAgendaOpen] = useState(false);
   const [selectedCollaboratorId, setSelectedCollaboratorId] = useState<string | null>(null);
   const [agendaTypeDialog, setAgendaTypeDialog] = useState<
@@ -111,6 +112,7 @@ export default function App() {
   const seenRef = useRef<Set<string>>(new Set());
   const refetchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const meRef = useRef<Me | null>(null);
+  const lastSeenActivityRef = useRef<string | null>(null);
 
   useEffect(() => {
     meRef.current = me;
@@ -166,6 +168,13 @@ export default function App() {
       }
 
       setData(s);
+      const newestActivityId = s.activities[0]?.id ?? null;
+      if (newestActivityId && newestActivityId !== lastSeenActivityRef.current && !activityOpen) {
+        setActivityAlert(true);
+      }
+      if (newestActivityId) {
+        lastSeenActivityRef.current = newestActivityId;
+      }
       try {
         localStorage.setItem(CLIENT_BACKUP_KEY, JSON.stringify(s));
       } catch {
@@ -182,6 +191,17 @@ export default function App() {
       void fetchState();
     }, 150);
   }, [fetchState]);
+
+  const handleToggleActivity = useCallback(() => {
+    setActivityOpen((value) => {
+      const next = !value;
+      if (next) {
+        setActivityAlert(false);
+        lastSeenActivityRef.current = data.activities[0]?.id ?? null;
+      }
+      return next;
+    });
+  }, [data.activities]);
 
   const replaceClient = useCallback((fresh: ClientT) => {
     setData((prev) =>
@@ -253,7 +273,10 @@ export default function App() {
           type?: string;
           activity?: Activity;
         };
-        if (evt.type === "change" || evt.type === "presence") scheduleRefetch();
+        if (evt.type === "change" || evt.type === "presence") {
+          scheduleRefetch();
+          if (!activityOpen) setActivityAlert(true);
+        }
         const a = evt.activity;
         if (a && a.actorId !== me.id && !seenRef.current.has(a.id)) {
           seenRef.current.add(a.id);
@@ -290,7 +313,7 @@ export default function App() {
       clearInterval(poll);
       document.removeEventListener("visibilitychange", onVis);
     };
-  }, [me, fetchState, scheduleRefetch, pushToast]);
+  }, [me, fetchState, scheduleRefetch, pushToast, activityOpen]);
 
   /* ---------- derived ---------- */
 
@@ -1027,6 +1050,7 @@ export default function App() {
     setAdminOpen(false);
     setTeamOpen(false);
     setActivityOpen(false);
+    setActivityAlert(false);
     setSelectedCollaboratorId(null);
     setSelectedId(null);
     setSearch("");
@@ -1077,84 +1101,109 @@ export default function App() {
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
     const margin = 42;
+    const contentWidth = pageWidth - margin * 2;
     let y = 52;
 
-    doc.setFillColor(21, 49, 92);
-    doc.rect(0, 0, pageWidth, 56, "F");
+    doc.setFillColor(14, 59, 110);
+    doc.rect(0, 0, pageWidth, 74, "F");
     doc.setTextColor(255, 255, 255);
-    doc.setFontSize(20);
-    doc.text("OnioCheck · Relatório de progresso", margin, 30);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(22);
+    doc.text("OnioCheck", margin, 30);
+    doc.setFont("helvetica", "normal");
     doc.setFontSize(10);
-    doc.text(`Gerado em ${new Date().toLocaleString("pt-BR")}`, margin, 48);
+    doc.text("Relatório executivo de operação", margin, 48);
+    doc.text(`Gerado em ${new Date().toLocaleString("pt-BR")}`, pageWidth - margin, 48, { align: "right" });
 
-    doc.setTextColor(17, 24, 39);
-    const stats = [
+    const metrics = [
       { label: "Ativos", value: String(dashboardSummary.activeClients) },
       { label: "Finalizados", value: String(dashboardSummary.finishedClients) },
       { label: "Taxa geral", value: `${dashboardSummary.completionRate}%` },
       { label: "Lojas", value: String(dashboardSummary.storeSummary.length) },
     ];
 
-    const cardWidth = (pageWidth - margin * 2 - 18) / 4;
-    stats.forEach((item, index) => {
+    const cardWidth = (contentWidth - 18) / 4;
+    metrics.forEach((item, index) => {
       const x = margin + index * (cardWidth + 6);
-      doc.setFillColor(243, 247, 255);
-      doc.roundedRect(x, 70, cardWidth, 52, 8, 8, "F");
+      doc.setFillColor(239, 245, 255);
+      doc.roundedRect(x, 92, cardWidth, 52, 9, 9, "F");
+      doc.setDrawColor(206, 220, 245);
+      doc.setLineWidth(1);
+      doc.roundedRect(x, 92, cardWidth, 52, 9, 9, "S");
+      doc.setTextColor(96, 112, 138);
       doc.setFontSize(9);
-      doc.setTextColor(100, 116, 139);
-      doc.text(item.label, x + 18, 92);
-      doc.setFontSize(20);
+      doc.text(item.label, x + 16, 116);
       doc.setTextColor(15, 23, 42);
-      doc.text(item.value, x + 18, 114);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(18);
+      doc.text(item.value, x + 16, 132);
     });
 
-    y = 150;
-    doc.setFontSize(14);
+    y = 170;
     doc.setTextColor(15, 23, 42);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(14);
     doc.text("Resumo por loja", margin, y);
-    y += 18;
+    y += 16;
 
     dashboardSummary.storeSummary.forEach((store) => {
-      if (y > pageHeight - 90) {
+      if (y > pageHeight - 115) {
         doc.addPage();
-        y = 52;
+        y = 54;
       }
 
-      doc.setDrawColor(203, 213, 225);
-      doc.setLineWidth(1);
-      doc.roundedRect(margin, y, pageWidth - margin * 2, 42, 6, 6, "S");
+      doc.setDrawColor(214, 224, 240);
+      doc.setFillColor(250, 252, 255);
+      doc.roundedRect(margin, y, contentWidth, 52, 8, 8, "FD");
+      doc.setFont("helvetica", "bold");
       doc.setFontSize(11);
       doc.setTextColor(15, 23, 42);
-      doc.text(store.name, margin + 16, y + 18);
-      doc.text(`${store.progress}%`, pageWidth - margin - 16, y + 18, { align: "right" });
+      doc.text(store.name, margin + 16, y + 20);
+      doc.text(`${store.progress}%`, pageWidth - margin - 16, y + 20, { align: "right" });
+
+      const barX = margin + 16;
+      const barWidth = contentWidth - 32;
       doc.setFillColor(228, 233, 241);
-      doc.roundedRect(margin + 16, y + 23, pageWidth - margin * 2 - 32, 8, 4, 4, "F");
-      doc.setFillColor(44, 122, 245);
-      doc.roundedRect(margin + 16, y + 23, ((pageWidth - margin * 2 - 32) * store.progress) / 100, 8, 4, 4, "F");
+      doc.roundedRect(barX, y + 26, barWidth, 8, 4, 4, "F");
+      doc.setFillColor(37, 107, 239);
+      doc.roundedRect(barX, y + 26, (barWidth * store.progress) / 100, 8, 4, 4, "F");
+
+      doc.setFont("helvetica", "normal");
       doc.setFontSize(9);
-      doc.setTextColor(100, 116, 139);
-      doc.text(`${store.done} concluídos · ${store.active} em andamento`, margin + 16, y + 38);
-      y += 58;
+      doc.setTextColor(92, 110, 136);
+      doc.text(`${store.done} concluídos · ${store.active} em andamento`, margin + 16, y + 44);
+
+      y += 64;
     });
 
-    if (y > 220) {
+    if (y > pageHeight - 110) {
       doc.addPage();
-      y = 52;
+      y = 54;
     }
 
+    doc.setTextColor(15, 23, 42);
+    doc.setFont("helvetica", "bold");
     doc.setFontSize(14);
     doc.text("Clientes em foco", margin, y);
-    y += 18;
+    y += 16;
 
     dashboardSummary.priorityClients.forEach((client) => {
-      if (y > pageHeight - 62) {
+      if (y > pageHeight - 76) {
         doc.addPage();
-        y = 52;
+        y = 54;
       }
-      doc.setFontSize(11);
-      doc.text(`• ${client.name} (${client.unit})`, margin + 8, y);
-      doc.text(`${client.progress}%`, pageWidth - margin - 8, y, { align: "right" });
-      y += 18;
+
+      doc.setFillColor(246, 249, 255);
+      doc.roundedRect(margin, y, contentWidth, 28, 8, 8, "F");
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(10);
+      doc.setTextColor(15, 23, 42);
+      doc.text(client.name, margin + 14, y + 16);
+      doc.text(`${client.progress}%`, pageWidth - margin - 14, y + 16, { align: "right" });
+      doc.setTextColor(108, 124, 149);
+      doc.setFont("helvetica", "normal");
+      doc.text(client.unit, margin + 14, y + 25);
+      y += 36;
     });
 
     doc.save(`oniocheck-relatorio-${new Date().toISOString().slice(0, 10)}.pdf`);
@@ -1209,9 +1258,10 @@ export default function App() {
         collapsed={sidebarCollapsed}
         teamOpen={teamOpen}
         activityOpen={activityOpen}
+        activityAlert={activityAlert}
         onToggleCollapse={() => setSidebarCollapsed((value) => !value)}
         onToggleTeam={() => setTeamOpen((value) => !value)}
-        onToggleActivity={() => setActivityOpen((value) => !value)}
+        onToggleActivity={handleToggleActivity}
         onEditIdentity={() => setNeedSetup(true)}
         onOpenAdmin={() => setAdminOpen(true)}
         onOpenProfile={() => setProfileOpen(true)}

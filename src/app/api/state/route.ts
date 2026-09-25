@@ -1,5 +1,5 @@
 import { randomUUID } from "crypto";
-import { asc, count, desc } from "drizzle-orm";
+import { asc, count, desc, lt } from "drizzle-orm";
 import { db, ensureDatabaseCompatibility } from "@/db";
 import { activities, agendaEventTypes, agendaEvents, clients, collaborators } from "@/db/schema";
 import { toActivity, toAgendaType, toClient, toCollab } from "@/lib/mappers";
@@ -35,6 +35,8 @@ export async function GET() {
   try {
     await ensureDatabaseCompatibility();
     await ensureSeed();
+    const cutoff = new Date(Date.now() - 48 * 60 * 60 * 1000);
+    await db.delete(activities).where(lt(activities.createdAt, cutoff));
     const [clientRows, collabRows, activityRows, typeRows, eventRows] = await Promise.all([
       db.select().from(clients).orderBy(asc(clients.createdAt)),
       db.select().from(collaborators).orderBy(asc(collaborators.createdAt)),
