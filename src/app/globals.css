@@ -189,6 +189,22 @@ button:disabled {
   border-color: rgba(136, 165, 219, 0.18);
 }
 
+.app.dark .dashboard-row,
+.app.dark .dashboard-focus-item {
+  background: rgba(11, 22, 32, 0.78);
+  border-color: rgba(141, 168, 214, 0.16);
+}
+
+.app.dark .dashboard-row-top strong,
+.app.dark .dashboard-focus-head span {
+  color: #9ec8ff;
+}
+
+.app.dark .progress-track {
+  background: rgba(19, 31, 44, 0.92);
+  border-color: rgba(141, 168, 214, 0.16);
+}
+
 .app.dark .dialog-icon {
   background: rgba(38, 82, 161, 0.24);
   color: #dfeeff;
@@ -1270,6 +1286,88 @@ button.team-row:hover {
   color: var(--muted);
   margin-left: 9px;
   font-weight: 700;
+}
+
+.dashboard-shell {
+  display: grid;
+  gap: 18px;
+  margin-top: 20px;
+}
+
+.dashboard-stats {
+  margin-top: 0;
+}
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.dashboard-panel {
+  overflow: hidden;
+}
+
+.dashboard-list {
+  display: grid;
+  gap: 14px;
+  padding: 18px;
+}
+
+.dashboard-row,
+.dashboard-focus-item {
+  display: grid;
+  gap: 8px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.7);
+}
+
+.dashboard-row-top,
+.dashboard-focus-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.dashboard-row-top span,
+.dashboard-focus-head strong {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.dashboard-row-top strong,
+.dashboard-focus-head span {
+  font-size: 13px;
+  color: var(--blue);
+}
+
+.dashboard-row small,
+.dashboard-focus-item small {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.progress-track {
+  width: 100%;
+  height: 10px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.18);
+  border: 1px solid rgba(148, 163, 184, 0.12);
+}
+
+.progress-track span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #2d6fe8 0%, #67a5ff 100%);
+}
+
+.small-track {
+  height: 8px;
 }
 
 /* ---------- workspace ---------- */

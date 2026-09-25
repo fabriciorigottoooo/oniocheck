@@ -14,6 +14,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { api } from "@/lib/api";
+import { summarizeDashboard } from "@/lib/dashboard";
 import {
   activityParts,
   isOnline,
@@ -68,6 +69,7 @@ export default function App() {
   const [needSetup, setNeedSetup] = useState(false);
   const [live, setLive] = useState(false);
   const [view, setView] = useState<"active" | "done">("active");
+  const [dashboardOpen, setDashboardOpen] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [toasts, setToasts] = useState<ToastItem[]>([]);
@@ -328,6 +330,7 @@ export default function App() {
   const stepsDone = activeClients.reduce((n, c) => n + stepTotal(c), 0);
   const selectedCollaborator =
     collaborators.find((c) => c.id === selectedCollaboratorId) ?? null;
+  const dashboardSummary = useMemo(() => summarizeDashboard(clients ?? []), [clients]);
   const agendaTypeMap = useMemo(
     () => new Map(agendaTypes.map((t) => [t.id, t])),
     [agendaTypes],
@@ -346,13 +349,23 @@ export default function App() {
 
   const changeView = (v: "active" | "done") => {
     setView(v);
+    setDashboardOpen(false);
     setAgendaOpen(false);
     setSearch("");
     setSelectedId(null);
     setSelectedCollaboratorId(null);
   };
 
+  const openDashboard = () => {
+    setDashboardOpen(true);
+    setAgendaOpen(false);
+    setSelectedCollaboratorId(null);
+    setSelectedId(null);
+    setSearch("");
+  };
+
   const openAgenda = () => {
+    setDashboardOpen(false);
     setAgendaOpen(true);
     setSelectedCollaboratorId(null);
     setSelectedId(null);
@@ -1053,9 +1066,104 @@ export default function App() {
       ? "Seus clientes finalizados aparecerão aqui."
       : "Nenhum cliente em andamento.";
 
+  const downloadDashboardPdf = async () => {
+    if (!clients || !clients.length) {
+      pushToast("Ainda não há clientes para exportar.");
+      return;
+    }
+
+    const { jsPDF } = await import("jspdf");
+    const doc = new jsPDF({ unit: "pt", format: "a4" });
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+    const margin = 42;
+    let y = 52;
+
+    doc.setFillColor(21, 49, 92);
+    doc.rect(0, 0, pageWidth, 56, "F");
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(20);
+    doc.text("OnioCheck · Relatório de progresso", margin, 30);
+    doc.setFontSize(10);
+    doc.text(`Gerado em ${new Date().toLocaleString("pt-BR")}`, margin, 48);
+
+    doc.setTextColor(17, 24, 39);
+    const stats = [
+      { label: "Ativos", value: String(dashboardSummary.activeClients) },
+      { label: "Finalizados", value: String(dashboardSummary.finishedClients) },
+      { label: "Taxa geral", value: `${dashboardSummary.completionRate}%` },
+      { label: "Lojas", value: String(dashboardSummary.storeSummary.length) },
+    ];
+
+    const cardWidth = (pageWidth - margin * 2 - 18) / 4;
+    stats.forEach((item, index) => {
+      const x = margin + index * (cardWidth + 6);
+      doc.setFillColor(243, 247, 255);
+      doc.roundedRect(x, 70, cardWidth, 52, 8, 8, "F");
+      doc.setFontSize(9);
+      doc.setTextColor(100, 116, 139);
+      doc.text(item.label, x + 18, 92);
+      doc.setFontSize(20);
+      doc.setTextColor(15, 23, 42);
+      doc.text(item.value, x + 18, 114);
+    });
+
+    y = 150;
+    doc.setFontSize(14);
+    doc.setTextColor(15, 23, 42);
+    doc.text("Resumo por loja", margin, y);
+    y += 18;
+
+    dashboardSummary.storeSummary.forEach((store) => {
+      if (y > pageHeight - 90) {
+        doc.addPage();
+        y = 52;
+      }
+
+      doc.setDrawColor(203, 213, 225);
+      doc.setLineWidth(1);
+      doc.roundedRect(margin, y, pageWidth - margin * 2, 42, 6, 6, "S");
+      doc.setFontSize(11);
+      doc.setTextColor(15, 23, 42);
+      doc.text(store.name, margin + 16, y + 18);
+      doc.text(`${store.progress}%`, pageWidth - margin - 16, y + 18, { align: "right" });
+      doc.setFillColor(228, 233, 241);
+      doc.roundedRect(margin + 16, y + 23, pageWidth - margin * 2 - 32, 8, 4, 4, "F");
+      doc.setFillColor(44, 122, 245);
+      doc.roundedRect(margin + 16, y + 23, ((pageWidth - margin * 2 - 32) * store.progress) / 100, 8, 4, 4, "F");
+      doc.setFontSize(9);
+      doc.setTextColor(100, 116, 139);
+      doc.text(`${store.done} concluídos · ${store.active} em andamento`, margin + 16, y + 38);
+      y += 58;
+    });
+
+    if (y > 220) {
+      doc.addPage();
+      y = 52;
+    }
+
+    doc.setFontSize(14);
+    doc.text("Clientes em foco", margin, y);
+    y += 18;
+
+    dashboardSummary.priorityClients.forEach((client) => {
+      if (y > pageHeight - 62) {
+        doc.addPage();
+        y = 52;
+      }
+      doc.setFontSize(11);
+      doc.text(`• ${client.name} (${client.unit})`, margin + 8, y);
+      doc.text(`${client.progress}%`, pageWidth - margin - 8, y, { align: "right" });
+      y += 18;
+    });
+
+    doc.save(`oniocheck-relatorio-${new Date().toISOString().slice(0, 10)}.pdf`);
+    pushToast("Relatório PDF baixado com sucesso.");
+  };
+
   const booting = !me && !needSetup;
 
-  const agendaTitle = agendaOpen ? "Agenda" : view === "active" ? "Em andamento" : "Finalizados";
+  const agendaTitle = dashboardOpen ? "Dashboard" : agendaOpen ? "Agenda" : view === "active" ? "Em andamento" : "Finalizados";
 
   const renderRightPanel = () => (
     <ClientDetail
@@ -1087,7 +1195,9 @@ export default function App() {
         view={view}
         counts={{ active: activeClients.length, done: doneClients.length }}
         agendaCount={agendaEvents.length}
+        dashboardActive={dashboardOpen}
         onView={changeView}
+        onOpenDashboard={openDashboard}
         onOpenAgenda={openAgenda}
         agendaActive={agendaOpen}
         collaborators={collaborators}
@@ -1115,11 +1225,13 @@ export default function App() {
             <div className="eyebrow">GESTÃO DE CHECKLISTS · COLABORATIVO</div>
             <h1>{agendaTitle}</h1>
             <p className="muted">
-              {agendaOpen
-                ? "Planeje reuniões e eventos, com tipos personalizáveis e visualização por toda a equipe."
-                : view === "active"
-                  ? "Cada etapa marcada é um passo a menos."
-                  : "Histórico de clientes com todas as etapas concluídas."}
+              {dashboardOpen
+                ? "Visão geral da operação: lojas, clientes em andamento e progresso da equipe."
+                : agendaOpen
+                  ? "Planeje reuniões e eventos, com tipos personalizáveis e visualização por toda a equipe."
+                  : view === "active"
+                    ? "Cada etapa marcada é um passo a menos."
+                    : "Histórico de clientes com todas as etapas concluídas."}
             </p>
           </div>
           <div className="top-actions">
@@ -1143,13 +1255,96 @@ export default function App() {
               <span className="pdot" />
               {live ? "Ao vivo" : "Reconectando…"}
             </span>
-            <button className="primary" onClick={() => setClientDialog({ mode: "new" })}>
-              <Plus size={15} /> Novo cliente
-            </button>
+            {!dashboardOpen && !agendaOpen && (
+              <button className="primary" onClick={() => setClientDialog({ mode: "new" })}>
+                <Plus size={15} /> Novo cliente
+              </button>
+            )}
+            {dashboardOpen && (
+              <button className="primary" type="button" onClick={() => void downloadDashboardPdf()}>
+                <Plus size={15} /> Gerar PDF
+              </button>
+            )}
           </div>
         </header>
 
-        <section className="stats" aria-label="Resumo">
+        {dashboardOpen && (
+          <div className="dashboard-shell">
+            <section className="stats dashboard-stats" aria-label="Resumo do dashboard">
+              <div className="stat dashboard-card">
+                <small>Clientes ativos</small>
+                <strong>{dashboardSummary.activeClients}</strong>
+              </div>
+              <div className="stat dashboard-card">
+                <small>Clientes finalizados</small>
+                <strong>{dashboardSummary.finishedClients}</strong>
+              </div>
+              <div className="stat dashboard-card">
+                <small>Taxa de conclusão</small>
+                <strong>{dashboardSummary.completionRate}%</strong>
+              </div>
+              <div className="stat dashboard-card">
+                <small>Lojas monitoradas</small>
+                <strong>{dashboardSummary.storeSummary.length}</strong>
+              </div>
+            </section>
+
+            <div className="dashboard-grid">
+              <section className="panel dashboard-panel">
+                <div className="list-head">
+                  <h2>Resumo por loja</h2>
+                </div>
+                <div className="dashboard-list">
+                  {dashboardSummary.storeSummary.length ? (
+                    dashboardSummary.storeSummary.map((store) => (
+                      <div key={store.name} className="dashboard-row">
+                        <div className="dashboard-row-top">
+                          <span>{store.name}</span>
+                          <strong>{store.progress}%</strong>
+                        </div>
+                        <div className="progress-track">
+                          <span style={{ width: `${store.progress}%` }} />
+                        </div>
+                        <small>
+                          {store.done} concluídos · {store.active} em andamento
+                        </small>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="empty">Nenhuma loja cadastrada.</p>
+                  )}
+                </div>
+              </section>
+
+              <section className="panel dashboard-panel">
+                <div className="list-head">
+                  <h2>Clientes em foco</h2>
+                </div>
+                <div className="dashboard-list">
+                  {dashboardSummary.priorityClients.length ? (
+                    dashboardSummary.priorityClients.map((client) => (
+                      <div key={client.id} className="dashboard-focus-item">
+                        <div className="dashboard-focus-head">
+                          <strong>{client.name}</strong>
+                          <span>{client.progress}%</span>
+                        </div>
+                        <small>{client.unit}</small>
+                        <div className="progress-track small-track">
+                          <span style={{ width: `${client.progress}%` }} />
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="empty">Todos os clientes estão concluídos.</p>
+                  )}
+                </div>
+              </section>
+            </div>
+          </div>
+        )}
+
+        {!dashboardOpen && (
+          <section className="stats" aria-label="Resumo">
           <div className="stat">
             <small>Clientes em andamento</small>
             <strong>{activeClients.length}</strong>
@@ -1184,6 +1379,8 @@ export default function App() {
             </div>
           </div>
         </section>
+
+        )}
 
         {agendaOpen ? (
           <section className="agenda-layout">
@@ -1355,18 +1552,20 @@ export default function App() {
             </div>
           </section>
         ) : (
-          <div className="workspace">
-            <ClientList
-              title="Seus clientes"
-              search={search}
-              onSearch={setSearch}
-              clients={visible}
-              selectedId={selectedId}
-              onSelect={setSelectedId}
-              emptyText={emptyText}
-            />
-            {renderRightPanel()}
-          </div>
+          !dashboardOpen && (
+            <div className="workspace">
+              <ClientList
+                title="Seus clientes"
+                search={search}
+                onSearch={setSearch}
+                clients={visible}
+                selectedId={selectedId}
+                onSelect={setSelectedId}
+                emptyText={emptyText}
+              />
+              {renderRightPanel()}
+            </div>
+          )
         )}
       </main>
 

@@ -56,6 +56,15 @@ type RouteHandlerConfig<Route extends AppRouteHandlerRoutes = AppRouteHandlerRou
   type __Unused = __Check
 }
 
+// Validate ../../src/app/api/admin/reset-password/route.ts
+{
+  type __IsExpected<Specific extends RouteHandlerConfig<"/api/admin/reset-password">> = Specific
+  const handler = {} as typeof import("../../src/app/api/admin/reset-password/route.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
 // Validate ../../src/app/api/agenda/events/[id]/route.ts
 {
   type __IsExpected<Specific extends RouteHandlerConfig<"/api/agenda/events/[id]">> = Specific

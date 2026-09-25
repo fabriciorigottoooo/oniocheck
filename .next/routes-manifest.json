@@ -75,6 +75,12 @@
       "namedRegex": "^/_not\\-found(?:/)?$"
     },
     {
+      "page": "/api/admin/reset-password",
+      "regex": "^/api/admin/reset\\-password(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/api/admin/reset\\-password(?:/)?$"
+    },
+    {
       "page": "/api/agenda/events",
       "regex": "^/api/agenda/events(?:/)?$",
       "routeKeys": {},

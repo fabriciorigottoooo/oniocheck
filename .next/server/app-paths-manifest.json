@@ -1,6 +1,7 @@
 {
   "/_global-error/page": "app/_global-error/page.js",
   "/_not-found/page": "app/_not-found/page.js",
+  "/api/admin/reset-password/route": "app/api/admin/reset-password/route.js",
   "/api/agenda/events/[id]/route": "app/api/agenda/events/[id]/route.js",
   "/api/agenda/events/route": "app/api/agenda/events/route.js",
   "/api/agenda/types/[id]/route": "app/api/agenda/types/[id]/route.js",

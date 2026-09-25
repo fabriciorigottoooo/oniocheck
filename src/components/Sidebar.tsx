@@ -5,6 +5,7 @@ import {
   ChevronDown,
   ChevronRight,
   CircleDashed,
+  LayoutDashboard,
   LogOut,
   PanelLeftClose,
   PanelLeftOpen,
@@ -19,7 +20,9 @@ type Props = {
   view: "active" | "done";
   counts: { active: number; done: number };
   agendaCount: number;
+  dashboardActive: boolean;
   onView: (v: "active" | "done") => void;
+  onOpenDashboard: () => void;
   onOpenAgenda: () => void;
   agendaActive: boolean;
   collaborators: Collab[];
@@ -45,7 +48,9 @@ export default function Sidebar({
   view,
   counts,
   agendaCount,
+  dashboardActive,
   onView,
+  onOpenDashboard,
   onOpenAgenda,
   agendaActive,
   collaborators,
@@ -131,6 +136,15 @@ export default function Sidebar({
           <span className="count">{counts.done}</span>
         </button>
       </nav>
+
+      <button
+        className={`tab ${dashboardActive ? "active" : ""}`}
+        aria-pressed={dashboardActive}
+        onClick={onOpenDashboard}
+      >
+        <span className="tab-icon"><LayoutDashboard size={14} /></span>
+        <span>Dashboard</span>
+      </button>
 
       <button
         className={`tab ${agendaActive ? "active" : ""}`}
