@@ -56,7 +56,8 @@ body {
 }
 
 button,
-input {
+input,
+textarea {
   font: inherit;
 }
 
@@ -144,7 +145,9 @@ button:disabled {
 .app.dark .client,
 .app.dark .detail-foot,
 .app.dark .footer,
-.app.dark .modal {
+.app.dark .modal,
+.app.dark .notes-panel,
+.app.dark .mini-action {
   background: linear-gradient(180deg, rgba(16, 26, 38, 0.98), rgba(10, 18, 28, 0.98));
   border-color: rgba(127, 153, 195, 0.18);
   box-shadow: 0 12px 24px rgba(2, 6, 12, 0.14);
@@ -173,7 +176,9 @@ button:disabled {
 .app.dark .modal .modal-row-main time,
 .app.dark .field-error,
 .app.dark .setup-hint,
-.app.dark .empty {
+.app.dark .empty,
+.app.dark .notes-panel p,
+.app.dark .notes-empty {
   color: #a9bfd8;
 }
 
@@ -194,10 +199,27 @@ button:disabled {
 }
 
 .app.dark .search,
-.app.dark input {
+.app.dark input,
+.app.dark textarea {
   background: #0f1b2a;
   color: var(--ink);
   border-color: rgba(118, 149, 197, 0.22);
+}
+
+textarea {
+  width: 100%;
+  border: 1px solid #dfe8f5;
+  border-radius: 12px;
+  background: #f8fafc;
+  color: var(--ink);
+  padding: 12px 13px;
+  resize: vertical;
+  min-height: 120px;
+  box-shadow: inset 0 1px 1px rgba(12, 24, 39, 0.02);
+}
+
+textarea::placeholder {
+  color: #7c8ea7;
 }
 
 .app.dark .list-head,
@@ -246,12 +268,15 @@ button:disabled {
   color: var(--muted);
 }
 
-.app.dark .secondary {
+.app.dark .secondary,
+.app.dark .mini-action {
   background: #162b46;
   color: #dfeeff;
+  border-color: rgba(136, 167, 218, 0.18);
 }
 
-.app.dark .secondary:hover {
+.app.dark .secondary:hover,
+.app.dark .mini-action:hover {
   background: #1b3354;
 }
 
@@ -1860,6 +1885,13 @@ button.team-row:hover {
   line-height: 1.5;
 }
 
+.detail-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 10px;
+}
+
 .rename-btn {
   border: 1px solid #dfe6ee;
   background: #fff;
@@ -1871,7 +1903,6 @@ button.team-row:hover {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  margin-top: 10px;
   transition: background 0.15s ease;
 }
 
@@ -1885,6 +1916,51 @@ button.team-row:hover {
   font-size: 12px;
   color: #62748a;
   margin: 18px 0 9px;
+}
+
+.notes-panel {
+  margin: 18px 26px 0;
+  padding: 16px 18px;
+  border: 1px solid #e2eaf3;
+  background: #f8fbff;
+  border-radius: 12px;
+}
+
+.notes-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.notes-header strong {
+  font-size: 12px;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: #4a6487;
+}
+
+.mini-action {
+  border: 1px solid #dfe8f6;
+  background: #fff;
+  color: #2a5fb1;
+  border-radius: 7px;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 5px 9px;
+}
+
+.notes-panel p {
+  margin: 0;
+  color: #3e536d;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.notes-empty {
+  color: #6a7d94;
 }
 
 .tasks {

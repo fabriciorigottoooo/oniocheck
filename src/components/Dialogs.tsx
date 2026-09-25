@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type ChangeEvent, type FormEvent, type ReactNode } from "react";
-import { CheckCircle2, Eye, EyeOff, PenLine, Trash2, UserRoundPlus, Upload, Users } from "lucide-react";
+import { CheckCircle2, Eye, EyeOff, NotebookPen, PenLine, Trash2, UserRoundPlus, Upload, Users } from "lucide-react";
 import { activityParts, relTime } from "@/lib/format";
 import Avatar from "./Avatar";
 
@@ -298,6 +298,61 @@ export function ClientDialog({
           </button>
           <button className="primary" type="submit" disabled={busy || !name.trim()}>
             {busy ? "Salvando…" : "Salvar"}
+          </button>
+        </div>
+      </form>
+    </Modal>
+  );
+}
+
+export function ClientNotesDialog({
+  clientName,
+  initialNotes = "",
+  busy,
+  onCancel,
+  onSubmit,
+}: {
+  clientName: string;
+  initialNotes?: string;
+  busy: boolean;
+  onCancel: () => void;
+  onSubmit: (notes: string) => void;
+}) {
+  const [notes, setNotes] = useState(initialNotes);
+
+  useEffect(() => {
+    setNotes(initialNotes);
+  }, [initialNotes]);
+
+  const submit = (e: FormEvent) => {
+    e.preventDefault();
+    onSubmit(notes.trim());
+  };
+
+  return (
+    <Modal label="Observações do cliente" onClose={onCancel}>
+      <div className="dialog-icon">
+        <NotebookPen size={22} />
+      </div>
+      <h2>Observações sobre {clientName}</h2>
+      <p>Escreva qualquer detalhe útil para a equipe e mantenha essa informação disponível para consultas futuras.</p>
+      <form onSubmit={submit}>
+        <label className="field-label" htmlFor="client-notes">
+          Observações
+        </label>
+        <textarea
+          id="client-notes"
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
+          rows={8}
+          placeholder="Ex.: Preferência de contato, observações da visita, dados relevantes do cliente..."
+        />
+        <div className="actions">
+          <button type="button" className="secondary" onClick={onCancel} disabled={busy}>
+            Cancelar
+          </button>
+          <button className="primary" type="submit" disabled={busy}>
+            {busy ? "Salvando…" : "Salvar observações"}
           </button>
         </div>
       </form>

@@ -73,7 +73,8 @@ export async function ensureDatabaseCompatibility() {
     ALTER TABLE IF EXISTS clients
       ADD COLUMN IF NOT EXISTS economic_group text,
       ADD COLUMN IF NOT EXISTS attendance_unit text,
-      ADD COLUMN IF NOT EXISTS phone text;
+      ADD COLUMN IF NOT EXISTS phone text,
+      ADD COLUMN IF NOT EXISTS notes text;
   `);
 
   await db.execute(`

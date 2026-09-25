@@ -10,6 +10,7 @@ export type ClientT = {
   economicGroup?: string | null;
   attendanceUnit?: string | null;
   phone?: string | null;
+  notes?: string | null;
   checks: StepState[];
   finishedAt: string | null;
   createdAt: string;
@@ -94,6 +95,7 @@ export type PatchBody =
       economicGroup?: string | null;
       attendanceUnit?: string | null;
       phone?: string | null;
+      notes?: string | null;
       actor: ActorInput;
     }
   | { op: "step"; index: number; value: boolean; actor: ActorInput }

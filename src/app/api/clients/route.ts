@@ -23,6 +23,7 @@ export async function POST(req: Request) {
       economicGroup?: unknown;
       attendanceUnit?: unknown;
       phone?: unknown;
+      notes?: unknown;
       actor?: unknown;
     };
     const actor = await resolveActor(
@@ -43,6 +44,7 @@ export async function POST(req: Request) {
     const attendanceUnit =
       typeof raw?.attendanceUnit === "string" ? raw.attendanceUnit.trim() : "";
     const phone = typeof raw?.phone === "string" ? raw.phone.trim() : "";
+    const notes = typeof raw?.notes === "string" ? raw.notes.trim() : "";
 
     const [row] = await db
       .insert(clients)
@@ -52,6 +54,7 @@ export async function POST(req: Request) {
         economicGroup: economicGroup || null,
         attendanceUnit: attendanceUnit || null,
         phone: phone || null,
+        notes: notes || null,
         checks: emptyChecks(),
       })
       .returning();

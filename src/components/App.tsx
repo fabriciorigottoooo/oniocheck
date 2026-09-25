@@ -31,6 +31,7 @@ import {
   AgendaEventDialog,
   AgendaTypeDialog,
   ClientDialog,
+  ClientNotesDialog,
   CollaboratorDetailDialog,
   FinishDialog,
   ProfileDialog,
@@ -73,6 +74,7 @@ export default function App() {
   const [clientDialog, setClientDialog] = useState<
     { mode: "new" } | { mode: "rename"; client: ClientT } | null
   >(null);
+  const [notesFor, setNotesFor] = useState<ClientT | null>(null);
   const [finishFor, setFinishFor] = useState<ClientT | null>(null);
   const [adminOpen, setAdminOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -732,11 +734,13 @@ export default function App() {
     economicGroup,
     attendanceUnit,
     phone,
+    notes,
   }: {
     name: string;
     economicGroup?: string | null;
     attendanceUnit?: string | null;
     phone?: string | null;
+    notes?: string | null;
   }) => {
     const meNow = meRef.current;
     if (!meNow || !clientDialog || clientDialog.mode !== "rename") return;
@@ -749,6 +753,7 @@ export default function App() {
         economicGroup,
         attendanceUnit,
         phone,
+        notes,
         actor: { id: meNow.id, name: meNow.name },
       });
       replaceClient(client);
@@ -763,6 +768,39 @@ export default function App() {
       pushToast("Dados do cliente atualizados.");
     } catch (e) {
       pushToast(errMsg(e, "Não foi possível renomear."));
+      void fetchState();
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const saveClientNotes = async (notes: string) => {
+    const meNow = meRef.current;
+    if (!meNow || !notesFor) return;
+    const target = notesFor;
+    setSaving(true);
+    try {
+      const { client } = await api.patchClient(target.id, {
+        op: "rename",
+        name: target.name,
+        economicGroup: target.economicGroup ?? null,
+        attendanceUnit: target.attendanceUnit ?? null,
+        phone: target.phone ?? null,
+        notes: notes || null,
+        actor: { id: meNow.id, name: meNow.name },
+      });
+      replaceClient(client);
+      try {
+        const snapshot = data ?? { clients: [], collaborators: [], activities: [], agendaTypes: [], agendaEvents: [], serverTime: new Date().toISOString() };
+        const next = { ...snapshot, clients: snapshot.clients.map((x) => (x.id === client.id ? client : x)) };
+        localStorage.setItem(CLIENT_BACKUP_KEY, JSON.stringify(next));
+      } catch {
+        // sem armazenamento disponível
+      }
+      setNotesFor(null);
+      pushToast("Observações salvas.");
+    } catch (e) {
+      pushToast(errMsg(e, "Não foi possível salvar as observações."));
       void fetchState();
     } finally {
       setSaving(false);
@@ -1024,6 +1062,7 @@ export default function App() {
       client={selected}
       onToggle={(i, v) => selected && toggleStep(selected, i, v)}
       onRename={() => selected && setClientDialog({ mode: "rename", client: selected })}
+      onNotes={() => selected && setNotesFor(selected)}
       onFinish={() => selected && setFinishFor(selected)}
       onReopen={() => selected && reopenClient(selected)}
       onDelete={() => selected && deleteFinishedClient(selected)}
@@ -1376,6 +1415,16 @@ export default function App() {
           busy={saving}
           onCancel={() => setClientDialog(null)}
           onSubmit={clientDialog.mode === "new" ? createClient : renameClient}
+        />
+      )}
+
+      {notesFor && (
+        <ClientNotesDialog
+          clientName={notesFor.name}
+          initialNotes={notesFor.notes ?? ""}
+          busy={saving}
+          onCancel={() => setNotesFor(null)}
+          onSubmit={saveClientNotes}
         />
       )}
 

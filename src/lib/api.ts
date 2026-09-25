@@ -68,6 +68,7 @@ export const api = {
     economicGroup?: string | null;
     attendanceUnit?: string | null;
     phone?: string | null;
+    notes?: string | null;
     actor: ActorInput;
   }) =>
     req<{ client: ClientT }>("/api/clients", {

@@ -1,12 +1,14 @@
-import { PenLine, Trash2 } from "lucide-react";
+import { NotebookPen, PenLine, Trash2 } from "lucide-react";
 import { STEPS } from "@/lib/steps";
 import type { ClientT, StepState } from "@/lib/types";
 import { fullDate, timeShort } from "@/lib/format";
+import { clientNotesPreview } from "@/lib/clientNotes";
 
 type Props = {
   client: ClientT | null;
   onToggle: (index: number, value: boolean) => void;
   onRename: () => void;
+  onNotes: () => void;
   onFinish: () => void;
   onReopen: () => void;
   onDelete: () => void;
@@ -16,6 +18,7 @@ export default function ClientDetail({
   client,
   onToggle,
   onRename,
+  onNotes,
   onFinish,
   onReopen,
   onDelete,
@@ -48,9 +51,14 @@ export default function ClientDetail({
             {c.phone && <span>Telefone: {c.phone}</span>}
           </div>
         )}
-        <button className="rename-btn" onClick={onRename}>
-          <PenLine size={12} /> Editar cliente
-        </button>
+        <div className="detail-actions">
+          <button className="rename-btn" onClick={onRename}>
+            <PenLine size={12} /> Editar cliente
+          </button>
+          <button className="rename-btn" onClick={onNotes}>
+            <NotebookPen size={12} /> Observações
+          </button>
+        </div>
         <div className="progress-label">
           <span>
             {done
@@ -69,6 +77,20 @@ export default function ClientDetail({
         >
           <i style={{ width: `${n * 10}%` }} />
         </div>
+      </div>
+
+      <div className="notes-panel">
+        <div className="notes-header">
+          <strong>Observações</strong>
+          <button type="button" className="mini-action" onClick={onNotes}>
+            {c.notes ? "Editar" : "Adicionar"}
+          </button>
+        </div>
+        {c.notes && c.notes.trim() ? (
+          <p>{clientNotesPreview(c.notes, 260)}</p>
+        ) : (
+          <p className="notes-empty">Nenhuma observação registrada para este cliente.</p>
+        )}
       </div>
 
       <div className="tasks">
