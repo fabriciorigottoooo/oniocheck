@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { api } from "@/lib/api";
 import { summarizeDashboard } from "@/lib/dashboard";
+import { STEPS } from "@/lib/steps";
 import {
   activityParts,
   isOnline,
@@ -85,6 +86,7 @@ export default function App() {
   const [teamOpen, setTeamOpen] = useState(false);
   const [activityOpen, setActivityOpen] = useState(false);
   const [activityAlert, setActivityAlert] = useState(false);
+  const [selectedStepFilter, setSelectedStepFilter] = useState<number | null>(null);
   const [agendaOpen, setAgendaOpen] = useState(false);
   const [selectedCollaboratorId, setSelectedCollaboratorId] = useState<string | null>(null);
   const [agendaTypeDialog, setAgendaTypeDialog] = useState<
@@ -339,11 +341,18 @@ export default function App() {
         ),
     [clients],
   );
+  const filteredStepClients = useMemo(() => {
+    if (selectedStepFilter === null) return activeClients;
+    return activeClients.filter((client) => !client.checks[selectedStepFilter]?.done);
+  }, [activeClients, selectedStepFilter]);
+
   const visible = useMemo(() => {
     const q = norm(search.trim());
-    const list = view === "active" ? activeClients : doneClients;
-    return q ? list.filter((c) => norm(c.name).includes(q)) : list;
-  }, [view, search, activeClients, doneClients]);
+    const baseList = view === "active"
+      ? (selectedStepFilter === null ? activeClients : filteredStepClients)
+      : doneClients;
+    return q ? baseList.filter((c) => norm(c.name).includes(q)) : baseList;
+  }, [view, search, activeClients, doneClients, filteredStepClients, selectedStepFilter]);
 
   const selected =
     (clients ?? []).find((c) => c.id === selectedId) ??
@@ -354,6 +363,21 @@ export default function App() {
   const selectedCollaborator =
     collaborators.find((c) => c.id === selectedCollaboratorId) ?? null;
   const dashboardSummary = useMemo(() => summarizeDashboard(clients ?? []), [clients]);
+  const stepBreakdown = useMemo(
+    () =>
+      STEPS.map((step, index) => {
+        const done = activeClients.filter((client) => client.checks[index]?.done).length;
+        const missing = activeClients.length - done;
+        return {
+          label: step,
+          index,
+          done,
+          missing,
+          progress: activeClients.length ? Math.round((done / activeClients.length) * 100) : 0,
+        };
+      }),
+    [activeClients],
+  );
   const agendaTypeMap = useMemo(
     () => new Map(agendaTypes.map((t) => [t.id, t])),
     [agendaTypes],
@@ -377,6 +401,7 @@ export default function App() {
     setSearch("");
     setSelectedId(null);
     setSelectedCollaboratorId(null);
+    setSelectedStepFilter(null);
   };
 
   const openDashboard = () => {
@@ -1380,19 +1405,43 @@ export default function App() {
                     <strong>{dashboardSummary.storesFinishedLastWeek}</strong>
                   </div>
                 </div>
-                <div className="week-bars" aria-label="Comparativo semanal">
-                  <div className="week-bar-group">
-                    <span>Últ. semana</span>
-                    <div className="week-bar-track">
-                      <i style={{ width: `${Math.min(dashboardSummary.storesFinishedLastWeek * 50, 100)}%` }} />
+              </div>
+            </section>
+
+            <section className="dashboard-charts">
+              <div className="panel dashboard-chart-panel">
+                <div className="list-head compact-head">
+                  <h2>Etapas concluídas</h2>
+                </div>
+                <div className="chart-bars">
+                  {stepBreakdown.slice(0, 6).map((step) => (
+                    <div key={step.label} className="chart-row">
+                      <div className="chart-row-head">
+                        <span>{step.label}</span>
+                        <strong>{step.progress}%</strong>
+                      </div>
+                      <div className="progress-track chart-track">
+                        <span style={{ width: `${step.progress}%` }} />
+                      </div>
                     </div>
-                  </div>
-                  <div className="week-bar-group">
-                    <span>Esta semana</span>
-                    <div className="week-bar-track accent">
-                      <i style={{ width: `${Math.min(dashboardSummary.storesFinishedThisWeek * 50, 100)}%` }} />
+                  ))}
+                </div>
+              </div>
+
+              <div className="panel dashboard-chart-panel">
+                <div className="list-head compact-head">
+                  <h2>Resumo da operação</h2>
+                </div>
+                <div className="bar-columns" aria-label="Resumo da operação">
+                  {[{ label: "Ativas", value: dashboardSummary.activeClients }, { label: "Finalizadas", value: dashboardSummary.finishedClients }, { label: "Taxa", value: dashboardSummary.completionRate }].map((item) => (
+                    <div key={item.label} className="bar-column-wrap">
+                      <div className="bar-column-label">{item.label}</div>
+                      <div className="bar-column">
+                        <span style={{ height: `${Math.max(item.value === dashboardSummary.completionRate ? item.value : Math.min(item.value * 22, 100), 8)}%` }} />
+                      </div>
+                      <strong>{item.label === "Taxa" ? `${item.value}%` : item.value}</strong>
                     </div>
-                  </div>
+                  ))}
                 </div>
               </div>
             </section>
@@ -1452,42 +1501,80 @@ export default function App() {
         )}
 
         {!dashboardOpen && (
-          <section className="stats" aria-label="Resumo">
-          <div className="stat">
-            <small>Clientes em andamento</small>
-            <strong>{activeClients.length}</strong>
-          </div>
-          <div className="stat">
-            <small>Clientes finalizados</small>
-            <strong>{doneClients.length}</strong>
-          </div>
-          <div className="stat">
-            <small>Etapas concluídas · ativos</small>
-            <strong>
-              {stepsDone} / {activeClients.length * 10}
-            </strong>
-          </div>
-          <div className="stat">
-            <small>Equipe online agora</small>
-            <strong>{onlineCollabs.length}</strong>
-            <div className="stack">
-              {onlineCollabs.slice(0, 6).map((c) => (
-                <Avatar
-                  key={c.id}
-                  name={c.name}
-                  color={c.color}
-                  size={24}
-                  lightBorder
-                  imageUrl={c.avatarUrl ?? null}
-                />
-              ))}
-              {onlineCollabs.length > 6 && (
-                <span className="stack-more">+{onlineCollabs.length - 6}</span>
-              )}
-            </div>
-          </div>
-        </section>
+          <>
+            <section className="stats" aria-label="Resumo">
+              <div className="stat">
+                <small>Clientes em andamento</small>
+                <strong>{activeClients.length}</strong>
+              </div>
+              <div className="stat">
+                <small>Clientes finalizados</small>
+                <strong>{doneClients.length}</strong>
+              </div>
+              <div className="stat">
+                <small>Etapas concluídas · ativos</small>
+                <strong>
+                  {stepsDone} / {activeClients.length * 10}
+                </strong>
+              </div>
+              <div className="stat">
+                <small>Equipe online agora</small>
+                <strong>{onlineCollabs.length}</strong>
+                <div className="stack">
+                  {onlineCollabs.slice(0, 6).map((c) => (
+                    <Avatar
+                      key={c.id}
+                      name={c.name}
+                      color={c.color}
+                      size={24}
+                      lightBorder
+                      imageUrl={c.avatarUrl ?? null}
+                    />
+                  ))}
+                  {onlineCollabs.length > 6 && (
+                    <span className="stack-more">+{onlineCollabs.length - 6}</span>
+                  )}
+                </div>
+              </div>
+            </section>
 
+            <section className="step-filters panel" aria-label="Filtros de etapas">
+              <div className="list-head step-filter-head">
+                <h2>Filtrar por etapa</h2>
+                {selectedStepFilter !== null && (
+                  <button type="button" className="link-btn" onClick={() => setSelectedStepFilter(null)}>
+                    Limpar filtro
+                  </button>
+                )}
+              </div>
+              <div className="step-filter-list">
+                <button
+                  type="button"
+                  className={`step-filter-pill ${selectedStepFilter === null ? "active" : ""}`}
+                  onClick={() => setSelectedStepFilter(null)}
+                >
+                  <span>Todos</span>
+                  <em>{activeClients.length}</em>
+                </button>
+                {STEPS.map((step, index) => {
+                  const count = activeClients.filter((client) => !client.checks[index]?.done).length;
+                  const active = selectedStepFilter === index;
+                  return (
+                    <button
+                      key={step}
+                      type="button"
+                      className={`step-filter-pill ${active ? "active" : ""}`}
+                      onClick={() => setSelectedStepFilter((value) => value === index ? null : index)}
+                      title={`${count} lojas ainda faltam ${step.toLowerCase()}`}
+                    >
+                      <span>{step}</span>
+                      <em>{count}</em>
+                    </button>
+                  );
+                })}
+              </div>
+            </section>
+          </>
         )}
 
         {agendaOpen ? (
@@ -1663,13 +1750,21 @@ export default function App() {
           !dashboardOpen && (
             <div className="workspace">
               <ClientList
-                title="Seus clientes"
+                title={
+                  selectedStepFilter === null
+                    ? "Seus clientes"
+                    : `Sem ${STEPS[selectedStepFilter]}`
+                }
                 search={search}
                 onSearch={setSearch}
                 clients={visible}
                 selectedId={selectedId}
                 onSelect={setSelectedId}
-                emptyText={emptyText}
+                emptyText={
+                  selectedStepFilter === null
+                    ? emptyText
+                    : `Nenhuma loja pendente em ${STEPS[selectedStepFilter].toLowerCase()}.`
+                }
               />
               {renderRightPanel()}
             </div>
