@@ -53,20 +53,9 @@ export default function ClientList({
                   <span className="pct">{n * 10}%</span>
                 </span>
                 <small className="client-meta">
-                  {(c.economicGroup || c.attendanceUnit || c.phone) && (
-                    <span>
-                      {c.economicGroup || "Grupo não informado"}
-                      {c.economicGroup && c.attendanceUnit ? " · " : ""}
-                      {c.attendanceUnit || ""}
-                      {(c.economicGroup || c.attendanceUnit) && c.phone ? " · " : ""}
-                      {c.phone || ""}
-                    </span>
-                  )}
-                  <span>
-                    {c.finishedAt
-                      ? "Finalizado em " + fullDate(c.finishedAt)
-                      : `${n} de 10 etapas concluídas`}
-                  </span>
+                  {c.finishedAt
+                    ? "Finalizado em " + fullDate(c.finishedAt)
+                    : `${n} de 10 etapas concluídas`}
                 </small>
                 <span className="bar">
                   <i style={{ width: `${n * 10}%` }} />
