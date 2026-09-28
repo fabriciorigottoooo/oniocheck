@@ -3,12 +3,15 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   CalendarDays,
+  CheckCircle2,
   CheckCheck,
   Clock3,
+  ListFilter,
   MoonStar,
   NotebookPen,
   PencilLine,
   Plus,
+  RotateCcw,
   Settings,
   SunMedium,
   Trash2,
@@ -131,11 +134,14 @@ export default function App() {
   const refetchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const meRef = useRef<Me | null>(null);
   const activityOpenRef = useRef(activityOpen);
-  activityOpenRef.current = activityOpen;
 
   useEffect(() => {
     meRef.current = me;
   }, [me]);
+
+  useEffect(() => {
+    activityOpenRef.current = activityOpen;
+  }, [activityOpen]);
 
   /* ---------- helpers ---------- */
 
@@ -421,6 +427,11 @@ export default function App() {
       }),
     [activeClients],
   );
+  const lineChartSteps = stepBreakdown.slice(0, 6);
+  const chartX = (index: number) => 54 + index * (512 / Math.max(lineChartSteps.length - 1, 1));
+  const chartY = (value: number) => 20 + ((100 - value) / 100) * 132;
+  const completedLine = lineChartSteps.map((step, index) => `${chartX(index)},${chartY(step.progress)}`).join(" ");
+  const pendingLine = lineChartSteps.map((step, index) => `${chartX(index)},${chartY(100 - step.progress)}`).join(" ");
   const agendaTypeMap = useMemo(
     () => new Map(agendaTypes.map((t) => [t.id, t])),
     [agendaTypes],
@@ -1184,18 +1195,54 @@ export default function App() {
     const pageHeight = doc.internal.pageSize.getHeight();
     const margin = 42;
     const contentWidth = pageWidth - margin * 2;
-    let y = 52;
+    const generatedAt = new Date();
+    const generatedLabel = generatedAt.toLocaleString("pt-BR");
+    let y = 0;
 
-    doc.setFillColor(14, 59, 110);
-    doc.rect(0, 0, pageWidth, 74, "F");
-    doc.setTextColor(255, 255, 255);
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(22);
-    doc.text("OnioCheck", margin, 30);
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(10);
-    doc.text("Relatório executivo de operação", margin, 48);
-    doc.text(`Gerado em ${new Date().toLocaleString("pt-BR")}`, pageWidth - margin, 48, { align: "right" });
+    doc.setProperties({
+      title: "Relatório executivo OnioCheck",
+      subject: "Resumo de clientes, lojas e etapas da operação",
+      author: "OnioCheck",
+    });
+
+    const drawRunningHeader = () => {
+      doc.setFillColor(14, 59, 110);
+      doc.rect(0, 0, pageWidth, 62, "F");
+      doc.setTextColor(255, 255, 255);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(19);
+      doc.text("OnioCheck", margin, 29);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(9);
+      doc.text("RELATÓRIO EXECUTIVO · OPERAÇÃO", margin, 46);
+      doc.setTextColor(217, 231, 250);
+      doc.text(`Emitido em ${generatedLabel}`, pageWidth - margin, 42, { align: "right" });
+    };
+
+    const addContentPage = () => {
+      doc.addPage();
+      drawRunningHeader();
+      y = 84;
+    };
+
+    const ensureRoom = (height: number) => {
+      if (y + height > pageHeight - 58) addContentPage();
+    };
+
+    const sectionHeading = (title: string) => {
+      ensureRoom(36);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(12);
+      doc.setTextColor(26, 44, 70);
+      doc.text(title, margin, y + 12);
+      doc.setDrawColor(220, 229, 242);
+      doc.setLineWidth(0.8);
+      doc.line(margin, y + 19, pageWidth - margin, y + 19);
+      y += 30;
+    };
+
+    drawRunningHeader();
+    y = 82;
 
     const metrics = [
       { label: "Ativos", value: String(dashboardSummary.activeClients) },
@@ -1208,25 +1255,22 @@ export default function App() {
     metrics.forEach((item, index) => {
       const x = margin + index * (cardWidth + 6);
       doc.setFillColor(239, 245, 255);
-      doc.roundedRect(x, 92, cardWidth, 52, 9, 9, "F");
+      doc.roundedRect(x, y, cardWidth, 58, 9, 9, "F");
       doc.setDrawColor(206, 220, 245);
       doc.setLineWidth(1);
-      doc.roundedRect(x, 92, cardWidth, 52, 9, 9, "S");
+      doc.roundedRect(x, y, cardWidth, 58, 9, 9, "S");
       doc.setTextColor(96, 112, 138);
+      doc.setFont("helvetica", "normal");
       doc.setFontSize(9);
-      doc.text(item.label, x + 16, 116);
+      doc.text(item.label.toUpperCase(), x + 12, y + 21);
       doc.setTextColor(15, 23, 42);
       doc.setFont("helvetica", "bold");
       doc.setFontSize(18);
-      doc.text(item.value, x + 16, 132);
+      doc.text(item.value, x + 12, y + 45);
     });
 
-    y = 170;
-    doc.setTextColor(15, 23, 42);
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(14);
-    doc.text("Evolução semanal", margin, y);
-    y += 16;
+    y += 76;
+    sectionHeading("Finalizações semanais");
 
     const weeklyCards = [
       { label: "Nesta semana", value: dashboardSummary.storesFinishedThisWeek },
@@ -1236,83 +1280,109 @@ export default function App() {
     weeklyCards.forEach((item, index) => {
       const x = margin + index * (weeklyWidth + 12);
       doc.setFillColor(246, 249, 255);
-      doc.roundedRect(x, y, weeklyWidth, 34, 8, 8, "F");
+      doc.roundedRect(x, y, weeklyWidth, 42, 8, 8, "F");
+      doc.setDrawColor(226, 233, 244);
+      doc.roundedRect(x, y, weeklyWidth, 42, 8, 8, "S");
       doc.setTextColor(96, 112, 138);
       doc.setFont("helvetica", "normal");
       doc.setFontSize(9);
-      doc.text(item.label, x + 12, y + 15);
+      doc.text(item.label, x + 12, y + 16);
       doc.setTextColor(15, 23, 42);
       doc.setFont("helvetica", "bold");
       doc.setFontSize(18);
-      doc.text(String(item.value), x + 12, y + 28);
+      doc.text(String(item.value), x + 12, y + 34);
     });
-    y += 48;
+    y += 54;
 
-    doc.setTextColor(15, 23, 42);
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(14);
-    doc.text("Resumo por loja", margin, y);
-    y += 16;
+    sectionHeading("Resumo por loja");
+
+    if (!dashboardSummary.storeSummary.length) {
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(10);
+      doc.setTextColor(108, 124, 149);
+      doc.text("Nenhuma loja com dados disponíveis para o período.", margin, y + 12);
+      y += 26;
+    }
 
     dashboardSummary.storeSummary.forEach((store) => {
-      if (y > pageHeight - 115) {
-        doc.addPage();
-        y = 54;
-      }
+      const nameLines = doc.splitTextToSize(store.name, contentWidth - 112) as string[];
+      const rowHeight = Math.max(58, 42 + nameLines.length * 11);
+      ensureRoom(rowHeight + 8);
 
       doc.setDrawColor(214, 224, 240);
       doc.setFillColor(250, 252, 255);
-      doc.roundedRect(margin, y, contentWidth, 52, 8, 8, "FD");
+      doc.roundedRect(margin, y, contentWidth, rowHeight, 8, 8, "FD");
       doc.setFont("helvetica", "bold");
       doc.setFontSize(11);
       doc.setTextColor(15, 23, 42);
-      doc.text(store.name, margin + 16, y + 20);
+      doc.text(nameLines, margin + 14, y + 18);
       doc.text(`${store.progress}%`, pageWidth - margin - 16, y + 20, { align: "right" });
 
       const barX = margin + 16;
       const barWidth = contentWidth - 32;
+      const barY = y + rowHeight - 28;
       doc.setFillColor(228, 233, 241);
-      doc.roundedRect(barX, y + 26, barWidth, 8, 4, 4, "F");
-      doc.setFillColor(37, 107, 239);
-      doc.roundedRect(barX, y + 26, (barWidth * store.progress) / 100, 8, 4, 4, "F");
+      doc.roundedRect(barX, barY, barWidth, 6, 3, 3, "F");
+      if (store.progress > 0) {
+        doc.setFillColor(37, 107, 239);
+        doc.roundedRect(barX, barY, Math.max(4, (barWidth * store.progress) / 100), 6, 3, 3, "F");
+      }
 
       doc.setFont("helvetica", "normal");
       doc.setFontSize(9);
       doc.setTextColor(92, 110, 136);
-      doc.text(`${store.done} concluídos · ${store.active} em andamento`, margin + 16, y + 44);
+      doc.text(`${store.done} finalizados  ·  ${store.active} em andamento`, margin + 16, y + rowHeight - 8);
 
-      y += 64;
+      y += rowHeight + 9;
     });
 
-    if (y > pageHeight - 110) {
-      doc.addPage();
-      y = 54;
+    sectionHeading("Clientes em foco");
+
+    if (!dashboardSummary.priorityClients.length) {
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(10);
+      doc.setTextColor(108, 124, 149);
+      doc.text("Nenhum cliente em andamento no momento.", margin, y + 12);
+      y += 26;
     }
 
-    doc.setTextColor(15, 23, 42);
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(14);
-    doc.text("Clientes em foco", margin, y);
-    y += 16;
-
     dashboardSummary.priorityClients.forEach((client) => {
-      if (y > pageHeight - 76) {
-        doc.addPage();
-        y = 54;
-      }
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(10);
+      const nameLines = doc.splitTextToSize(client.name, contentWidth - 100) as string[];
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(9);
+      const unitLines = doc.splitTextToSize(client.unit, contentWidth - 30) as string[];
+      const rowHeight = Math.max(48, 17 + nameLines.length * 12 + unitLines.length * 10);
+      ensureRoom(rowHeight + 7);
 
       doc.setFillColor(246, 249, 255);
-      doc.roundedRect(margin, y, contentWidth, 28, 8, 8, "F");
+      doc.setDrawColor(226, 233, 244);
+      doc.roundedRect(margin, y, contentWidth, rowHeight, 8, 8, "FD");
       doc.setFont("helvetica", "bold");
       doc.setFontSize(10);
       doc.setTextColor(15, 23, 42);
-      doc.text(client.name, margin + 14, y + 16);
+      doc.text(nameLines, margin + 14, y + 16);
       doc.text(`${client.progress}%`, pageWidth - margin - 14, y + 16, { align: "right" });
       doc.setTextColor(108, 124, 149);
       doc.setFont("helvetica", "normal");
-      doc.text(client.unit, margin + 14, y + 25);
-      y += 36;
+      doc.setFontSize(9);
+      doc.text(unitLines, margin + 14, y + 17 + nameLines.length * 12);
+      y += rowHeight + 7;
     });
+
+    const pageCount = doc.getNumberOfPages();
+    for (let page = 1; page <= pageCount; page += 1) {
+      doc.setPage(page);
+      doc.setDrawColor(220, 229, 242);
+      doc.setLineWidth(0.7);
+      doc.line(margin, pageHeight - 38, pageWidth - margin, pageHeight - 38);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(8);
+      doc.setTextColor(113, 128, 150);
+      doc.text("OnioCheck  ·  Relatório interno", margin, pageHeight - 23);
+      doc.text(`Página ${page} de ${pageCount}`, pageWidth - margin, pageHeight - 23, { align: "right" });
+    }
 
     doc.save(`oniocheck-relatorio-${new Date().toISOString().slice(0, 10)}.pdf`);
     pushToast("Relatório PDF baixado com sucesso.");
@@ -1476,18 +1546,33 @@ export default function App() {
                 <div className="list-head compact-head">
                   <h2>Etapas concluídas</h2>
                 </div>
-                <div className="chart-bars">
-                  {stepBreakdown.slice(0, 6).map((step) => (
-                    <div key={step.label} className="chart-row">
-                      <div className="chart-row-head">
-                        <span>{step.label}</span>
-                        <strong>{step.progress}%</strong>
-                      </div>
-                      <div className="progress-track chart-track">
-                        <span style={{ width: `${step.progress}%` }} />
-                      </div>
-                    </div>
-                  ))}
+                <div className="line-chart-wrap">
+                  <div className="line-chart-legend" aria-label="Legenda do gráfico">
+                    <span><i className="legend-dot completed" />Concluídas</span>
+                    <span><i className="legend-dot pending" />Pendentes</span>
+                  </div>
+                  <svg className="steps-line-chart" viewBox="0 0 620 220" role="img" aria-label="Percentual de etapas concluídas e pendentes por etapa">
+                    {[0, 50, 100].map((value) => {
+                      const y = chartY(value);
+                      return <g key={value}>
+                        <line x1="54" x2="566" y1={y} y2={y} className="chart-grid-line" />
+                        <text x="42" y={y + 4} className="chart-axis-label" textAnchor="end">{value}%</text>
+                      </g>;
+                    })}
+                    {lineChartSteps.length > 1 && <>
+                      <polyline points={completedLine} className="chart-line completed-line" />
+                      <polyline points={pendingLine} className="chart-line pending-line" />
+                    </>}
+                    {lineChartSteps.map((step, index) => {
+                      const x = chartX(index);
+                      const shortLabel = step.label.length > 15 ? `${step.label.slice(0, 14)}…` : step.label;
+                      return <g key={step.label}>
+                        <circle cx={x} cy={chartY(step.progress)} r="4.5" className="chart-point completed-point"><title>{step.label}: {step.progress}% concluídas</title></circle>
+                        <circle cx={x} cy={chartY(100 - step.progress)} r="4.5" className="chart-point pending-point"><title>{step.label}: {100 - step.progress}% pendentes</title></circle>
+                        <text x={x} y="180" className="chart-step-label" textAnchor="middle">{shortLabel}</text>
+                      </g>;
+                    })}
+                  </svg>
                 </div>
               </div>
 
@@ -1495,14 +1580,16 @@ export default function App() {
                 <div className="list-head compact-head">
                   <h2>Resumo da operação</h2>
                 </div>
-                <div className="bar-columns" aria-label="Resumo da operação">
-                  {[{ label: "Ativas", value: dashboardSummary.activeClients }, { label: "Finalizadas", value: dashboardSummary.finishedClients }, { label: "Taxa", value: dashboardSummary.completionRate }].map((item) => (
-                    <div key={item.label} className="bar-column-wrap">
-                      <div className="bar-column-label">{item.label}</div>
-                      <div className="bar-column">
-                        <span style={{ height: `${Math.max(item.value === dashboardSummary.completionRate ? item.value : Math.min(item.value * 22, 100), 8)}%` }} />
-                      </div>
-                      <strong>{item.label === "Taxa" ? `${item.value}%` : item.value}</strong>
+                <div className="operation-metrics" aria-label="Resumo da operação">
+                  {[
+                    { label: "Em andamento", value: dashboardSummary.activeClients, tone: "active" },
+                    { label: "Finalizados", value: dashboardSummary.finishedClients, tone: "finished" },
+                    { label: "Conclusão", value: `${dashboardSummary.completionRate}%`, tone: "rate" },
+                  ].map((item) => (
+                    <div key={item.label} className={`operation-metric ${item.tone}`}>
+                      <span className="metric-mark" />
+                      <small>{item.label}</small>
+                      <strong>{item.value}</strong>
                     </div>
                   ))}
                 </div>
@@ -1601,12 +1688,18 @@ export default function App() {
               </div>
             </section>
 
-            {view === "active" && <section className="step-filters panel" aria-label="Filtros de etapas">
+            {view === "active" && !agendaOpen && <section className="step-filters panel" aria-label="Filtros de etapas">
               <div className="list-head step-filter-head">
-                <h2>Filtrar por etapa</h2>
+                <div className="step-filter-title">
+                  <span className="step-filter-heading-icon"><ListFilter size={18} /></span>
+                  <div>
+                    <h2>Filtrar por etapa</h2>
+                    <p>Encontre as lojas pelo ponto em que estão no processo.</p>
+                  </div>
+                </div>
                 {selectedStepFilter !== null && (
                   <button type="button" className="link-btn" onClick={() => setSelectedStepFilter(null)}>
-                    Limpar filtro
+                    <RotateCcw size={14} /> Limpar filtro
                   </button>
                 )}
               </div>
@@ -1614,8 +1707,10 @@ export default function App() {
                 <button
                   type="button"
                   className={`step-filter-pill ${selectedStepFilter === null ? "active" : ""}`}
+                  aria-pressed={selectedStepFilter === null}
                   onClick={() => setSelectedStepFilter(null)}
                 >
+                  <ListFilter size={15} aria-hidden="true" />
                   <span>Todos</span>
                   <em>{activeClients.length}</em>
                 </button>
@@ -1627,9 +1722,11 @@ export default function App() {
                       key={step}
                       type="button"
                       className={`step-filter-pill ${active ? "active" : ""}`}
+                      aria-pressed={active}
                       onClick={() => setSelectedStepFilter((value) => value === index ? null : index)}
                       title={`${count} lojas ainda faltam ${step.toLowerCase()}`}
                     >
+                      <CheckCircle2 size={15} aria-hidden="true" />
                       <span>{step}</span>
                       <em>{count}</em>
                     </button>
