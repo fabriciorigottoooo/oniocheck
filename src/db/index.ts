@@ -38,7 +38,7 @@ async function ensureAgendaDefaults() {
 
 export async function ensureDatabaseCompatibility() {
   await db.execute(`
-    CREATE TABLE IF NOT EXISTS stores_vault (
+    CREATE TABLE IF NOT EXISTS stores_registry (
       id text PRIMARY KEY,
       payload jsonb NOT NULL,
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()

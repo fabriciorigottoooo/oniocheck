@@ -73,11 +73,23 @@ export type AgendaEvent = {
   createdAt: string;
 };
 
-export type StoresVaultEnvelope = {
-  version: 1;
-  salt: string;
-  iv: string;
-  data: string;
+export type StoreAccount = {
+  id: string;
+  role: "Atendente" | "Administrador" | "Suporte";
+  email: string;
+  password: string;
+};
+
+export type StoreRecord = {
+  id: string;
+  name: string;
+  cnpj: string;
+  phone: string;
+  responsible: string;
+  accounts: StoreAccount[];
+  observations: string;
+  createdAt: string;
+  updatedAt: string;
 };
 
 export type AppState = {

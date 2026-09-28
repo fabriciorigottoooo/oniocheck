@@ -1371,7 +1371,7 @@ export default function App() {
             <h1>{agendaTitle}</h1>
             <p className="muted">
               {storesOpen
-                ? "Gerencie os cadastros e credenciais das lojas em um cofre compartilhado e criptografado."
+                ? "Gerencie os cadastros e credenciais das lojas compartilhados com toda a equipe."
                 : dashboardOpen
                 ? "Visão geral da operação: lojas, clientes em andamento e progresso da equipe."
                 : agendaOpen
