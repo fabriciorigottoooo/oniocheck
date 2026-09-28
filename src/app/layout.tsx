@@ -13,7 +13,9 @@ export const metadata: Metadata = {
   title: "OnioCheck · Checklist de clientes",
   description:
     "Gestão colaborativa de checklists e unidades de atendimento.",
-  icons: {},
+  icons: {
+    icon: "/favicon.svg",
+  },
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
