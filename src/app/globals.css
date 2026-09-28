@@ -83,11 +83,11 @@ button:disabled {
   min-height: 100vh;
   background: var(--bg);
   color: var(--ink);
-  transition: grid-template-columns 0.2s ease;
+  transition: grid-template-columns 0.36s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .app.sidebar-collapsed {
-  grid-template-columns: 96px minmax(0, 1fr);
+  grid-template-columns: 82px minmax(0, 1fr);
 }
 
 .app.dark {
@@ -397,13 +397,13 @@ textarea::placeholder {
   padding: 28px 16px 18px;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 16px;
   position: sticky;
   top: 0;
   height: 100vh;
   overflow-x: hidden;
   overflow-y: auto;
-  transition: all 0.28s cubic-bezier(0.2, 0.8, 0.2, 1);
+  transition: width 0.36s cubic-bezier(0.22, 1, 0.36, 1), padding 0.36s cubic-bezier(0.22, 1, 0.36, 1), gap 0.28s ease;
 }
 
 .side .brand-row {
@@ -416,6 +416,20 @@ textarea::placeholder {
 .side.collapsed {
   padding-left: 10px;
   padding-right: 10px;
+  gap: 15px;
+}
+
+.side.collapsed .brand-row {
+  display: flex;
+  justify-content: center;
+}
+
+.side.collapsed .brand-row .brand-wrap {
+  display: none;
+}
+
+.side.collapsed .sidebar-toggle {
+  margin: 0 auto;
 }
 
 .brand-row {
@@ -762,13 +776,73 @@ textarea::placeholder {
 
 .side.collapsed .tabs {
   display: grid;
-  gap: 8px;
+  gap: 7px;
+}
+
+.side.collapsed .tab {
+  position: relative;
+  width: 46px;
+  height: 46px;
+  min-height: 46px;
+  margin: 0 auto;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 15px;
+  justify-content: center;
+  transition: color 0.2s ease, background 0.24s ease, border-color 0.24s ease, transform 0.28s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.24s ease;
+}
+
+.side.collapsed .tab .tab-icon {
+  width: 24px;
+  min-width: 24px;
+  height: 24px;
+}
+
+.side.collapsed .tab .tab-icon svg {
+  width: 20px;
+  height: 20px;
+  stroke-width: 1.9;
+}
+
+.side.collapsed .tab[aria-pressed="true"] {
+  border-color: rgba(153, 190, 255, 0.16);
+  background: linear-gradient(145deg, rgba(90, 145, 243, 0.32), rgba(53, 99, 185, 0.2));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 5px 14px rgba(3, 13, 31, 0.16);
+}
+
+.side.collapsed .tab-meta {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 10px;
+  height: 10px;
+  pointer-events: none;
+}
+
+.side.collapsed .tab .activity-alert {
+  width: 8px;
+  height: 8px;
+  box-shadow: 0 0 0 2px #112749, 0 0 9px rgba(255, 77, 77, 0.62);
+}
+
+.side.collapsed .tab:hover {
+  transform: translateY(-2px) scale(1.035);
+  background: rgba(255, 255, 255, 0.09);
+}
+
+.side.collapsed .tab[aria-pressed="true"]:hover {
+  background: linear-gradient(145deg, rgba(90, 145, 243, 0.4), rgba(53, 99, 185, 0.27));
 }
 
 .side.collapsed .secondary {
-  width: 100%;
+  width: 46px;
+  height: 46px;
+  min-height: 46px;
+  margin-left: auto;
+  margin-right: auto;
   justify-content: center;
-  padding: 12px 10px;
+  padding: 0;
+  border-radius: 15px;
 }
 
 .side.collapsed .team,

@@ -45,6 +45,7 @@ import Avatar from "./Avatar";
 import StoresView from "./StoresView";
 
 const ME_KEY = "oniocheck-me-v1";
+const LAST_SEEN_ACTIVITY_KEY = "oniocheck-last-seen-activity-v1";
 const CLIENT_BACKUP_KEY = "oniocheck-client-backup-v1";
 const DELETED_CLIENTS_KEY = "oniocheck-deleted-clients-v1";
 
@@ -129,7 +130,8 @@ export default function App() {
   const seenRef = useRef<Set<string>>(new Set());
   const refetchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const meRef = useRef<Me | null>(null);
-  const lastSeenActivityRef = useRef<string | null>(null);
+  const activityOpenRef = useRef(activityOpen);
+  activityOpenRef.current = activityOpen;
 
   useEffect(() => {
     meRef.current = me;
@@ -186,11 +188,21 @@ export default function App() {
 
       setData(s);
       const newestActivityId = s.activities[0]?.id ?? null;
-      if (newestActivityId && newestActivityId !== lastSeenActivityRef.current && !activityOpen) {
-        setActivityAlert(true);
-      }
-      if (newestActivityId) {
-        lastSeenActivityRef.current = newestActivityId;
+      try {
+        const savedLastSeen = localStorage.getItem(LAST_SEEN_ACTIVITY_KEY);
+        if (savedLastSeen === null) {
+          // Na primeira visita, considera o histórico atual como já conhecido.
+          localStorage.setItem(LAST_SEEN_ACTIVITY_KEY, newestActivityId ?? "");
+        } else if (newestActivityId && newestActivityId !== savedLastSeen) {
+          if (activityOpenRef.current) {
+            localStorage.setItem(LAST_SEEN_ACTIVITY_KEY, newestActivityId);
+            setActivityAlert(false);
+          } else {
+            setActivityAlert(true);
+          }
+        }
+      } catch {
+        // Se o navegador bloquear o armazenamento, mantém o indicador em memória.
       }
       try {
         localStorage.setItem(CLIENT_BACKUP_KEY, JSON.stringify(s));
@@ -214,7 +226,11 @@ export default function App() {
       const next = !value;
       if (next) {
         setActivityAlert(false);
-        lastSeenActivityRef.current = data.activities[0]?.id ?? null;
+        try {
+          localStorage.setItem(LAST_SEEN_ACTIVITY_KEY, data.activities[0]?.id ?? "");
+        } catch {
+          // O histórico continua marcado como lido nesta sessão.
+        }
       }
       return next;
     });
@@ -300,7 +316,6 @@ export default function App() {
         };
         if (evt.type === "change" || evt.type === "presence") {
           scheduleRefetch();
-          if (!activityOpen) setActivityAlert(true);
         }
         const a = evt.activity;
         if (a && a.actorId !== me.id && !seenRef.current.has(a.id)) {
@@ -338,7 +353,7 @@ export default function App() {
       clearInterval(poll);
       document.removeEventListener("visibilitychange", onVis);
     };
-  }, [me, fetchState, scheduleRefetch, pushToast, activityOpen]);
+  }, [me, fetchState, scheduleRefetch, pushToast]);
 
   /* ---------- derived ---------- */
 
@@ -1586,7 +1601,7 @@ export default function App() {
               </div>
             </section>
 
-            <section className="step-filters panel" aria-label="Filtros de etapas">
+            {view === "active" && <section className="step-filters panel" aria-label="Filtros de etapas">
               <div className="list-head step-filter-head">
                 <h2>Filtrar por etapa</h2>
                 {selectedStepFilter !== null && (
@@ -1621,7 +1636,7 @@ export default function App() {
                   );
                 })}
               </div>
-            </section>
+            </section>}
           </>
         )}
 

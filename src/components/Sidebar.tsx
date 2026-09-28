@@ -126,6 +126,8 @@ export default function Sidebar({
       <nav className="tabs" aria-label="Telas">
         <button
           className="tab"
+          title="Em andamento"
+          aria-label={`Em andamento: ${counts.active}`}
           aria-pressed={view === "active"}
           onClick={() => onView("active")}
         >
@@ -135,6 +137,8 @@ export default function Sidebar({
         </button>
         <button
           className="tab"
+          title="Finalizados"
+          aria-label={`Finalizados: ${counts.done}`}
           aria-pressed={view === "done"}
           onClick={() => onView("done")}
         >
@@ -146,6 +150,7 @@ export default function Sidebar({
 
       <button
         className={`tab ${dashboardActive ? "active" : ""}`}
+        title="Dashboard"
         aria-pressed={dashboardActive}
         onClick={onOpenDashboard}
       >
@@ -155,6 +160,7 @@ export default function Sidebar({
 
       <button
         className={`tab ${agendaActive ? "active" : ""}`}
+        title="Agenda"
         aria-pressed={agendaActive}
         onClick={onOpenAgenda}
       >
@@ -165,6 +171,7 @@ export default function Sidebar({
 
       <button
         className={`tab ${storesActive ? "active" : ""}`}
+        title="Cadastros/Lojas"
         aria-pressed={storesActive}
         onClick={onOpenStores}
       >
@@ -174,6 +181,7 @@ export default function Sidebar({
 
       <button
         className={`tab ${teamOpen ? "active" : ""}`}
+        title="Equipe"
         aria-pressed={teamOpen}
         onClick={onToggleTeam}
       >
@@ -184,6 +192,7 @@ export default function Sidebar({
 
       <button
         className={`tab ${activityOpen ? "active" : ""} ${activityAlert ? "has-alert" : ""}`}
+        title="Atividade recente"
         aria-pressed={activityOpen}
         onClick={onToggleActivity}
       >
