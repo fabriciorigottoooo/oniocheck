@@ -1,6 +1,7 @@
 import { randomUUID } from "crypto";
 import { jsonb, pgTable, text, timestamp } from "drizzle-orm/pg-core";
 import type { StepState } from "../lib/types";
+import type { StoresVaultEnvelope } from "../lib/types";
 
 export const collaborators = pgTable("collaborators", {
   id: text("id").primaryKey(),
@@ -86,4 +87,10 @@ export const activities = pgTable("activities", {
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
+});
+
+export const storesVault = pgTable("stores_vault", {
+  id: text("id").primaryKey(),
+  payload: jsonb("payload").$type<StoresVaultEnvelope>().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });

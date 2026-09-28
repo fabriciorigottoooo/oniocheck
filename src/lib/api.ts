@@ -4,6 +4,7 @@ import type {
   ClientT,
   Collab,
   PatchBody,
+  StoresVaultEnvelope,
 } from "./types";
 
 async function req<T>(url: string, options?: RequestInit): Promise<T> {
@@ -29,6 +30,14 @@ async function req<T>(url: string, options?: RequestInit): Promise<T> {
 
 export const api = {
   state: () => req<AppState>("/api/state"),
+
+  getStoresVault: () => req<{ vault: StoresVaultEnvelope | null; revision: string | null }>("/api/stores-vault"),
+
+  saveStoresVault: (body: { vault: StoresVaultEnvelope; expectedUpdatedAt: string | null; actor: ActorInput }) =>
+    req<{ ok: boolean; revision: string }>("/api/stores-vault", {
+      method: "PUT",
+      body: JSON.stringify(body),
+    }),
 
   login: (body: { username: string; password: string }) =>
     req<{ user: { id: string; username: string; role: string }; collaborator: Collab }>(

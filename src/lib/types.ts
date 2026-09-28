@@ -73,6 +73,13 @@ export type AgendaEvent = {
   createdAt: string;
 };
 
+export type StoresVaultEnvelope = {
+  version: 1;
+  salt: string;
+  iv: string;
+  data: string;
+};
+
 export type AppState = {
   clients: ClientT[];
   collaborators: Collab[];

@@ -42,6 +42,7 @@ import {
 } from "./Dialogs";
 import Toasts, { type ToastItem } from "./Toasts";
 import Avatar from "./Avatar";
+import StoresView from "./StoresView";
 
 const ME_KEY = "oniocheck-me-v1";
 const CLIENT_BACKUP_KEY = "oniocheck-client-backup-v1";
@@ -72,6 +73,7 @@ export default function App() {
   const [live, setLive] = useState(false);
   const [view, setView] = useState<"active" | "done">("active");
   const [dashboardOpen, setDashboardOpen] = useState(false);
+  const [storesOpen, setStoresOpen] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [toasts, setToasts] = useState<ToastItem[]>([]);
@@ -423,6 +425,7 @@ export default function App() {
   const changeView = (v: "active" | "done") => {
     setView(v);
     setDashboardOpen(false);
+    setStoresOpen(false);
     setAgendaOpen(false);
     setSearch("");
     setSelectedId(null);
@@ -432,6 +435,7 @@ export default function App() {
 
   const openDashboard = () => {
     setDashboardOpen(true);
+    setStoresOpen(false);
     setAgendaOpen(false);
     setSelectedCollaboratorId(null);
     setSelectedId(null);
@@ -440,7 +444,17 @@ export default function App() {
 
   const openAgenda = () => {
     setDashboardOpen(false);
+    setStoresOpen(false);
     setAgendaOpen(true);
+    setSelectedCollaboratorId(null);
+    setSelectedId(null);
+    setSearch("");
+  };
+
+  const openStores = () => {
+    setDashboardOpen(false);
+    setAgendaOpen(false);
+    setStoresOpen(true);
     setSelectedCollaboratorId(null);
     setSelectedId(null);
     setSearch("");
@@ -1291,7 +1305,7 @@ export default function App() {
 
   const booting = !me && !needSetup;
 
-  const agendaTitle = dashboardOpen ? "Dashboard" : agendaOpen ? "Agenda" : view === "active" ? "Em andamento" : "Finalizados";
+  const agendaTitle = storesOpen ? "Cadastros/Lojas" : dashboardOpen ? "Dashboard" : agendaOpen ? "Agenda" : view === "active" ? "Em andamento" : "Finalizados";
 
   const renderRightPanel = () => (
     <ClientDetail
@@ -1324,9 +1338,11 @@ export default function App() {
         counts={{ active: activeClients.length, done: doneClients.length }}
         agendaCount={agendaEvents.length}
         dashboardActive={dashboardOpen}
+        storesActive={storesOpen}
         onView={changeView}
         onOpenDashboard={openDashboard}
         onOpenAgenda={openAgenda}
+        onOpenStores={openStores}
         agendaActive={agendaOpen}
         collaborators={collaborators}
         activities={activities}
@@ -1351,10 +1367,12 @@ export default function App() {
       <main className="main">
         <header className="topbar">
           <div>
-            <div className="eyebrow">GESTÃO DE CHECKLISTS · COLABORATIVO</div>
+            <div className="eyebrow">{storesOpen ? "CADASTROS · LOJAS" : "GESTÃO DE CHECKLISTS · COLABORATIVO"}</div>
             <h1>{agendaTitle}</h1>
             <p className="muted">
-              {dashboardOpen
+              {storesOpen
+                ? "Gerencie os cadastros e credenciais das lojas em um cofre compartilhado e criptografado."
+                : dashboardOpen
                 ? "Visão geral da operação: lojas, clientes em andamento e progresso da equipe."
                 : agendaOpen
                   ? "Planeje reuniões e eventos, com tipos personalizáveis e visualização por toda a equipe."
@@ -1373,7 +1391,7 @@ export default function App() {
             >
               {darkMode ? <SunMedium size={20} /> : <MoonStar size={20} />}
             </button>
-            <span
+            {!storesOpen && <span
               className={`pill ${live ? "on" : "off"}`}
               title={
                 live
@@ -1383,13 +1401,13 @@ export default function App() {
             >
               <span className="pdot" />
               {live ? "Ao vivo" : "Reconectando…"}
-            </span>
-            {!dashboardOpen && !agendaOpen && (
+            </span>}
+            {!dashboardOpen && !agendaOpen && !storesOpen && (
               <button className="primary" onClick={() => setClientDialog({ mode: "new" })}>
                 <Plus size={15} /> Novo cliente
               </button>
             )}
-            {dashboardOpen && (
+            {dashboardOpen && !storesOpen && (
               <button className="primary" type="button" onClick={() => void downloadDashboardPdf()}>
                 <Plus size={15} /> Gerar PDF
               </button>
@@ -1397,7 +1415,9 @@ export default function App() {
           </div>
         </header>
 
-        {dashboardOpen && (
+        {storesOpen && <StoresView actor={{ id: me?.id ?? "", name: me?.name ?? "" }} />}
+
+        {dashboardOpen && !storesOpen && (
           <div className="dashboard-shell">
             <section className="stats dashboard-stats" aria-label="Resumo do dashboard">
               <div className="stat dashboard-card">
@@ -1528,7 +1548,7 @@ export default function App() {
           </div>
         )}
 
-        {!dashboardOpen && (
+        {!dashboardOpen && !storesOpen && (
           <>
             <section className="stats" aria-label="Resumo">
               <div className="stat">
@@ -1605,7 +1625,7 @@ export default function App() {
           </>
         )}
 
-        {agendaOpen ? (
+        {!storesOpen && agendaOpen ? (
           <section className="agenda-layout">
             <div className="panel agenda-panel">
               <div className="list-head">
@@ -1775,7 +1795,7 @@ export default function App() {
             </div>
           </section>
         ) : (
-          !dashboardOpen && (
+          !dashboardOpen && !storesOpen && (
             <div className="workspace">
               <ClientList
                 title={

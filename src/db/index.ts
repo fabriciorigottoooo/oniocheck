@@ -38,6 +38,14 @@ async function ensureAgendaDefaults() {
 
 export async function ensureDatabaseCompatibility() {
   await db.execute(`
+    CREATE TABLE IF NOT EXISTS stores_vault (
+      id text PRIMARY KEY,
+      payload jsonb NOT NULL,
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+  `);
+
+  await db.execute(`
     CREATE TABLE IF NOT EXISTS agenda_event_types (
       id text PRIMARY KEY,
       name text NOT NULL,

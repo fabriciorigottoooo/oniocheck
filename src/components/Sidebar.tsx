@@ -10,6 +10,7 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   Settings,
+  Store,
   Users,
 } from "lucide-react";
 import type { Activity, Collab } from "@/lib/types";
@@ -21,9 +22,11 @@ type Props = {
   counts: { active: number; done: number };
   agendaCount: number;
   dashboardActive: boolean;
+  storesActive: boolean;
   onView: (v: "active" | "done") => void;
   onOpenDashboard: () => void;
   onOpenAgenda: () => void;
+  onOpenStores: () => void;
   agendaActive: boolean;
   collaborators: Collab[];
   activities: Activity[];
@@ -50,9 +53,11 @@ export default function Sidebar({
   counts,
   agendaCount,
   dashboardActive,
+  storesActive,
   onView,
   onOpenDashboard,
   onOpenAgenda,
+  onOpenStores,
   agendaActive,
   collaborators,
   activities,
@@ -156,6 +161,15 @@ export default function Sidebar({
         <span className="tab-icon"><CalendarDays size={14} /></span>
         <span>Agenda</span>
         {agendaCount > 0 && <span className="count">{agendaCount}</span>}
+      </button>
+
+      <button
+        className={`tab ${storesActive ? "active" : ""}`}
+        aria-pressed={storesActive}
+        onClick={onOpenStores}
+      >
+        <span className="tab-icon"><Store size={14} /></span>
+        <span>Cadastros/Lojas</span>
       </button>
 
       <button
