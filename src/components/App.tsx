@@ -4,8 +4,9 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import {
   CalendarDays,
-  CheckCircle2,
   CheckCheck,
+  ChevronLeft,
+  ChevronRight,
   Clock3,
   LogOut,
   Menu as MenuIcon,
@@ -99,6 +100,7 @@ export default function App() {
   const [darkMode, setDarkMode] = useState(false);
   const [topMenuOpen, setTopMenuOpen] = useState(false);
   const [dashboardChartExpanded, setDashboardChartExpanded] = useState(false);
+  const [hiddenChartSeries, setHiddenChartSeries] = useState<string[]>([]);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [deletedClientIds, setDeletedClientIds] = useState<string[]>(() => {
     try {
@@ -142,6 +144,8 @@ export default function App() {
 
   const fileRef = useRef<HTMLInputElement>(null);
   const topMenuRef = useRef<HTMLDivElement>(null);
+  const chartPlotRef = useRef<HTMLDivElement>(null);
+  const chartDragRef = useRef<{ pointerId: number; x: number; y: number; scrollLeft: number; scrollTop: number } | null>(null);
   const seenRef = useRef<Set<string>>(new Set());
   const refetchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const meRef = useRef<Me | null>(null);
@@ -478,7 +482,8 @@ export default function App() {
     };
   });
   const lineChartSteps = stepBreakdown;
-  const chartX = (index: number) => 56 + index * (738 / Math.max(lineChartSteps.length - 1, 1));
+  const chartViewWidth = dashboardChartExpanded ? 1480 : 850;
+  const chartX = (index: number) => 56 + index * ((chartViewWidth - 112) / Math.max(lineChartSteps.length - 1, 1));
   const chartPlotHeight = dashboardChartExpanded ? 340 : 156;
   const chartViewHeight = dashboardChartExpanded ? 430 : 280;
   const chartLabelY = dashboardChartExpanded ? 408 : 218;
@@ -505,6 +510,7 @@ export default function App() {
       dashed: true,
     }] : []),
   ];
+  const visibleChartSeries = chartSeries.filter((series) => !hiddenChartSeries.includes(series.key));
   const agendaTypeMap = useMemo(
     () => new Map(agendaTypes.map((t) => [t.id, t])),
     [agendaTypes],
@@ -1651,36 +1657,86 @@ export default function App() {
                     <h2>Progresso por etapa</h2>
                     <p>Percentual de conclusão separado por situação das lojas.</p>
                   </div>
-                  <button
-                    type="button"
-                    className="chart-expand-btn"
-                    aria-label={dashboardChartExpanded ? "Recolher gráfico" : "Expandir gráfico"}
-                    aria-expanded={dashboardChartExpanded}
-                    title={dashboardChartExpanded ? "Recolher gráfico" : "Expandir gráfico"}
-                    onClick={() => setDashboardChartExpanded((expanded) => !expanded)}
-                  >
-                    {dashboardChartExpanded ? <Minimize2 size={17} /> : <Maximize2 size={17} />}
-                  </button>
+                  <div className="chart-heading-actions">
+                    {dashboardChartExpanded && (
+                      <>
+                        <span className="chart-scroll-hint">Navegue pelas etapas</span>
+                        <button type="button" className="chart-scroll-btn" aria-label="Rolar etapas para a esquerda" title="Etapas anteriores" onClick={() => chartPlotRef.current?.scrollBy({ left: -520, behavior: "smooth" })}>
+                          <ChevronLeft size={18} />
+                        </button>
+                        <button type="button" className="chart-scroll-btn" aria-label="Rolar etapas para a direita" title="Próximas etapas" onClick={() => chartPlotRef.current?.scrollBy({ left: 520, behavior: "smooth" })}>
+                          <ChevronRight size={18} />
+                        </button>
+                      </>
+                    )}
+                    <button
+                      type="button"
+                      className="chart-expand-btn"
+                      aria-label={dashboardChartExpanded ? "Recolher gráfico" : "Expandir gráfico"}
+                      aria-expanded={dashboardChartExpanded}
+                      title={dashboardChartExpanded ? "Recolher gráfico" : "Expandir gráfico"}
+                      onClick={() => setDashboardChartExpanded((expanded) => !expanded)}
+                    >
+                      {dashboardChartExpanded ? <Minimize2 size={17} /> : <Maximize2 size={17} />}
+                      <span>{dashboardChartExpanded ? "Recolher" : "Expandir"}</span>
+                    </button>
+                  </div>
                 </div>
                 <div className="line-chart-wrap">
                   <div className="line-chart-legend" aria-label="Legenda do gráfico">
                     {chartSeries.map((series) => (
-                      <span key={series.key}>
+                      <button
+                        key={series.key}
+                        type="button"
+                        className={`chart-legend-toggle${hiddenChartSeries.includes(series.key) ? " muted" : ""}`}
+                        aria-pressed={!hiddenChartSeries.includes(series.key)}
+                        aria-label={`${hiddenChartSeries.includes(series.key) ? "Mostrar" : "Ocultar"} linha ${series.label}`}
+                        onClick={() => setHiddenChartSeries((current) => current.includes(series.key)
+                          ? current.filter((key) => key !== series.key)
+                          : [...current, series.key])}
+                      >
                         <i className={`legend-line${"dashed" in series && series.dashed ? " dashed" : ""}`} style={{ borderTopColor: series.color }} />
                         {series.label}
-                      </span>
+                      </button>
                     ))}
                   </div>
-                  {chartSeries.length ? <div className="line-chart-plot">
-                    <svg className="steps-line-chart" viewBox={`0 0 850 ${chartViewHeight}`} role="img" aria-label="Percentual concluído e pendente por etapa, separado entre lojas em andamento e finalizadas">
+                  {visibleChartSeries.length ? <div ref={chartPlotRef} className={`line-chart-plot${chartDragRef.current ? " dragging" : ""}`} onPointerDown={(event) => {
+                    if (!dashboardChartExpanded || event.pointerType === "touch" || event.button !== 0) return;
+                    chartDragRef.current = {
+                      pointerId: event.pointerId,
+                      x: event.clientX,
+                      y: event.clientY,
+                      scrollLeft: event.currentTarget.scrollLeft,
+                      scrollTop: event.currentTarget.scrollTop,
+                    };
+                    event.currentTarget.classList.add("dragging");
+                    event.currentTarget.setPointerCapture(event.pointerId);
+                  }} onPointerMove={(event) => {
+                    const drag = chartDragRef.current;
+                    if (!drag || drag.pointerId !== event.pointerId) return;
+                    event.currentTarget.scrollLeft = drag.scrollLeft - (event.clientX - drag.x);
+                    event.currentTarget.scrollTop = drag.scrollTop - (event.clientY - drag.y);
+                  }} onPointerUp={(event) => {
+                    if (chartDragRef.current?.pointerId === event.pointerId) chartDragRef.current = null;
+                    event.currentTarget.classList.remove("dragging");
+                  }} onPointerCancel={(event) => {
+                    if (chartDragRef.current?.pointerId === event.pointerId) chartDragRef.current = null;
+                    event.currentTarget.classList.remove("dragging");
+                  }} onWheel={(event) => {
+                    if (dashboardChartExpanded && event.shiftKey) {
+                      event.currentTarget.scrollLeft += event.deltaY;
+                      event.preventDefault();
+                    }
+                  }}>
+                    <svg className="steps-line-chart" viewBox={`0 0 ${chartViewWidth} ${chartViewHeight}`} role="img" aria-label="Percentual concluído e pendente por etapa, separado entre lojas em andamento e finalizadas">
                     {[0, 25, 50, 75, 100].map((value) => {
                       const y = chartY(value);
                       return <g key={value}>
-                        <line x1="56" x2="794" y1={y} y2={y} className="chart-grid-line" />
+                        <line x1="56" x2={chartViewWidth - 56} y1={y} y2={y} className="chart-grid-line" />
                         <text x="44" y={y + 4} className="chart-axis-label" textAnchor="end">{value}%</text>
                       </g>;
                     })}
-                    {chartSeries.map((series) => (
+                    {visibleChartSeries.map((series) => (
                       <g key={series.key}>
                         {lineChartSteps.length > 1 && <polyline
                           points={series.values.map((value, index) => `${chartX(index)},${chartY(value)}`).join(" ")}
@@ -1701,14 +1757,16 @@ export default function App() {
                     ))}
                     {lineChartSteps.map((step, index) => {
                       const x = chartX(index);
-                      const shortLabel = step.label.length > 14 ? `${step.label.slice(0, 13)}…` : step.label;
+                      const shortLabel = dashboardChartExpanded || step.label.length <= 14
+                        ? step.label
+                        : `${step.label.slice(0, 13)}…`;
                       return <g key={step.label}>
                         <text x={x} y={chartLabelY} className="chart-step-label" textAnchor="middle"><title>{step.label}</title>{shortLabel}</text>
                       </g>;
                     })}
                     </svg>
                   </div> : (
-                    <p className="chart-empty">Cadastre ou reabra lojas para comparar o progresso por etapa.</p>
+                    <p className="chart-empty">{chartSeries.length ? "Todas as linhas estão ocultas. Selecione uma legenda para mostrá-las." : "Cadastre ou reabra lojas para comparar o progresso por etapa."}</p>
                   )}
                 </div>
               </div>
@@ -1859,7 +1917,6 @@ export default function App() {
                   aria-pressed={selectedStepFilters.length === 0}
                   onClick={() => setSelectedStepFilters([])}
                 >
-                  <ListFilter size={15} aria-hidden="true" />
                   <span>Todos</span>
                   <em>{activeClients.length}</em>
                 </button>
@@ -1875,7 +1932,6 @@ export default function App() {
                       onClick={() => setSelectedStepFilters((value) => value.length === 1 && value[0] === index ? [] : [index])}
                       title={`${count} lojas ainda faltam ${step.toLowerCase()}`}
                     >
-                      <CheckCircle2 size={15} aria-hidden="true" />
                       <span>{step}</span>
                       <em>{count}</em>
                     </button>
@@ -1900,7 +1956,6 @@ export default function App() {
                               : [...current, index].sort((a, b) => a - b),
                           )}
                         />
-                        <CheckCircle2 size={15} aria-hidden="true" />
                         <span>{step}</span>
                         <em>{activeClients.filter((client) => !client.checks[index]?.done).length}</em>
                       </label>
