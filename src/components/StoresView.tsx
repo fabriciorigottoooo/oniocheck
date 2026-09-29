@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import Image from "next/image";
 import {
   Building2,
   Copy,
@@ -188,7 +189,15 @@ export default function StoresView({ actor }: { actor: ActorInput }) {
     } : current);
   };
 
-  if (loading) return <section className="panel stores-loading">Carregando os cadastros compartilhados…</section>;
+  if (loading) return (
+    <section className="panel stores-loading" aria-live="polite" aria-busy="true">
+      <Image src="/logo_oniocheck_horizontal.png" alt="OnioCheck" width={1200} height={429} className="stores-loading-logo" />
+      <p>Carregando os cadastros compartilhados…</p>
+      <div className="loading-bar" role="progressbar" aria-label="Carregando cadastros">
+        <i />
+      </div>
+    </section>
+  );
 
   return (
     <section className="stores-view">

@@ -2,20 +2,16 @@ import {
   Activity as ActivityIcon,
   CalendarDays,
   CheckCheck,
-  ChevronDown,
-  ChevronRight,
   CircleDashed,
   LayoutDashboard,
-  LogOut,
   PanelLeftClose,
   PanelLeftOpen,
-  Settings,
   Store,
   Users,
 } from "lucide-react";
+import Image from "next/image";
 import type { Activity, Collab } from "@/lib/types";
-import { activityParts, isOnline, relTime } from "@/lib/format";
-import Avatar from "./Avatar";
+import { isOnline } from "@/lib/format";
 
 type Props = {
   view: "active" | "done";
@@ -30,9 +26,6 @@ type Props = {
   agendaActive: boolean;
   collaborators: Collab[];
   activities: Activity[];
-  meId: string | null;
-  meAvatarUrl?: string | null;
-  meName?: string | null;
   now: number;
   collapsed: boolean;
   teamOpen: boolean;
@@ -41,11 +34,6 @@ type Props = {
   onToggleCollapse: () => void;
   onToggleTeam: () => void;
   onToggleActivity: () => void;
-  onEditIdentity: () => void;
-  onOpenAdmin: () => void;
-  onOpenProfile: () => void;
-  onLogout: () => void;
-  onSelectCollaborator?: (id: string) => void;
 };
 
 export default function Sidebar({
@@ -61,9 +49,6 @@ export default function Sidebar({
   agendaActive,
   collaborators,
   activities,
-  meId,
-  meAvatarUrl,
-  meName,
   now,
   collapsed,
   teamOpen,
@@ -72,31 +57,15 @@ export default function Sidebar({
   onToggleCollapse,
   onToggleTeam,
   onToggleActivity,
-  onEditIdentity,
-  onOpenAdmin,
-  onOpenProfile,
-  onLogout,
-  onSelectCollaborator,
 }: Props) {
   const onlineN = collaborators.filter((c) => isOnline(c, now)).length;
-  const sorted = [...collaborators].sort((a, b) => {
-    const oa = isOnline(a, now) ? 0 : 1;
-    const ob = isOnline(b, now) ? 0 : 1;
-    if (oa !== ob) return oa - ob;
-    if (a.id === meId) return -1;
-    if (b.id === meId) return 1;
-    return a.name.localeCompare(b.name, "pt-BR");
-  });
 
   return (
     <aside className={`side${collapsed ? " collapsed" : ""}`}>
       <div className="brand-row">
-        <div className="brand-wrap no-logo">
-          <div className="brand-copy">
-            <div className="brand">
-              onio<span>check</span>
-            </div>
-          </div>
+        <div className="brand-wrap">
+          <Image src="/logo_oniocheck_horizontal.png" alt="OnioCheck" width={1200} height={429} className="sidebar-brand-full" />
+          <Image src="/favicon.png" alt="" aria-hidden="true" width={256} height={256} className="sidebar-brand-mark" />
         </div>
         <button
           type="button"
@@ -107,20 +76,6 @@ export default function Sidebar({
         >
           {collapsed ? <PanelLeftOpen size={15} /> : <PanelLeftClose size={15} />}
         </button>
-      </div>
-
-      <div className="profile-summary" onClick={onOpenProfile} role="button" tabIndex={0} onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") onOpenProfile();
-      }}>
-        {meAvatarUrl ? (
-          <img src={meAvatarUrl} alt={meName ?? "Perfil"} className="profile-avatar" />
-        ) : (
-          <Avatar name={meName ?? "Você"} color={"#2d6fe8"} size={38} />
-        )}
-        <div className="profile-meta">
-          <strong>{meName ?? "Você"}</strong>
-          <span>Configurar perfil</span>
-        </div>
       </div>
 
       <nav className="tabs" aria-label="Telas">
@@ -204,28 +159,6 @@ export default function Sidebar({
         </span>
       </button>
 
-      <div className="sidebar-logout-wrap">
-        <button
-          type="button"
-          className={`danger logoff-btn${collapsed ? " icon-only" : ""}`}
-          onClick={onLogout}
-          title="Sair"
-          aria-label="Sair da conta"
-        >
-          <LogOut size={14} />
-          {!collapsed && "Sair"}
-        </button>
-      </div>
-
-      <button
-        className={`secondary admin-low${collapsed ? " icon-only" : ""}`}
-        onClick={onOpenAdmin}
-        title="Administrador"
-        aria-label="Administrador"
-      >
-        <Settings size={14} />
-        {!collapsed && "Administrador"}
-      </button>
     </aside>
   );
 }

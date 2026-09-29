@@ -1,20 +1,26 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import Image from "next/image";
 import {
   CalendarDays,
   CheckCircle2,
   CheckCheck,
   Clock3,
+  LogOut,
+  Menu as MenuIcon,
   ListFilter,
   MoonStar,
   NotebookPen,
   PencilLine,
   Plus,
+  SlidersHorizontal,
   RotateCcw,
   Settings,
   SunMedium,
   Trash2,
+  UserRound,
+  X,
 } from "lucide-react";
 import { api } from "@/lib/api";
 import { summarizeDashboard } from "@/lib/dashboard";
@@ -89,6 +95,7 @@ export default function App() {
   const [adminOpen, setAdminOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
+  const [topMenuOpen, setTopMenuOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [deletedClientIds, setDeletedClientIds] = useState<string[]>(() => {
     try {
@@ -105,7 +112,8 @@ export default function App() {
   const [teamOpen, setTeamOpen] = useState(false);
   const [activityOpen, setActivityOpen] = useState(false);
   const [activityAlert, setActivityAlert] = useState(false);
-  const [selectedStepFilter, setSelectedStepFilter] = useState<number | null>(null);
+  const [selectedStepFilters, setSelectedStepFilters] = useState<number[]>([]);
+  const [advancedFiltersOpen, setAdvancedFiltersOpen] = useState(false);
   const [agendaOpen, setAgendaOpen] = useState(false);
   const [selectedCollaboratorId, setSelectedCollaboratorId] = useState<string | null>(null);
   const [agendaTypeDialog, setAgendaTypeDialog] = useState<
@@ -130,6 +138,7 @@ export default function App() {
   const [now, setNow] = useState(() => Date.now());
 
   const fileRef = useRef<HTMLInputElement>(null);
+  const topMenuRef = useRef<HTMLDivElement>(null);
   const seenRef = useRef<Set<string>>(new Set());
   const refetchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const meRef = useRef<Me | null>(null);
@@ -142,6 +151,24 @@ export default function App() {
   useEffect(() => {
     activityOpenRef.current = activityOpen;
   }, [activityOpen]);
+
+  useEffect(() => {
+    if (!topMenuOpen) return;
+    const onPointerDown = (event: PointerEvent) => {
+      if (event.target instanceof Node && !topMenuRef.current?.contains(event.target)) {
+        setTopMenuOpen(false);
+      }
+    };
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setTopMenuOpen(false);
+    };
+    document.addEventListener("pointerdown", onPointerDown);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", onPointerDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [topMenuOpen]);
 
   /* ---------- helpers ---------- */
 
@@ -391,17 +418,19 @@ export default function App() {
     [filteredClients],
   );
   const filteredStepClients = useMemo(() => {
-    if (selectedStepFilter === null) return activeClients;
-    return activeClients.filter((client) => !client.checks[selectedStepFilter]?.done);
-  }, [activeClients, selectedStepFilter]);
+    if (!selectedStepFilters.length) return activeClients;
+    return activeClients.filter((client) =>
+      selectedStepFilters.some((index) => !client.checks[index]?.done),
+    );
+  }, [activeClients, selectedStepFilters]);
 
   const visible = useMemo(() => {
     const q = norm(search.trim());
     const baseList = view === "active"
-      ? (selectedStepFilter === null ? activeClients : filteredStepClients)
+      ? (selectedStepFilters.length === 0 ? activeClients : filteredStepClients)
       : doneClients;
     return q ? baseList.filter((c) => norm(c.name).includes(q)) : baseList;
-  }, [view, search, activeClients, doneClients, filteredStepClients, selectedStepFilter]);
+  }, [view, search, activeClients, doneClients, filteredStepClients, selectedStepFilters]);
 
   const selected =
     filteredClients.find((c) => c.id === selectedId) ??
@@ -456,7 +485,8 @@ export default function App() {
     setSearch("");
     setSelectedId(null);
     setSelectedCollaboratorId(null);
-    setSelectedStepFilter(null);
+    setSelectedStepFilters([]);
+    setAdvancedFiltersOpen(false);
   };
 
   const openDashboard = () => {
@@ -1136,6 +1166,7 @@ export default function App() {
   };
 
   const logout = useCallback(() => {
+    setTopMenuOpen(false);
     localStorage.removeItem(ME_KEY);
     setMe(null);
     setNeedSetup(true);
@@ -1406,10 +1437,10 @@ export default function App() {
 
   if (booting) {
     return (
-      <div className="loading-screen">
-        <img src="/logo_oniocheck_transparente.svg" alt="OnioCheck" className="loading-logo" />
+      <div className="loading-screen" aria-live="polite" aria-busy="true">
+        <Image src="/logo_oniocheck_horizontal.png" alt="OnioCheck" width={1200} height={429} className="loading-logo" priority />
         <p>Conectando ao servidor...</p>
-        <div className="loading-bar" aria-label="Carregando">
+        <div className="loading-bar" role="progressbar" aria-label="Carregando">
           <i />
         </div>
       </div>
@@ -1431,9 +1462,6 @@ export default function App() {
         agendaActive={agendaOpen}
         collaborators={collaborators}
         activities={activities}
-        meId={me?.id ?? null}
-        meAvatarUrl={meAvatarUrl}
-        meName={me?.name ?? null}
         now={now}
         collapsed={sidebarCollapsed}
         teamOpen={teamOpen}
@@ -1442,11 +1470,6 @@ export default function App() {
         onToggleCollapse={() => setSidebarCollapsed((value) => !value)}
         onToggleTeam={() => setTeamOpen((value) => !value)}
         onToggleActivity={handleToggleActivity}
-        onEditIdentity={() => setNeedSetup(true)}
-        onOpenAdmin={() => setAdminOpen(true)}
-        onOpenProfile={() => setProfileOpen(true)}
-        onLogout={logout}
-        onSelectCollaborator={setSelectedCollaboratorId}
       />
 
       <main className="main">
@@ -1467,15 +1490,6 @@ export default function App() {
             </p>
           </div>
           <div className="top-actions">
-            <button
-              type="button"
-              className="secondary small icon-only"
-              onClick={() => setDarkMode((v) => !v)}
-              aria-label={darkMode ? "Ativar modo claro" : "Ativar modo escuro"}
-              title={darkMode ? "Modo claro" : "Modo escuro"}
-            >
-              {darkMode ? <SunMedium size={20} /> : <MoonStar size={20} />}
-            </button>
             {!storesOpen && <span
               className={`pill ${live ? "on" : "off"}`}
               title={
@@ -1497,6 +1511,39 @@ export default function App() {
                 <Plus size={15} /> Gerar PDF
               </button>
             )}
+            <div className="top-menu-wrap" ref={topMenuRef}>
+              <button
+                type="button"
+                className={`top-menu-trigger${topMenuOpen ? " open" : ""}`}
+                aria-label={topMenuOpen ? "Fechar menu" : "Abrir menu"}
+                aria-haspopup="menu"
+                aria-expanded={topMenuOpen}
+                aria-controls="site-action-menu"
+                title={topMenuOpen ? "Fechar menu" : "Menu"}
+                onClick={() => setTopMenuOpen((open) => !open)}
+              >
+                {topMenuOpen ? <X size={21} /> : <MenuIcon size={22} />}
+              </button>
+              {topMenuOpen && (
+                <div className="top-action-menu" id="site-action-menu" role="menu" aria-label="Menu do usuário">
+                  <div className="top-action-menu-heading">Conta e preferências</div>
+                  <button type="button" role="menuitem" onClick={() => { setTopMenuOpen(false); setProfileOpen(true); }}>
+                    <UserRound size={17} /> <span>Configurar perfil</span>
+                  </button>
+                  <button type="button" role="menuitem" onClick={() => { setTopMenuOpen(false); setAdminOpen(true); }}>
+                    <Settings size={17} /> <span>Administrador</span>
+                  </button>
+                  <button type="button" role="menuitem" onClick={() => setDarkMode((current) => !current)}>
+                    {darkMode ? <SunMedium size={17} /> : <MoonStar size={17} />}
+                    <span>{darkMode ? "Tema claro" : "Tema escuro"}</span>
+                  </button>
+                  <div className="top-action-menu-divider" />
+                  <button type="button" role="menuitem" className="top-action-logout" onClick={logout}>
+                    <LogOut size={17} /> <span>Sair</span>
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </header>
 
@@ -1697,18 +1744,30 @@ export default function App() {
                     <p>Encontre as lojas pelo ponto em que estão no processo.</p>
                   </div>
                 </div>
-                {selectedStepFilter !== null && (
-                  <button type="button" className="link-btn" onClick={() => setSelectedStepFilter(null)}>
-                    <RotateCcw size={14} /> Limpar filtro
+                <div className="step-filter-actions">
+                  <button
+                    type="button"
+                    className={`secondary small advanced-filter-toggle${selectedStepFilters.length > 1 ? " has-selection" : ""}`}
+                    aria-expanded={advancedFiltersOpen}
+                    aria-controls="advanced-step-filters"
+                    onClick={() => setAdvancedFiltersOpen((open) => !open)}
+                  >
+                    <SlidersHorizontal size={15} /> Filtro avançado
+                    {selectedStepFilters.length > 0 && <em>{selectedStepFilters.length}</em>}
                   </button>
-                )}
+                  {selectedStepFilters.length > 0 && (
+                    <button type="button" className="link-btn" onClick={() => setSelectedStepFilters([])}>
+                      <RotateCcw size={14} /> Limpar
+                    </button>
+                  )}
+                </div>
               </div>
               <div className="step-filter-list">
                 <button
                   type="button"
-                  className={`step-filter-pill ${selectedStepFilter === null ? "active" : ""}`}
-                  aria-pressed={selectedStepFilter === null}
-                  onClick={() => setSelectedStepFilter(null)}
+                  className={`step-filter-pill ${selectedStepFilters.length === 0 ? "active" : ""}`}
+                  aria-pressed={selectedStepFilters.length === 0}
+                  onClick={() => setSelectedStepFilters([])}
                 >
                   <ListFilter size={15} aria-hidden="true" />
                   <span>Todos</span>
@@ -1716,14 +1775,14 @@ export default function App() {
                 </button>
                 {STEPS.map((step, index) => {
                   const count = activeClients.filter((client) => !client.checks[index]?.done).length;
-                  const active = selectedStepFilter === index;
+                  const active = selectedStepFilters.length === 1 && selectedStepFilters[0] === index;
                   return (
                     <button
                       key={step}
                       type="button"
                       className={`step-filter-pill ${active ? "active" : ""}`}
                       aria-pressed={active}
-                      onClick={() => setSelectedStepFilter((value) => value === index ? null : index)}
+                      onClick={() => setSelectedStepFilters((value) => value.length === 1 && value[0] === index ? [] : [index])}
                       title={`${count} lojas ainda faltam ${step.toLowerCase()}`}
                     >
                       <CheckCircle2 size={15} aria-hidden="true" />
@@ -1733,6 +1792,32 @@ export default function App() {
                   );
                 })}
               </div>
+              {advancedFiltersOpen && (
+                <div className="advanced-step-filters" id="advanced-step-filters">
+                  <div className="advanced-step-copy">
+                    <strong>Escolha uma ou mais etapas</strong>
+                    <span>Exibe lojas com pelo menos uma etapa selecionada pendente.</span>
+                  </div>
+                  <div className="advanced-step-options">
+                    {STEPS.map((step, index) => (
+                      <label key={step} className="advanced-step-option">
+                        <input
+                          type="checkbox"
+                          checked={selectedStepFilters.includes(index)}
+                          onChange={() => setSelectedStepFilters((current) =>
+                            current.includes(index)
+                              ? current.filter((selected) => selected !== index)
+                              : [...current, index].sort((a, b) => a - b),
+                          )}
+                        />
+                        <CheckCircle2 size={15} aria-hidden="true" />
+                        <span>{step}</span>
+                        <em>{activeClients.filter((client) => !client.checks[index]?.done).length}</em>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
             </section>}
           </>
         )}
@@ -1911,9 +1996,11 @@ export default function App() {
             <div className="workspace">
               <ClientList
                 title={
-                  selectedStepFilter === null
+                  selectedStepFilters.length === 0
                     ? "Seus clientes"
-                    : `Sem ${STEPS[selectedStepFilter]}`
+                    : selectedStepFilters.length === 1
+                      ? `Sem ${STEPS[selectedStepFilters[0]]}`
+                      : "Etapas selecionadas"
                 }
                 search={search}
                 onSearch={setSearch}
@@ -1921,9 +2008,11 @@ export default function App() {
                 selectedId={selectedId}
                 onSelect={setSelectedId}
                 emptyText={
-                  selectedStepFilter === null
+                  selectedStepFilters.length === 0
                     ? emptyText
-                    : `Nenhuma loja pendente em ${STEPS[selectedStepFilter].toLowerCase()}.`
+                    : selectedStepFilters.length === 1
+                      ? `Nenhuma loja pendente em ${STEPS[selectedStepFilters[0]].toLowerCase()}.`
+                      : "Nenhuma loja tem etapas selecionadas pendentes."
                 }
               />
               {renderRightPanel()}

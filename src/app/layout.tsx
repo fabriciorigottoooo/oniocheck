@@ -14,7 +14,9 @@ export const metadata: Metadata = {
   description:
     "Gestão colaborativa de checklists e unidades de atendimento.",
   icons: {
-    icon: "/favicon.svg",
+    icon: "/favicon.png",
+    shortcut: "/favicon.png",
+    apple: "/favicon.png",
   },
 };
 
