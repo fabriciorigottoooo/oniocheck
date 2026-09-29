@@ -85,104 +85,82 @@ function PasswordField({
   );
 }
 
-export function SetupDialog({
-  initialName = "",
-  editing = false,
+export function AuthDialog({
   busy,
-  onSubmit,
-  onCancel,
+  onLogin,
+  onRegister,
 }: {
-  initialName?: string;
-  editing?: boolean;
   busy: boolean;
-  onSubmit: (username: string, password: string) => void;
-  onCancel?: () => void;
+  onLogin: (username: string, password: string) => Promise<string | null>;
+  onRegister: (payload: { email: string; username: string; password: string; confirmPassword: string }) => Promise<string | null>;
 }) {
-  const [username, setUsername] = useState(initialName);
+  const [mode, setMode] = useState<"register" | "login">("register");
+  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [error, setError] = useState("");
 
-  const submit = (e: FormEvent) => {
-    e.preventDefault();
-    const u = username.trim();
-    if (!u) return;
-    if (!editing && !password.trim()) return;
-    onSubmit(u, password);
+  const switchMode = (nextMode: "register" | "login") => {
+    setError("");
+    setMode(nextMode);
+  };
+
+  const submit = async (event: FormEvent) => {
+    event.preventDefault();
+    setError("");
+    const message = mode === "register"
+      ? password !== confirmPassword
+        ? "As senhas digitadas não conferem."
+        : await onRegister({ email, username, password, confirmPassword })
+      : await onLogin(username, password);
+    if (message) setError(message);
   };
 
   return (
-    <Modal
-      label={editing ? "Editar meu nome" : "Entrar no checklist"}
-      onClose={editing ? onCancel : undefined}
-    >
-      <div className="dialog-icon">
-        <Users size={22} />
-      </div>
-      <h2>{editing ? "Como você aparece para a equipe" : "Login no checklist"}</h2>
-      <p>
-        {editing
-          ? "Este checklist é colaborativo: cada pessoa entra com o próprio nome e todas as marcações ficam organizadas na equipe."
-          : "Entre com seu nome de usuário e sua senha para acessar o checklist."}
-      </p>
-      <form onSubmit={submit} className="login-form">
-        <div className="login-fieldset">
-          <label className="field-label" htmlFor="setup-name">
-            Nome de usuário
-          </label>
-          <input
-            id="setup-name"
-            type="text"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            maxLength={40}
-            autoFocus
-            autoComplete="off"
-            placeholder="Ex.: ana.souza"
-          />
+    <div className="overlay auth-overlay">
+      <div className="auth-modal" role="dialog" aria-modal="true" aria-label={mode === "register" ? "Criar conta" : "Fazer login"}>
+        <div className="auth-flip-stage">
+          <div className={`auth-flip-card${mode === "login" ? " is-login" : ""}`}>
+            <section className="auth-face auth-register-face" aria-hidden={mode !== "register"} inert={mode !== "register"}>
+              <div className="dialog-icon"><UserRoundPlus size={22} /></div>
+              <h2>Crie sua conta</h2>
+              <p>Cadastre-se para acessar o OnioCheck e colaborar com sua equipe.</p>
+              <form className="login-form auth-form" onSubmit={submit}>
+                <label className="auth-field">E-mail<input type="email" value={email} onChange={(event) => setEmail(event.target.value)} maxLength={320} autoComplete="email" placeholder="voce@exemplo.com" required /></label>
+                <label className="auth-field">Nome de usuário<input type="text" value={username} onChange={(event) => setUsername(event.target.value)} maxLength={40} autoComplete="username" placeholder="Ex.: ana.souza" required /></label>
+                <PasswordField id="register-password" label="Senha" value={password} onChange={setPassword} placeholder="Crie uma senha" autoComplete="new-password" />
+                <PasswordField id="register-confirm-password" label="Confirmar senha" value={confirmPassword} onChange={setConfirmPassword} placeholder="Digite a senha novamente" autoComplete="new-password" />
+                {error && <p className="auth-error" role="alert">{error}</p>}
+                <button className="primary auth-submit" type="submit" disabled={busy || !email.trim() || !username.trim() || !password || !confirmPassword}>
+                  {busy ? "Criando conta…" : "Criar conta"}
+                </button>
+              </form>
+              <p className="auth-switch">Já possui conta? <button type="button" onClick={() => switchMode("login")} disabled={busy}>Faça login</button></p>
+            </section>
+
+            <section className="auth-face auth-login-face" aria-hidden={mode !== "login"} inert={mode !== "login"}>
+              <div className="dialog-icon"><Users size={22} /></div>
+              <h2>Que bom ter você de volta</h2>
+              <p>Entre com seu nome de usuário e sua senha para acessar o checklist.</p>
+              <form className="login-form auth-form" onSubmit={submit}>
+                <label className="auth-field">Nome de usuário<input type="text" value={username} onChange={(event) => setUsername(event.target.value)} maxLength={40} autoComplete="username" placeholder="Seu nome de usuário" required /></label>
+                <PasswordField id="login-password" label="Senha" value={password} onChange={setPassword} placeholder="Digite sua senha" autoComplete="current-password" />
+                <button type="button" className="link-btn" onClick={() => {
+                  const message = encodeURIComponent("Fabrício, esqueci minha senha. Poderia resetá-la, por favor?");
+                  window.open(`https://wa.me/5517988463129?text=${message}`, "_blank", "noopener,noreferrer");
+                }}>Esqueci minha senha</button>
+                {error && <p className="auth-error" role="alert">{error}</p>}
+                <button className="primary auth-submit" type="submit" disabled={busy || !username.trim() || !password}>
+                  {busy ? "Entrando…" : "Entrar"}
+                </button>
+              </form>
+              <p className="auth-switch">Ainda não tem uma conta? <button type="button" onClick={() => switchMode("register")} disabled={busy}>Cadastre-se</button></p>
+            </section>
+          </div>
         </div>
-        {!editing && (
-          <PasswordField
-            id="setup-password"
-            label="Senha"
-            value={password}
-            onChange={setPassword}
-            placeholder="Digite sua senha"
-            autoComplete="current-password"
-          />
-        )}
-        {!editing && (
-          <button
-            type="button"
-            className="link-btn"
-            onClick={() => {
-              const message = encodeURIComponent("Fabrício, esqueci minha senha. Poderia resetá-la, por favor?");
-              window.open(`https://wa.me/5517988463129?text=${message}`, "_blank", "noopener,noreferrer");
-            }}
-          >
-            Esqueci minha senha
-          </button>
-        )}
-        <div className="actions">
-          {editing && onCancel && (
-            <button type="button" className="secondary" onClick={onCancel} disabled={busy}>
-              Cancelar
-            </button>
-          )}
-          <button
-            className="primary"
-            type="submit"
-            disabled={busy || !username.trim() || (!editing && !password.trim())}
-          >
-            {busy ? "Entrando…" : editing ? "Salvar" : "Entrar"}
-          </button>
-        </div>
-      </form>
-      <div className="setup-hint">
-        <Users size={16} />
-        <span>
-          Seu usuário e senha ficam salvos no banco de dados para acesso da equipe.
-        </span>
       </div>
-    </Modal>
+    </div>
   );
 }
 

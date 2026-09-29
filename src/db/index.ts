@@ -38,6 +38,25 @@ async function ensureAgendaDefaults() {
 
 export async function ensureDatabaseCompatibility() {
   await db.execute(`
+    CREATE TABLE IF NOT EXISTS users (
+      id text PRIMARY KEY,
+      username text NOT NULL UNIQUE,
+      email text,
+      password text NOT NULL,
+      role text NOT NULL DEFAULT 'user',
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+  `);
+
+  await db.execute(`ALTER TABLE users ADD COLUMN IF NOT EXISTS email text;`);
+
+  await db.execute(`
+    CREATE UNIQUE INDEX IF NOT EXISTS users_email_unique_idx
+      ON users (email) WHERE email IS NOT NULL;
+  `);
+
+  await db.execute(`
     CREATE TABLE IF NOT EXISTS stores_registry (
       id text PRIMARY KEY,
       payload jsonb NOT NULL,

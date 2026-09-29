@@ -34,7 +34,7 @@ export async function POST(req: Request) {
     }
 
     const username = normalize((body as { username?: unknown })?.username).slice(0, 40);
-    const password = normalize((body as { password?: unknown })?.password).slice(0, 50);
+    const password = normalize((body as { password?: unknown })?.password).slice(0, 256);
 
     if (!username || !password) {
       return Response.json({ error: "Informe nome de usuário e senha." }, { status: 400 });
@@ -46,33 +46,13 @@ export async function POST(req: Request) {
       .where(eq(users.username, username))
       .limit(1);
 
-    const userRow = existing[0]
-      ? existing[0]
-      : await db
-          .insert(users)
-          .values({
-            id: randomUUID(),
-            username,
-            password,
-            role: username.toLowerCase() === "admin" ? "admin" : "user",
-            updatedAt: new Date(),
-          })
-          .returning()
-          .then((rows) => rows[0]);
-
+    const userRow = existing[0];
     if (!userRow) {
-      return Response.json({ error: "Não foi possível criar o usuário." }, { status: 500 });
+      return Response.json({ error: "Conta não encontrada. Faça seu cadastro para continuar." }, { status: 404 });
     }
 
-    if (existing[0] && userRow.password !== password) {
+    if (userRow.password !== password) {
       return Response.json({ error: "Senha incorreta." }, { status: 401 });
-    }
-
-    if (!existing[0]) {
-      await db
-        .update(users)
-        .set({ updatedAt: new Date() })
-        .where(eq(users.id, userRow.id));
     }
 
     let collaboratorRow = await db

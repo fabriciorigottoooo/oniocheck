@@ -3280,6 +3280,193 @@ button.team-row:hover {
   gap: 14px;
 }
 
+.auth-overlay {
+  z-index: 80;
+}
+
+.auth-modal {
+  width: min(100%, 500px);
+  perspective: 1400px;
+}
+
+.auth-flip-stage {
+  min-height: 650px;
+}
+
+.auth-flip-card {
+  position: relative;
+  min-height: inherit;
+  transform-style: preserve-3d;
+  transition: transform 760ms cubic-bezier(0.2, 0.72, 0.18, 1);
+}
+
+.auth-flip-card.is-login {
+  transform: rotateY(180deg);
+}
+
+.auth-face {
+  position: absolute;
+  inset: 0;
+  padding: 28px;
+  border: 1px solid rgba(193, 207, 228, 0.72);
+  border-radius: 20px;
+  color: #25364c;
+  background: linear-gradient(155deg, #fff 0%, #f8fbff 100%);
+  box-shadow: 0 25px 90px rgba(16, 33, 57, 0.4);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.auth-login-face {
+  transform: rotateY(180deg);
+}
+
+.auth-face h2 {
+  margin: 14px 0 8px;
+  font-size: 23px;
+  letter-spacing: -0.45px;
+}
+
+.auth-face > p:not(.auth-switch):not(.auth-error) {
+  margin: 0 0 18px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.auth-form {
+  gap: 12px;
+}
+
+.auth-field {
+  display: grid;
+  gap: 7px;
+  color: #42536a;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.auth-field input {
+  width: 100%;
+  height: 42px;
+  padding: 0 12px;
+  border: 1px solid #cfd8e5;
+  border-radius: 9px;
+  outline: none;
+  color: #25364c;
+  background: #fff;
+  font: inherit;
+  font-weight: 500;
+  transition: border-color 0.16s ease, box-shadow 0.16s ease;
+}
+
+.auth-field input:focus {
+  border-color: #2d6fe8;
+  box-shadow: 0 0 0 3px rgba(45, 111, 232, 0.12);
+}
+
+.auth-face .field-label {
+  margin: 0 0 7px;
+  color: #42536a;
+  font-size: 12px;
+}
+
+.auth-face .password-input-shell {
+  min-height: 42px;
+}
+
+.auth-submit {
+  width: 100%;
+  min-height: 43px;
+  justify-content: center;
+  margin-top: 2px;
+}
+
+.auth-error {
+  margin: 0 !important;
+  padding: 9px 11px;
+  border: 1px solid rgba(204, 65, 65, 0.2);
+  border-radius: 9px;
+  color: #ae3030 !important;
+  background: #fff2f2;
+  font-size: 12px !important;
+}
+
+.auth-switch {
+  margin: 20px 0 0 !important;
+  color: #64748b;
+  text-align: center;
+  font-size: 12px !important;
+}
+
+.auth-switch button {
+  padding: 0;
+  border: 0;
+  color: #1d5fd3;
+  background: transparent;
+  font: inherit;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.auth-switch button:hover {
+  text-decoration: underline;
+}
+
+.app.dark .auth-face {
+  border-color: rgba(132, 162, 214, 0.2);
+  color: #e4edf8;
+  background: linear-gradient(155deg, #111c2a 0%, #172536 100%);
+}
+
+.app.dark .auth-field,
+.app.dark .auth-face .field-label {
+  color: #c4d2e5;
+}
+
+.app.dark .auth-field input {
+  border-color: rgba(132, 162, 214, 0.25);
+  color: #e4edf8;
+  background: #0d1723;
+}
+
+.app.dark .auth-error {
+  border-color: rgba(235, 104, 104, 0.28);
+  color: #ffb2b2 !important;
+  background: rgba(126, 35, 35, 0.22);
+}
+
+@media (max-width: 520px) {
+  .auth-overlay {
+    padding: 12px;
+  }
+
+  .auth-flip-stage {
+    min-height: 635px;
+  }
+
+  .auth-face {
+    padding: 23px 19px;
+  }
+}
+
+@media (max-height: 740px) {
+  .auth-overlay {
+    align-items: start;
+    overflow-y: auto;
+  }
+
+  .auth-modal {
+    margin-block: auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-flip-card {
+    transition-duration: 1ms;
+  }
+}
+
 .login-fieldset {
   display: grid;
   gap: 8px;

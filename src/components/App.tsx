@@ -44,12 +44,12 @@ import {
   AdminDialog,
   AgendaEventDialog,
   AgendaTypeDialog,
+  AuthDialog,
   ClientDialog,
   ClientNotesDialog,
   CollaboratorDetailDialog,
   FinishDialog,
   ProfileDialog,
-  SetupDialog,
   TeamModal,
 } from "./Dialogs";
 import Toasts, { type ToastItem } from "./Toasts";
@@ -801,36 +801,10 @@ export default function App() {
     }
   };
 
-  const login = async (username: string, password?: string) => {
+  const login = async (username: string, password: string): Promise<string | null> => {
     setSaving(true);
     try {
-      const current = meRef.current;
-      if (!password && current) {
-        const { collaborator } = await api.join({ id: current.id, name: username });
-        const next: Me = {
-          id: collaborator.id,
-          name: collaborator.name,
-          color: collaborator.color,
-          username,
-          role: current.role,
-        };
-        try {
-          localStorage.setItem(ME_KEY, JSON.stringify(next));
-        } catch {
-          // armazenamento indisponível — sessão ainda funciona
-        }
-        setMe(next);
-        setNeedSetup(false);
-        pushToast("Nome e usuário atualizados para a equipe.");
-        void fetchState();
-        return;
-      }
-
-      const payload = {
-        username,
-        password: password ?? "",
-      };
-      const { user, collaborator } = await api.login(payload);
+      const { user, collaborator } = await api.login({ username, password });
       const next: Me = {
         id: collaborator.id,
         name: collaborator.displayName?.trim() ? collaborator.displayName.trim() : collaborator.name,
@@ -846,17 +820,41 @@ export default function App() {
       }
       setMe(next);
       setNeedSetup(false);
-      pushToast(
-        current
-          ? `Usuário atualizado para ${user.username}.`
-          : `Bem-vindo(a), ${user.username}!`,
-      );
+      pushToast(`Bem-vindo(a), ${user.username}!`);
       void fetchState();
+      return null;
     } catch (e) {
       const msg = errMsg(e, "Não foi possível entrar. Verifique usuário e senha.");
-      pushToast(
-        msg === "Senha incorreta." ? "Senha incorreta. Verifique a senha do usuário." : msg,
-      );
+      return msg === "Senha incorreta." ? "Senha incorreta. Verifique seus dados." : msg;
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const register = async (payload: { email: string; username: string; password: string; confirmPassword: string }): Promise<string | null> => {
+    setSaving(true);
+    try {
+      const { user, collaborator } = await api.register(payload);
+      const next: Me = {
+        id: collaborator.id,
+        name: collaborator.displayName?.trim() ? collaborator.displayName.trim() : collaborator.name,
+        displayName: collaborator.displayName?.trim() ? collaborator.displayName.trim() : null,
+        color: collaborator.color,
+        username: user.username,
+        role: user.role,
+      };
+      try {
+        localStorage.setItem(ME_KEY, JSON.stringify(next));
+      } catch {
+        // armazenamento indisponível — sessão ainda funciona
+      }
+      setMe(next);
+      setNeedSetup(false);
+      pushToast(`Conta criada. Bem-vindo(a), ${user.username}!`);
+      void fetchState();
+      return null;
+    } catch (e) {
+      return errMsg(e, "Não foi possível criar sua conta agora.");
     } finally {
       setSaving(false);
     }
@@ -2167,12 +2165,10 @@ export default function App() {
       </main>
 
       {needSetup && (
-        <SetupDialog
-          initialName={me?.username ?? me?.name ?? ""}
-          editing={!!me}
+        <AuthDialog
           busy={saving}
-          onSubmit={login}
-          onCancel={() => setNeedSetup(false)}
+          onLogin={login}
+          onRegister={register}
         />
       )}
 

@@ -20,6 +20,7 @@ export const collaborators = pgTable("collaborators", {
 export const users = pgTable("users", {
   id: text("id").primaryKey(),
   username: text("username").notNull().unique(),
+  email: text("email"),
   password: text("password").notNull(),
   role: text("role").notNull().default("user"),
   createdAt: timestamp("created_at", { withTimezone: true })

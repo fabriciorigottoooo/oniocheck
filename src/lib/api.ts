@@ -48,6 +48,12 @@ export const api = {
       },
     ),
 
+  register: (body: { email: string; username: string; password: string; confirmPassword: string }) =>
+    req<{ user: { id: string; username: string; role: string }; collaborator: Collab }>(
+      "/api/auth/register",
+      { method: "POST", body: JSON.stringify(body) },
+    ),
+
   join: (body: { id?: string; name: string }) =>
     req<{ collaborator: Collab }>("/api/collaborators", {
       method: "POST",
