@@ -10,6 +10,8 @@ import {
   LogOut,
   Menu as MenuIcon,
   ListFilter,
+  Maximize2,
+  Minimize2,
   MoonStar,
   NotebookPen,
   PencilLine,
@@ -96,6 +98,7 @@ export default function App() {
   const [profileOpen, setProfileOpen] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
   const [topMenuOpen, setTopMenuOpen] = useState(false);
+  const [dashboardChartExpanded, setDashboardChartExpanded] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [deletedClientIds, setDeletedClientIds] = useState<string[]>(() => {
     try {
@@ -169,6 +172,15 @@ export default function App() {
       document.removeEventListener("keydown", onKeyDown);
     };
   }, [topMenuOpen]);
+
+  useEffect(() => {
+    if (!dashboardChartExpanded) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setDashboardChartExpanded(false);
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [dashboardChartExpanded]);
 
   /* ---------- helpers ---------- */
 
@@ -456,11 +468,43 @@ export default function App() {
       }),
     [activeClients],
   );
-  const lineChartSteps = stepBreakdown.slice(0, 6);
-  const chartX = (index: number) => 54 + index * (512 / Math.max(lineChartSteps.length - 1, 1));
-  const chartY = (value: number) => 20 + ((100 - value) / 100) * 132;
-  const completedLine = lineChartSteps.map((step, index) => `${chartX(index)},${chartY(step.progress)}`).join(" ");
-  const pendingLine = lineChartSteps.map((step, index) => `${chartX(index)},${chartY(100 - step.progress)}`).join(" ");
+  const doneStepBreakdown = STEPS.map((label, index) => {
+    const completed = doneClients.filter((client) => client.checks[index]?.done).length;
+    return {
+      label,
+      done: completed,
+      missing: doneClients.length - completed,
+      progress: doneClients.length ? Math.round((completed / doneClients.length) * 100) : 0,
+    };
+  });
+  const lineChartSteps = stepBreakdown;
+  const chartX = (index: number) => 56 + index * (738 / Math.max(lineChartSteps.length - 1, 1));
+  const chartPlotHeight = dashboardChartExpanded ? 340 : 156;
+  const chartViewHeight = dashboardChartExpanded ? 430 : 280;
+  const chartLabelY = dashboardChartExpanded ? 408 : 218;
+  const chartY = (value: number) => 28 + ((100 - value) / 100) * chartPlotHeight;
+  const activeAverage = activeClients.length
+    ? Math.round((stepsDone / (activeClients.length * STEPS.length)) * 100)
+    : 0;
+  const chartSeries = [
+    ...(activeClients.length ? [
+      { key: "active-done", label: "Em andamento · concluídas", color: "#2878e8", values: stepBreakdown.map((step) => step.progress), counts: stepBreakdown.map((step) => step.done), total: activeClients.length },
+      { key: "active-pending", label: "Em andamento · pendentes", color: "#f0a331", values: stepBreakdown.map((step) => 100 - step.progress), counts: stepBreakdown.map((step) => step.missing), total: activeClients.length },
+    ] : []),
+    ...(doneClients.length ? [
+      { key: "done-complete", label: "Finalizadas · concluídas", color: "#21a47b", values: doneStepBreakdown.map((step) => step.progress), counts: doneStepBreakdown.map((step) => step.done), total: doneClients.length },
+      { key: "done-pending", label: "Finalizadas · pendentes", color: "#d65c72", values: doneStepBreakdown.map((step) => 100 - step.progress), counts: doneStepBreakdown.map((step) => step.missing), total: doneClients.length },
+    ] : []),
+    ...(activeClients.length ? [{
+      key: "active-average",
+      label: "Média geral · em andamento",
+      color: "#9366dc",
+      values: lineChartSteps.map(() => activeAverage),
+      counts: lineChartSteps.map(() => stepsDone),
+      total: activeClients.length * STEPS.length,
+      dashed: true,
+    }] : []),
+  ];
   const agendaTypeMap = useMemo(
     () => new Map(agendaTypes.map((t) => [t.id, t])),
     [agendaTypes],
@@ -478,6 +522,7 @@ export default function App() {
   /* ---------- actions ---------- */
 
   const changeView = (v: "active" | "done") => {
+    setDashboardChartExpanded(false);
     setView(v);
     setDashboardOpen(false);
     setStoresOpen(false);
@@ -490,6 +535,7 @@ export default function App() {
   };
 
   const openDashboard = () => {
+    setDashboardChartExpanded(false);
     setDashboardOpen(true);
     setStoresOpen(false);
     setAgendaOpen(false);
@@ -499,6 +545,7 @@ export default function App() {
   };
 
   const openAgenda = () => {
+    setDashboardChartExpanded(false);
     setDashboardOpen(false);
     setStoresOpen(false);
     setAgendaOpen(true);
@@ -508,6 +555,7 @@ export default function App() {
   };
 
   const openStores = () => {
+    setDashboardChartExpanded(false);
     setDashboardOpen(false);
     setAgendaOpen(false);
     setStoresOpen(true);
@@ -1589,37 +1637,79 @@ export default function App() {
             </section>
 
             <section className="dashboard-charts">
-              <div className="panel dashboard-chart-panel">
-                <div className="list-head compact-head">
-                  <h2>Etapas concluídas</h2>
+              {dashboardChartExpanded && (
+                <button
+                  type="button"
+                  className="chart-expanded-backdrop"
+                  aria-label="Fechar gráfico ampliado"
+                  onClick={() => setDashboardChartExpanded(false)}
+                />
+              )}
+              <div className={`panel dashboard-chart-panel line-chart-card${dashboardChartExpanded ? " expanded" : ""}`}>
+                <div className="list-head compact-head line-chart-heading">
+                  <div className="line-chart-title">
+                    <h2>Progresso por etapa</h2>
+                    <p>Percentual de conclusão separado por situação das lojas.</p>
+                  </div>
+                  <button
+                    type="button"
+                    className="chart-expand-btn"
+                    aria-label={dashboardChartExpanded ? "Recolher gráfico" : "Expandir gráfico"}
+                    aria-expanded={dashboardChartExpanded}
+                    title={dashboardChartExpanded ? "Recolher gráfico" : "Expandir gráfico"}
+                    onClick={() => setDashboardChartExpanded((expanded) => !expanded)}
+                  >
+                    {dashboardChartExpanded ? <Minimize2 size={17} /> : <Maximize2 size={17} />}
+                  </button>
                 </div>
                 <div className="line-chart-wrap">
                   <div className="line-chart-legend" aria-label="Legenda do gráfico">
-                    <span><i className="legend-dot completed" />Concluídas</span>
-                    <span><i className="legend-dot pending" />Pendentes</span>
+                    {chartSeries.map((series) => (
+                      <span key={series.key}>
+                        <i className={`legend-line${"dashed" in series && series.dashed ? " dashed" : ""}`} style={{ borderTopColor: series.color }} />
+                        {series.label}
+                      </span>
+                    ))}
                   </div>
-                  <svg className="steps-line-chart" viewBox="0 0 620 220" role="img" aria-label="Percentual de etapas concluídas e pendentes por etapa">
-                    {[0, 50, 100].map((value) => {
+                  {chartSeries.length ? <div className="line-chart-plot">
+                    <svg className="steps-line-chart" viewBox={`0 0 850 ${chartViewHeight}`} role="img" aria-label="Percentual concluído e pendente por etapa, separado entre lojas em andamento e finalizadas">
+                    {[0, 25, 50, 75, 100].map((value) => {
                       const y = chartY(value);
                       return <g key={value}>
-                        <line x1="54" x2="566" y1={y} y2={y} className="chart-grid-line" />
-                        <text x="42" y={y + 4} className="chart-axis-label" textAnchor="end">{value}%</text>
+                        <line x1="56" x2="794" y1={y} y2={y} className="chart-grid-line" />
+                        <text x="44" y={y + 4} className="chart-axis-label" textAnchor="end">{value}%</text>
                       </g>;
                     })}
-                    {lineChartSteps.length > 1 && <>
-                      <polyline points={completedLine} className="chart-line completed-line" />
-                      <polyline points={pendingLine} className="chart-line pending-line" />
-                    </>}
+                    {chartSeries.map((series) => (
+                      <g key={series.key}>
+                        {lineChartSteps.length > 1 && <polyline
+                          points={series.values.map((value, index) => `${chartX(index)},${chartY(value)}`).join(" ")}
+                          className="chart-line"
+                          style={{ stroke: series.color, strokeDasharray: "dashed" in series && series.dashed ? "7 6" : undefined }}
+                        />}
+                        {series.values.map((value, index) => {
+                          const pointTitle = series.key === "active-average"
+                            ? `${series.label}: ${value}%`
+                            : `${series.label} · ${lineChartSteps[index].label}: ${series.counts[index]}/${series.total} (${value}%)`;
+                          return (
+                            <circle key={`${series.key}-${lineChartSteps[index].label}`} cx={chartX(index)} cy={chartY(value)} r="4.2" className="chart-point" style={{ fill: series.color }}>
+                              <title>{pointTitle}</title>
+                            </circle>
+                          );
+                        })}
+                      </g>
+                    ))}
                     {lineChartSteps.map((step, index) => {
                       const x = chartX(index);
-                      const shortLabel = step.label.length > 15 ? `${step.label.slice(0, 14)}…` : step.label;
+                      const shortLabel = step.label.length > 14 ? `${step.label.slice(0, 13)}…` : step.label;
                       return <g key={step.label}>
-                        <circle cx={x} cy={chartY(step.progress)} r="4.5" className="chart-point completed-point"><title>{step.label}: {step.progress}% concluídas</title></circle>
-                        <circle cx={x} cy={chartY(100 - step.progress)} r="4.5" className="chart-point pending-point"><title>{step.label}: {100 - step.progress}% pendentes</title></circle>
-                        <text x={x} y="180" className="chart-step-label" textAnchor="middle">{shortLabel}</text>
+                        <text x={x} y={chartLabelY} className="chart-step-label" textAnchor="middle"><title>{step.label}</title>{shortLabel}</text>
                       </g>;
                     })}
-                  </svg>
+                    </svg>
+                  </div> : (
+                    <p className="chart-empty">Cadastre ou reabra lojas para comparar o progresso por etapa.</p>
+                  )}
                 </div>
               </div>
 

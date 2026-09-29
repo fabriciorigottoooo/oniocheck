@@ -1557,22 +1557,125 @@ button.team-row:hover {
 
 .line-chart-wrap {
   display: grid;
-  gap: 8px;
+  gap: 11px;
+  min-width: 0;
 }
 
 .line-chart-legend {
   display: flex;
-  justify-content: flex-end;
+  justify-content: flex-start;
   flex-wrap: wrap;
-  gap: 14px;
+  gap: 7px;
   color: var(--muted);
-  font-size: 11px;
+  font-size: 10px;
 }
 
 .line-chart-legend span {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 7px;
+  min-height: 28px;
+  padding: 4px 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(248, 250, 255, 0.8);
+}
+
+.legend-line {
+  display: inline-block;
+  width: 19px;
+  height: 0;
+  border-top: 2.5px solid;
+  border-radius: 99px;
+  flex: 0 0 auto;
+}
+
+.legend-line.dashed {
+  border-top-style: dashed;
+}
+
+.line-chart-heading {
+  align-items: flex-start;
+}
+
+.line-chart-title h2 {
+  margin: 0;
+  font-size: 1rem;
+  letter-spacing: -0.03em;
+}
+
+.line-chart-title p {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.chart-expand-btn {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  color: #516987;
+  background: #f7f9fd;
+  transition: color 0.16s ease, border-color 0.16s ease, background 0.16s ease, transform 0.16s ease;
+}
+
+.chart-expand-btn:hover {
+  color: #1f5db8;
+  border-color: rgba(45, 111, 232, 0.32);
+  background: #eef5ff;
+  transform: translateY(-1px);
+}
+
+.chart-expanded-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 99;
+  border: 0;
+  background: rgba(7, 19, 36, 0.62);
+  backdrop-filter: blur(3px);
+}
+
+.line-chart-card.expanded {
+  position: fixed;
+  inset: 16px;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: clamp(20px, 3vw, 36px);
+  border-radius: 20px;
+  box-shadow: 0 28px 90px rgba(6, 19, 38, 0.32);
+}
+
+.line-chart-card.expanded .line-chart-wrap {
+  flex: 1;
+  min-height: 0;
+  grid-template-rows: auto minmax(0, 1fr);
+}
+
+.line-chart-card.expanded .line-chart-legend {
+  gap: 9px;
+  font-size: 12px;
+}
+
+.line-chart-card.expanded .line-chart-legend span {
+  min-height: 34px;
+  padding: 5px 11px;
+}
+
+.line-chart-plot {
+  width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  border-radius: 12px;
+  scrollbar-width: thin;
 }
 
 .legend-dot,
@@ -1598,8 +1701,26 @@ button.team-row:hover {
 .steps-line-chart {
   display: block;
   width: 100%;
-  height: 210px;
+  min-width: 920px;
+  height: 280px;
   overflow: visible;
+}
+
+.line-chart-card.expanded .steps-line-chart {
+  min-width: 1040px;
+  height: max(440px, calc(100vh - 190px));
+}
+
+.chart-empty {
+  display: grid;
+  place-items: center;
+  min-height: 240px;
+  margin: 0;
+  border: 1px dashed var(--line);
+  border-radius: 12px;
+  color: var(--muted);
+  font-size: 12px;
+  text-align: center;
 }
 
 .chart-grid-line {
@@ -1616,7 +1737,7 @@ button.team-row:hover {
 }
 
 .chart-step-label {
-  font-size: 9px;
+  font-size: 9.5px;
 }
 
 .chart-line {
@@ -2041,6 +2162,23 @@ button.team-row:hover {
 .app.dark .insight-box {
   background: linear-gradient(180deg, rgba(12, 21, 31, 0.98), rgba(18, 27, 38, 0.98));
   border-color: rgba(132, 162, 214, 0.16);
+}
+
+.app.dark .line-chart-legend span {
+  border-color: rgba(132, 162, 214, 0.16);
+  background: rgba(12, 21, 31, 0.65);
+}
+
+.app.dark .chart-expand-btn {
+  border-color: rgba(132, 162, 214, 0.2);
+  color: #b5c8e5;
+  background: rgba(12, 21, 31, 0.76);
+}
+
+.app.dark .chart-expand-btn:hover {
+  border-color: rgba(111, 159, 244, 0.45);
+  color: #e4efff;
+  background: rgba(45, 111, 232, 0.2);
 }
 
 .app.dark .insight-box strong,
