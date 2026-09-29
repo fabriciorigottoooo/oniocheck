@@ -7,10 +7,12 @@ import Avatar from "./Avatar";
 
 function Modal({
   label,
+  className = "",
   onClose,
   children,
 }: {
   label: string;
+  className?: string;
   onClose?: () => void;
   children: ReactNode;
 }) {
@@ -30,7 +32,7 @@ function Modal({
         if (onClose && e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="modal" role="dialog" aria-modal="true" aria-label={label}>
+      <div className={`modal${className ? ` ${className}` : ""}`} role="dialog" aria-modal="true" aria-label={label}>
         {children}
       </div>
     </div>
@@ -655,27 +657,34 @@ export function AgendaEventDialog({
   };
 
   return (
-    <Modal label="Editar evento agendado" onClose={onCancel}>
-      <div className="dialog-icon">
-        <PenLine size={22} />
+    <Modal label="Editar evento agendado" className="agenda-event-modal" onClose={onCancel}>
+      <div className="agenda-modal-heading">
+        <div className="dialog-icon"><PenLine size={21} /></div>
+        <div>
+          <span className="agenda-modal-kicker">AGENDA</span>
+          <h2>Editar evento</h2>
+          <p>Atualize os detalhes e o horário deste compromisso.</p>
+        </div>
       </div>
-      <h2>Editar evento</h2>
-      <p>Atualize o nome, horário, tipo ou observações deste evento.</p>
-      <form onSubmit={submit}>
-        <label className="field-label" htmlFor="agenda-event-title">Título</label>
-        <input id="agenda-event-title" type="text" value={title} onChange={(e) => setTitle(e.target.value)} maxLength={100} autoFocus />
+      <form className="agenda-event-form" onSubmit={submit}>
+        <label className="agenda-form-field" htmlFor="agenda-event-title">
+          <span>Título</span>
+          <input id="agenda-event-title" type="text" value={title} onChange={(e) => setTitle(e.target.value)} maxLength={100} autoFocus />
+        </label>
 
-        <label className="field-label" htmlFor="agenda-event-type">Tipo</label>
-        <select id="agenda-event-type" value={typeId} onChange={(e) => setTypeId(e.target.value)}>
-          <option value="">Selecione</option>
-          {typeOptions.map((type) => (
-            <option key={type.id} value={type.id}>{type.name}</option>
-          ))}
-        </select>
+        <label className="agenda-form-field" htmlFor="agenda-event-type">
+          <span>Tipo de compromisso</span>
+          <select id="agenda-event-type" value={typeId} onChange={(e) => setTypeId(e.target.value)}>
+            <option value="">Selecione um tipo</option>
+            {typeOptions.map((type) => (
+              <option key={type.id} value={type.id}>{type.name}</option>
+            ))}
+          </select>
+        </label>
 
-        <div className="agenda-grid">
+        <div className="agenda-grid agenda-event-time-grid">
           <label>
-            <span>Dia</span>
+            <span>Data</span>
             <input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
           </label>
           <label>
@@ -688,16 +697,18 @@ export function AgendaEventDialog({
           </label>
         </div>
 
-        <label className="field-label" htmlFor="agenda-event-notes">Observações</label>
-        <textarea id="agenda-event-notes" value={notes} onChange={(e) => setNotes(e.target.value)} rows={4} placeholder="Detalhes do evento..." />
+        <label className="agenda-form-field agenda-notes-field" htmlFor="agenda-event-notes">
+          <span>Observações <em>Opcional</em></span>
+          <textarea id="agenda-event-notes" value={notes} onChange={(e) => setNotes(e.target.value)} rows={4} placeholder="Adicione detalhes importantes para a equipe..." />
+        </label>
 
-        <div className="actions">
-          <button type="button" className="secondary" onClick={onCancel} disabled={busy}>Cancelar</button>
+        <div className="actions agenda-event-actions">
           {onDelete && (
             <button type="button" className="danger" onClick={onDelete} disabled={busy}>
               <Trash2 size={14} /> Excluir
             </button>
           )}
+          <button type="button" className="secondary" onClick={onCancel} disabled={busy}>Cancelar</button>
           <button className="primary" type="submit" disabled={busy || !title.trim() || !typeId || !date || !startTime || !endTime}>
             {busy ? "Salvando…" : "Salvar evento"}
           </button>
