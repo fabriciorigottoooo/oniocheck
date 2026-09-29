@@ -87,6 +87,7 @@ export async function PATCH(req: Request, ctx: Ctx) {
       name?: unknown;
       economicGroup?: unknown;
       attendanceUnit?: unknown;
+      attendanceUnits?: unknown;
       phone?: unknown;
       notes?: unknown;
       index?: unknown;
@@ -121,8 +122,16 @@ export async function PATCH(req: Request, ctx: Ctx) {
         }
         const economicGroup =
           typeof raw.economicGroup === "string" ? raw.economicGroup.trim() : "";
-        const attendanceUnit =
-          typeof raw.attendanceUnit === "string" ? raw.attendanceUnit.trim() : "";
+        const attendanceUnits = Array.isArray(raw.attendanceUnits)
+          ? raw.attendanceUnits
+              .filter((unit): unit is string => typeof unit === "string")
+              .map((unit) => unit.trim().slice(0, 80))
+              .filter(Boolean)
+              .slice(0, 20)
+          : typeof raw.attendanceUnit === "string" && raw.attendanceUnit.trim()
+            ? [raw.attendanceUnit.trim().slice(0, 80)]
+            : [];
+        const attendanceUnit = attendanceUnits[0] ?? "";
         const phone = typeof raw.phone === "string" ? raw.phone.trim() : "";
         const notes = typeof raw.notes === "string" ? raw.notes.trim() : "";
 
@@ -132,6 +141,7 @@ export async function PATCH(req: Request, ctx: Ctx) {
             name,
             economicGroup: economicGroup || null,
             attendanceUnit: attendanceUnit || null,
+            attendanceUnits,
             phone: phone || null,
             notes: notes || null,
             updatedAt: now,

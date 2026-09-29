@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type ChangeEvent, type FormEvent, type ReactNode } from "react";
-import { CheckCircle2, Eye, EyeOff, NotebookPen, PenLine, Trash2, UserRoundPlus, Upload, Users } from "lucide-react";
+import { CheckCircle2, Eye, EyeOff, NotebookPen, PenLine, Plus, Trash2, UserRoundPlus, Upload, Users, X } from "lucide-react";
 import { activityParts, relTime } from "@/lib/format";
 import Avatar from "./Avatar";
 
@@ -166,11 +166,25 @@ export function AuthDialog({
   );
 }
 
+function formatBrazilianPhone(value: string) {
+  const rawDigits = value.replace(/\D/g, "");
+  const localDigits = rawDigits.length >= 12 && rawDigits.startsWith("55") ? rawDigits.slice(2) : rawDigits;
+  const digits = localDigits.slice(0, 11);
+  if (!digits) return "";
+  if (digits.length <= 2) return `(${digits}`;
+  const ddd = digits.slice(0, 2);
+  const number = digits.slice(2);
+  if (digits.length <= 6) return `(${ddd}) ${number}`;
+  if (digits.length <= 10) return `(${ddd}) ${number.slice(0, 4)}-${number.slice(4)}`;
+  return `(${ddd}) ${number.slice(0, 5)}-${number.slice(5)}`;
+}
+
 export function ClientDialog({
   mode,
   initialName = "",
   initialEconomicGroup = "",
   initialAttendanceUnit = "",
+  initialAttendanceUnits = [],
   initialPhone = "",
   busy,
   onCancel,
@@ -180,6 +194,7 @@ export function ClientDialog({
   initialName?: string;
   initialEconomicGroup?: string;
   initialAttendanceUnit?: string;
+  initialAttendanceUnits?: string[];
   initialPhone?: string;
   busy: boolean;
   onCancel: () => void;
@@ -187,13 +202,17 @@ export function ClientDialog({
     name: string;
     economicGroup?: string | null;
     attendanceUnit?: string | null;
+    attendanceUnits?: string[] | null;
     phone?: string | null;
   }) => void;
 }) {
   const [name, setName] = useState(initialName);
   const [economicGroup, setEconomicGroup] = useState(initialEconomicGroup);
-  const [attendanceUnit, setAttendanceUnit] = useState(initialAttendanceUnit);
-  const [phone, setPhone] = useState(initialPhone);
+  const [attendanceUnits, setAttendanceUnits] = useState<string[]>(() => {
+    const initial = initialAttendanceUnits.length ? initialAttendanceUnits : initialAttendanceUnit ? [initialAttendanceUnit] : [""];
+    return [...initial];
+  });
+  const [phone, setPhone] = useState(() => formatBrazilianPhone(initialPhone));
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
@@ -202,7 +221,8 @@ export function ClientDialog({
       onSubmit({
         name: n,
         economicGroup: economicGroup.trim() || null,
-        attendanceUnit: attendanceUnit.trim() || null,
+        attendanceUnit: attendanceUnits.find((unit) => unit.trim())?.trim() || null,
+        attendanceUnits: attendanceUnits.map((unit) => unit.trim()).filter(Boolean),
         phone: phone.trim() || null,
       });
     }
@@ -246,18 +266,34 @@ export function ClientDialog({
           autoComplete="off"
         />
 
-        <label className="field-label" htmlFor="client-attendance-unit">
-          Unidade de atendimento
-        </label>
-        <input
-          id="client-attendance-unit"
-          type="text"
-          value={attendanceUnit}
-          onChange={(e) => setAttendanceUnit(e.target.value)}
-          maxLength={80}
-          placeholder="Ex.: Unidade Centro"
-          autoComplete="off"
-        />
+        <div className="client-units-field">
+          <div className="client-units-heading">
+            <span>Unidades de atendimento</span>
+            <button type="button" className="client-add-unit" disabled={attendanceUnits.length >= 20} onClick={() => setAttendanceUnits((units) => [...units, ""])}>
+              <Plus size={14} /> Adicionar unidade
+            </button>
+          </div>
+          <div className="client-unit-list">
+            {attendanceUnits.map((unit, index) => (
+              <div className="client-unit-row" key={index}>
+                <input
+                  type="text"
+                  value={unit}
+                  onChange={(event) => setAttendanceUnits((units) => units.map((current, unitIndex) => unitIndex === index ? event.target.value : current))}
+                  maxLength={80}
+                  placeholder={index === 0 ? "Ex.: Unidade Centro" : `Ex.: Unidade ${index + 1}`}
+                  autoComplete="off"
+                  aria-label={`Unidade de atendimento ${index + 1}`}
+                />
+                {attendanceUnits.length > 1 && (
+                  <button type="button" className="client-remove-unit" onClick={() => setAttendanceUnits((units) => units.filter((_, unitIndex) => unitIndex !== index))} aria-label={`Remover unidade ${index + 1}`} title="Remover unidade">
+                    <X size={15} />
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
 
         <label className="field-label" htmlFor="client-phone">
           Telefone de contato
@@ -266,8 +302,9 @@ export function ClientDialog({
           id="client-phone"
           type="tel"
           value={phone}
-          onChange={(e) => setPhone(e.target.value)}
-          maxLength={30}
+          onChange={(e) => setPhone(formatBrazilianPhone(e.target.value))}
+          maxLength={32}
+          inputMode="numeric"
           placeholder="Ex.: (11) 99999-9999"
           autoComplete="tel"
         />

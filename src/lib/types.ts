@@ -9,6 +9,7 @@ export type ClientT = {
   name: string;
   economicGroup?: string | null;
   attendanceUnit?: string | null;
+  attendanceUnits?: string[] | null;
   phone?: string | null;
   notes?: string | null;
   checks: StepState[];
@@ -113,6 +114,7 @@ export type PatchBody =
       name: string;
       economicGroup?: string | null;
       attendanceUnit?: string | null;
+      attendanceUnits?: string[] | null;
       phone?: string | null;
       notes?: string | null;
       actor: ActorInput;

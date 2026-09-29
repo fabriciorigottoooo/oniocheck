@@ -36,6 +36,7 @@ export const clients = pgTable("clients", {
   name: text("name").notNull(),
   economicGroup: text("economic_group"),
   attendanceUnit: text("attendance_unit"),
+  attendanceUnits: jsonb("attendance_units").$type<string[]>(),
   phone: text("phone"),
   notes: text("notes"),
   checks: jsonb("checks").$type<StepState[]>().notNull(),

@@ -897,11 +897,13 @@ export default function App() {
     name,
     economicGroup,
     attendanceUnit,
+    attendanceUnits,
     phone,
   }: {
     name: string;
     economicGroup?: string | null;
     attendanceUnit?: string | null;
+    attendanceUnits?: string[] | null;
     phone?: string | null;
   }) => {
     const meNow = meRef.current;
@@ -912,6 +914,7 @@ export default function App() {
         name,
         economicGroup,
         attendanceUnit,
+        attendanceUnits,
         phone,
         actor: { id: meNow.id, name: meNow.name },
       });
@@ -942,12 +945,14 @@ export default function App() {
     name,
     economicGroup,
     attendanceUnit,
+    attendanceUnits,
     phone,
     notes,
   }: {
     name: string;
     economicGroup?: string | null;
     attendanceUnit?: string | null;
+    attendanceUnits?: string[] | null;
     phone?: string | null;
     notes?: string | null;
   }) => {
@@ -961,6 +966,7 @@ export default function App() {
         name,
         economicGroup,
         attendanceUnit,
+        attendanceUnits,
         phone,
         notes,
         actor: { id: meNow.id, name: meNow.name },
@@ -992,8 +998,9 @@ export default function App() {
       const { client } = await api.patchClient(target.id, {
         op: "rename",
         name: target.name,
-        economicGroup: target.economicGroup ?? null,
-        attendanceUnit: target.attendanceUnit ?? null,
+          economicGroup: target.economicGroup ?? null,
+          attendanceUnit: target.attendanceUnit ?? null,
+          attendanceUnits: target.attendanceUnits ?? (target.attendanceUnit ? [target.attendanceUnit] : []),
         phone: target.phone ?? null,
         notes: notes || null,
         actor: { id: meNow.id, name: meNow.name },
@@ -2202,6 +2209,11 @@ export default function App() {
           }
           initialAttendanceUnit={
             clientDialog.mode === "rename" ? clientDialog.client.attendanceUnit ?? "" : ""
+          }
+          initialAttendanceUnits={
+            clientDialog.mode === "rename"
+              ? clientDialog.client.attendanceUnits ?? (clientDialog.client.attendanceUnit ? [clientDialog.client.attendanceUnit] : [])
+              : []
           }
           initialPhone={clientDialog.mode === "rename" ? clientDialog.client.phone ?? "" : ""}
           busy={saving}

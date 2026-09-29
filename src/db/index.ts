@@ -100,8 +100,18 @@ export async function ensureDatabaseCompatibility() {
     ALTER TABLE IF EXISTS clients
       ADD COLUMN IF NOT EXISTS economic_group text,
       ADD COLUMN IF NOT EXISTS attendance_unit text,
+      ADD COLUMN IF NOT EXISTS attendance_units jsonb,
       ADD COLUMN IF NOT EXISTS phone text,
       ADD COLUMN IF NOT EXISTS notes text;
+  `);
+
+  await db.execute(`
+    UPDATE clients
+    SET attendance_units = CASE
+      WHEN attendance_unit IS NULL OR btrim(attendance_unit) = '' THEN '[]'::jsonb
+      ELSE jsonb_build_array(attendance_unit)
+    END
+    WHERE attendance_units IS NULL;
   `);
 
   await db.execute(`

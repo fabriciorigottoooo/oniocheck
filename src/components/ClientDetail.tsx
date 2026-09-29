@@ -34,6 +34,9 @@ export default function ClientDetail({
   }
 
   const c = client;
+  const attendanceUnits = c.attendanceUnits?.length
+    ? c.attendanceUnits.join(", ")
+    : c.attendanceUnit;
   const n = c.checks.filter((s) => s?.done).length;
   const done = !!c.finishedAt;
 
@@ -44,10 +47,10 @@ export default function ClientDetail({
           {done ? "FINALIZADO" : n === 10 ? "PRONTO PARA FINALIZAR" : "EM ANDAMENTO"}
         </span>
         <h2>{c.name}</h2>
-        {(c.economicGroup || c.attendanceUnit || c.phone) && (
+        {(c.economicGroup || attendanceUnits || c.phone) && (
           <div className="client-identity">
             {c.economicGroup && <span>Grupo econômico: {c.economicGroup}</span>}
-            {c.attendanceUnit && <span>Unidade de atendimento: {c.attendanceUnit}</span>}
+            {attendanceUnits && <span>Unidades de atendimento: {attendanceUnits}</span>}
             {c.phone && <span>Telefone: {c.phone}</span>}
           </div>
         )}

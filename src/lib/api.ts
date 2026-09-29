@@ -82,6 +82,7 @@ export const api = {
     name: string;
     economicGroup?: string | null;
     attendanceUnit?: string | null;
+    attendanceUnits?: string[] | null;
     phone?: string | null;
     notes?: string | null;
     actor: ActorInput;
