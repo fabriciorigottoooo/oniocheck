@@ -191,6 +191,7 @@ export default function ImplementationBoard({ workflow, finished, busy, onUpdate
 
   return (
     <section className="implementation-board" aria-label="Quadro de implantação do OnioChat">
+      {busy && <div className="workflow-sync-indicator" role="status" aria-live="polite"><i /> Salvando atualização para toda a equipe…</div>}
       <div className="workflow-overview">
         <div className="workflow-overview-top">
           <div><span className="workflow-kicker">IMPLANTAÇÃO ONIOCHAT</span><h3>Quadro de implantação</h3><p>O próximo passo é liberado quando a etapa anterior é concluída.</p></div>

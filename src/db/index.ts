@@ -36,7 +36,7 @@ async function ensureAgendaDefaults() {
   ]);
 }
 
-export async function ensureDatabaseCompatibility() {
+async function runDatabaseCompatibility() {
   await db.execute(`
     CREATE TABLE IF NOT EXISTS users (
       id text PRIMARY KEY,
@@ -136,4 +136,16 @@ export async function ensureDatabaseCompatibility() {
   `);
 
   await ensureAgendaDefaults();
+}
+
+let compatibilityPromise: Promise<void> | null = null;
+
+export function ensureDatabaseCompatibility(): Promise<void> {
+  if (!compatibilityPromise) {
+    compatibilityPromise = runDatabaseCompatibility().catch((error) => {
+      compatibilityPromise = null;
+      throw error;
+    });
+  }
+  return compatibilityPromise;
 }

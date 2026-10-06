@@ -38,6 +38,8 @@ import {
   getWorkflowProgress,
   isWorkflowFilterPending,
   normalizeWorkflow,
+  isWorkflowComplete,
+  updateWorkflow,
   type WorkflowUpdate,
 } from "@/lib/workflow";
 import type { Activity, AgendaEvent, AgendaType, AppState, ClientT, Collab } from "@/lib/types";
@@ -89,6 +91,7 @@ export default function App() {
   });
   const [me, setMe] = useState<Me | null>(null);
   const [needSetup, setNeedSetup] = useState(false);
+  const [initialDataLoaded, setInitialDataLoaded] = useState(false);
   const [live, setLive] = useState(false);
   const [view, setView] = useState<"active" | "done">("active");
   const [dashboardOpen, setDashboardOpen] = useState(false);
@@ -146,6 +149,7 @@ export default function App() {
     finished: false,
   });
   const [saving, setSaving] = useState(false);
+  const [workflowSaving, setWorkflowSaving] = useState(false);
   const [now, setNow] = useState(() => Date.now());
 
   const fileRef = useRef<HTMLInputElement>(null);
@@ -266,6 +270,8 @@ export default function App() {
       }
     } catch {
       // mantém dados anteriores; o indicador de conexão avisa
+    } finally {
+      setInitialDataLoaded(true);
     }
   }, []);
 
@@ -1003,7 +1009,22 @@ export default function App() {
   const updateClientWorkflow = async (client: ClientT, workflowUpdate: WorkflowUpdate) => {
     const meNow = meRef.current;
     if (!meNow || client.finishedAt) return;
-    setSaving(true);
+    const originalClient = client;
+    const nowIso = new Date().toISOString();
+    let optimisticClient: ClientT;
+    try {
+      const workflow = updateWorkflow(clientWorkflow(client), workflowUpdate, meNow.name, nowIso);
+      optimisticClient = {
+        ...client,
+        workflow,
+        finishedAt: isWorkflowComplete(workflow) ? nowIso : client.finishedAt,
+      };
+      replaceClient(optimisticClient);
+    } catch (e) {
+      pushToast(errMsg(e, "Não foi possível atualizar esta etapa."));
+      return;
+    }
+    setWorkflowSaving(true);
     try {
       const { client: fresh } = await api.patchClient(client.id, {
         op: "workflow",
@@ -1024,10 +1045,11 @@ export default function App() {
             : "Fluxo de implantação atualizado.");
       }
     } catch (e) {
+      replaceClient(originalClient);
       pushToast(errMsg(e, "Não foi possível atualizar a implantação."));
       void fetchState();
     } finally {
-      setSaving(false);
+      setWorkflowSaving(false);
     }
   };
 
@@ -1468,14 +1490,14 @@ export default function App() {
     pushToast("Relatório PDF baixado com sucesso.");
   };
 
-  const booting = !me && !needSetup;
+  const booting = (!me && !needSetup) || (!!me && !initialDataLoaded);
 
   const agendaTitle = storesOpen ? "Cadastros/Lojas" : dashboardOpen ? "Dashboard" : agendaOpen ? "Agenda" : view === "active" ? "Em andamento" : "Finalizados";
 
   const renderRightPanel = () => (
     <ClientDetail
       client={selected}
-      busy={saving}
+      busy={saving || workflowSaving}
       onWorkflowUpdate={updateClientWorkflow}
       onRename={() => selected && setClientDialog({ mode: "rename", client: selected })}
       onNotes={() => selected && setNotesFor(selected)}
@@ -1487,10 +1509,14 @@ export default function App() {
   if (booting) {
     return (
       <div className="loading-screen" aria-live="polite" aria-busy="true">
-        <Image src="/logo_oniocheck_horizontal.png" alt="OnioCheck" width={1200} height={429} className="loading-logo" priority />
-        <p>Conectando ao servidor...</p>
-        <div className="loading-bar" role="progressbar" aria-label="Carregando">
-          <i />
+        <div className="loading-card">
+          <Image src="/logo_oniocheck_horizontal.png" alt="OnioCheck" width={1200} height={429} className="loading-logo" priority />
+          <span className="loading-spinner" aria-hidden="true" />
+          <p>Carregando suas lojas e preparando o OnioCheck…</p>
+          <div className="loading-bar" role="progressbar" aria-label="Carregando">
+            <i />
+          </div>
+          <small className="loading-caption">Sincronizando os dados da equipe</small>
         </div>
       </div>
     );
