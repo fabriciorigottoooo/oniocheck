@@ -1,5 +1,6 @@
 import type { activities, agendaEventTypes, agendaEvents, clients, collaborators } from "@/db/schema";
 import type { Activity, ActivityAction, AgendaEvent, AgendaType, ClientT, Collab } from "./types";
+import { normalizeWorkflow } from "./workflow";
 
 type ClientRow = typeof clients.$inferSelect;
 type CollabRow = typeof collaborators.$inferSelect;
@@ -8,6 +9,8 @@ type AgendaTypeRow = typeof agendaEventTypes.$inferSelect;
 type AgendaEventRow = typeof agendaEvents.$inferSelect;
 
 export function toClient(r: ClientRow): ClientT {
+  const checks = Array.isArray(r.checks) ? r.checks : [];
+  const finishedAt = r.finishedAt ? r.finishedAt.toISOString() : null;
   return {
     id: r.id,
     name: r.name,
@@ -18,8 +21,9 @@ export function toClient(r: ClientRow): ClientT {
       : r.attendanceUnit ? [r.attendanceUnit] : [],
     phone: (r as typeof r & { phone?: string | null }).phone ?? null,
     notes: (r as typeof r & { notes?: string | null }).notes ?? null,
-    checks: Array.isArray(r.checks) ? r.checks : [],
-    finishedAt: r.finishedAt ? r.finishedAt.toISOString() : null,
+    checks,
+    workflow: normalizeWorkflow(r.workflow, checks, finishedAt),
+    finishedAt,
     createdAt: r.createdAt.toISOString(),
     updatedAt: r.updatedAt.toISOString(),
   };

@@ -6,6 +6,7 @@ import { logActivity, resolveActor } from "@/lib/collab";
 import { toClient } from "@/lib/mappers";
 import { STEPS } from "@/lib/steps";
 import type { ActivityAction } from "@/lib/types";
+import { getWorkflowStages, getWorkflowTaskState, normalizeWorkflow, updateWorkflow, type WorkflowUpdate } from "@/lib/workflow";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -92,6 +93,7 @@ export async function PATCH(req: Request, ctx: Ctx) {
       notes?: unknown;
       index?: unknown;
       value?: unknown;
+      workflowUpdate?: unknown;
       actor?: unknown;
     };
     const actor = await resolveActor(
@@ -193,6 +195,50 @@ export async function PATCH(req: Request, ctx: Ctx) {
         };
       }
 
+      if (op === "workflow") {
+        if (c.finishedAt) {
+          return { kind: "conflict" as const, error: "Esta implantação já foi finalizada. Reabra-a para continuar." };
+        }
+        const update = raw.workflowUpdate as WorkflowUpdate | undefined;
+        if (!update || typeof update !== "object" || !("type" in update)) {
+          return { kind: "bad" as const, error: "Atualização de etapa inválida." };
+        }
+        let nextWorkflow;
+        try {
+          nextWorkflow = updateWorkflow(
+            normalizeWorkflow(c.workflow, c.checks, c.finishedAt),
+            update,
+            actor.name,
+            now.toISOString(),
+          );
+        } catch (error) {
+          return { kind: "conflict" as const, error: error instanceof Error ? error.message : "Não foi possível alterar a etapa." };
+        }
+        const stages = getWorkflowStages(nextWorkflow);
+        const lastStage = stages[stages.length - 1];
+        const completesFlow = !!lastStage && getWorkflowTaskState(nextWorkflow, lastStage.id).status === "done";
+        const [updated] = await tx
+          .update(clients)
+          .set({ workflow: nextWorkflow, finishedAt: completesFlow ? now : null, updatedAt: now })
+          .where(eq(clients.id, id))
+          .returning();
+        let detail = "Fluxo do Facebook atualizado";
+        if (update.type === "task") {
+          const changedStage = stages.find((stage) => stage.id === update.taskId);
+          detail = `${changedStage?.title ?? "Etapa"} · ${update.status === "done" ? "concluída" : update.status === "in_progress" ? "em andamento" : "pendente"}`;
+        } else if (update.type === "facebook-path") {
+          detail = `Cenário do Facebook: ${update.facebookStatus === "already-uses" ? "já utiliza" : update.facebookStatus === "used-before" ? "já utilizou" : "nunca usou"}`;
+        } else if (update.type === "never-used-options") {
+          detail = "Necessidades de acesso e site atualizadas";
+        }
+        return {
+          kind: "ok" as const,
+          client: updated,
+          action: (completesFlow ? "finished" : "workflow") as ActivityAction,
+          detail: completesFlow ? "Implantação concluída" : detail,
+        };
+      }
+
       if (op === "finish") {
         if (c.finishedAt) {
           return { kind: "conflict" as const, error: "Cliente já finalizado." };
@@ -220,12 +266,18 @@ export async function PATCH(req: Request, ctx: Ctx) {
         if (!c.finishedAt) {
           return {
             kind: "conflict" as const,
-            error: "Este checklist não está finalizado.",
+            error: "Esta implantação não está finalizada.",
           };
         }
+        const workflow = normalizeWorkflow(c.workflow, c.checks, c.finishedAt.toISOString());
+        workflow.tasks.linking = {
+          status: "in_progress",
+          by: actor.name,
+          at: now.toISOString(),
+        };
         const [updated] = await tx
           .update(clients)
-          .set({ finishedAt: null, updatedAt: now })
+          .set({ finishedAt: null, workflow, updatedAt: now })
           .where(eq(clients.id, id))
           .returning();
         return {

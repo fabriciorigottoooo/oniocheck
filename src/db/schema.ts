@@ -37,6 +37,7 @@ export const clients = pgTable("clients", {
   economicGroup: text("economic_group"),
   attendanceUnit: text("attendance_unit"),
   attendanceUnits: jsonb("attendance_units").$type<string[]>(),
+  workflow: jsonb("workflow").$type<import("../lib/workflow").ImplementationWorkflow>(),
   phone: text("phone"),
   notes: text("notes"),
   checks: jsonb("checks").$type<StepState[]>().notNull(),

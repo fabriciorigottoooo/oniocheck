@@ -1,6 +1,7 @@
 import { Search } from "lucide-react";
 import type { ClientT } from "@/lib/types";
-import { fullDate, stepTotal } from "@/lib/format";
+import { fullDate } from "@/lib/format";
+import { getWorkflowProgress, normalizeWorkflow } from "@/lib/workflow";
 
 type Props = {
   title: string;
@@ -40,7 +41,7 @@ export default function ClientList({
       <div className="clients">
         {clients.length ? (
           clients.map((c) => {
-            const n = stepTotal(c);
+            const progress = getWorkflowProgress(c.workflow ?? normalizeWorkflow(null, c.checks, c.finishedAt));
             return (
               <button
                 key={c.id}
@@ -50,15 +51,15 @@ export default function ClientList({
               >
                 <span className="client-top">
                   <strong>{c.name}</strong>
-                  <span className="pct">{n * 10}%</span>
+                  <span className="pct">{progress.percent}%</span>
                 </span>
                 <small className="client-meta">
                   {c.finishedAt
                     ? "Finalizado em " + fullDate(c.finishedAt)
-                    : `${n} de 10 etapas concluídas`}
+                    : `${progress.done} de ${progress.total} etapas concluídas`}
                 </small>
                 <span className="bar">
-                  <i style={{ width: `${n * 10}%` }} />
+                  <i style={{ width: `${progress.percent}%` }} />
                 </span>
               </button>
             );

@@ -1,4 +1,25 @@
 export function getClientProgress(client = {}) {
+  if (client.workflow && typeof client.workflow === 'object') {
+    const workflow = client.workflow;
+    const base = ['onboarding', 'initial', 'api', 'facebook-path'];
+    let branch = [];
+    if (workflow.facebookStatus === 'already-uses') branch = ['confirm-bm'];
+    if (workflow.facebookStatus === 'used-before') branch = ['verify-facebook', 'confirm-bm'];
+    if (workflow.facebookStatus === 'never-used') {
+      if (workflow.createWebsite === true) branch.push('website-form');
+      if (workflow.needsFacebookAccess === true || workflow.createWebsite === true) branch.push('schedule');
+      branch.push('fill-bm');
+    }
+    const stages = [...base, ...branch, 'license-data', 'create-license', 'training', 'linking'];
+    const decisionDone = Boolean(workflow.facebookStatus) && (
+      workflow.facebookStatus !== 'never-used' ||
+      (typeof workflow.needsFacebookAccess === 'boolean' && typeof workflow.createWebsite === 'boolean')
+    );
+    const done = stages.filter((id) => id === 'facebook-path'
+      ? decisionDone
+      : workflow.tasks?.[id]?.status === 'done').length;
+    return stages.length ? Math.round((done / stages.length) * 100) : 0;
+  }
   const checks = Array.isArray(client.checks) ? client.checks : [];
   const total = checks.length;
   if (total === 0) return 0;

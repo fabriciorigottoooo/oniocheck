@@ -144,7 +144,7 @@ export function AuthDialog({
             <section className="auth-face auth-login-face" aria-hidden={mode !== "login"} inert={mode !== "login"}>
               <div className="dialog-icon"><Users size={22} /></div>
               <h2>Que bom ter você de volta</h2>
-              <p>Entre com seu nome de usuário e sua senha para acessar o checklist.</p>
+              <p>Entre com seu nome de usuário e sua senha para acessar o OnioCheck.</p>
               <form className="login-form auth-form" onSubmit={submit}>
                 <label className="auth-field">Nome de usuário<input type="text" value={username} onChange={(event) => setUsername(event.target.value)} maxLength={40} autoComplete="username" placeholder="Seu nome de usuário" required /></label>
                 <PasswordField id="login-password" label="Senha" value={password} onChange={setPassword} placeholder="Digite sua senha" autoComplete="current-password" />

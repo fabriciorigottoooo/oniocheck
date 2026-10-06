@@ -101,6 +101,7 @@ export async function ensureDatabaseCompatibility() {
       ADD COLUMN IF NOT EXISTS economic_group text,
       ADD COLUMN IF NOT EXISTS attendance_unit text,
       ADD COLUMN IF NOT EXISTS attendance_units jsonb,
+      ADD COLUMN IF NOT EXISTS workflow jsonb,
       ADD COLUMN IF NOT EXISTS phone text,
       ADD COLUMN IF NOT EXISTS notes text;
   `);

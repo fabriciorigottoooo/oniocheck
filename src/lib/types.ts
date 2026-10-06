@@ -1,3 +1,5 @@
+import type { ImplementationWorkflow, WorkflowUpdate } from "./workflow";
+
 export type StepState = {
   done: boolean;
   by: string | null;
@@ -13,6 +15,7 @@ export type ClientT = {
   phone?: string | null;
   notes?: string | null;
   checks: StepState[];
+  workflow?: ImplementationWorkflow | null;
   finishedAt: string | null;
   createdAt: string;
   updatedAt: string;
@@ -35,6 +38,7 @@ export type ActivityAction =
   | "step_off"
   | "finished"
   | "reopened"
+  | "workflow"
   | "deleted"
   | "imported";
 
@@ -119,6 +123,7 @@ export type PatchBody =
       notes?: string | null;
       actor: ActorInput;
     }
+  | { op: "workflow"; workflowUpdate: WorkflowUpdate; actor: ActorInput }
   | { op: "step"; index: number; value: boolean; actor: ActorInput }
   | { op: "finish"; actor: ActorInput }
   | { op: "reopen"; actor: ActorInput };

@@ -1,33 +1,35 @@
 import { NotebookPen, PenLine, Trash2 } from "lucide-react";
-import { STEPS } from "@/lib/steps";
-import type { ClientT, StepState } from "@/lib/types";
-import { fullDate, timeShort } from "@/lib/format";
+import type { ClientT } from "@/lib/types";
+import type { WorkflowUpdate } from "@/lib/workflow";
+import { emptyWorkflow, getWorkflowProgress, migrateWorkflow } from "@/lib/workflow";
+import { fullDate } from "@/lib/format";
 import { clientNotesPreview } from "@/lib/clientNotes";
+import ImplementationBoard from "./ImplementationBoard";
 
 type Props = {
   client: ClientT | null;
-  onToggle: (index: number, value: boolean) => void;
+  busy: boolean;
+  onWorkflowUpdate: (client: ClientT, update: WorkflowUpdate) => void;
   onRename: () => void;
   onNotes: () => void;
-  onFinish: () => void;
   onReopen: () => void;
   onDelete: () => void;
 };
 
 export default function ClientDetail({
   client,
-  onToggle,
+  busy,
+  onWorkflowUpdate,
   onRename,
   onNotes,
-  onFinish,
   onReopen,
   onDelete,
 }: Props) {
   if (!client) {
     return (
-      <section className="panel" aria-label="Checklist do cliente">
+      <section className="panel" aria-label="Implantação do cliente">
         <div className="empty" style={{ padding: "72px 24px" }}>
-          Selecione um cliente para ver o checklist.
+          Selecione um cliente para acompanhar a implantação.
         </div>
       </section>
     );
@@ -37,14 +39,15 @@ export default function ClientDetail({
   const attendanceUnits = c.attendanceUnits?.length
     ? c.attendanceUnits.join(", ")
     : c.attendanceUnit;
-  const n = c.checks.filter((s) => s?.done).length;
+  const workflow = c.workflow ?? (c.finishedAt ? migrateWorkflow(c.checks, c.finishedAt) : emptyWorkflow());
+  const workflowProgress = getWorkflowProgress(workflow);
   const done = !!c.finishedAt;
 
   return (
-    <section className="panel" aria-label="Checklist do cliente">
+    <section className="panel" aria-label="Implantação do cliente">
       <div className="detail-head">
         <span className={`badge${done ? " done" : ""}`}>
-          {done ? "FINALIZADO" : n === 10 ? "PRONTO PARA FINALIZAR" : "EM ANDAMENTO"}
+          {done ? "IMPLANTAÇÃO CONCLUÍDA" : "IMPLANTAÇÃO EM ANDAMENTO"}
         </span>
         <h2>{c.name}</h2>
         {(c.economicGroup || attendanceUnits || c.phone) && (
@@ -65,20 +68,20 @@ export default function ClientDetail({
         <div className="progress-label">
           <span>
             {done
-              ? "Concluído em " + (c.finishedAt ? fullDate(c.finishedAt) : "")
-              : `${n} de 10 etapas concluídas`}
+              ? "Concluída em " + (c.finishedAt ? fullDate(c.finishedAt) : "")
+              : `${workflowProgress.done} de ${workflowProgress.total} etapas concluídas`}
           </span>
-          <strong>{n * 10}%</strong>
+          <strong>{workflowProgress.percent}%</strong>
         </div>
         <div
           className="bar big"
           role="progressbar"
-          aria-label="Progresso do cliente"
-          aria-valuenow={n}
+          aria-label="Progresso da implantação"
+          aria-valuenow={workflowProgress.percent}
           aria-valuemin={0}
-          aria-valuemax={10}
+          aria-valuemax={100}
         >
-          <i style={{ width: `${n * 10}%` }} />
+          <i style={{ width: `${workflowProgress.percent}%` }} />
         </div>
       </div>
 
@@ -96,48 +99,29 @@ export default function ClientDetail({
         )}
       </div>
 
-      <div className="tasks">
-        {STEPS.map((s, i) => {
-          const st: StepState = c.checks[i] ?? { done: false, by: null, at: null };
-          return (
-            <label key={s} className="task">
-              <input
-                type="checkbox"
-                checked={!!st.done}
-                disabled={done}
-                onChange={(e) => onToggle(i, e.target.checked)}
-              />
-              <span className="task-body">
-                <span className="step">ETAPA {String(i + 1).padStart(2, "0")}</span>
-                <span className="task-name">{s}</span>
-              </span>
-            </label>
-          );
-        })}
-      </div>
+      <ImplementationBoard
+        workflow={workflow}
+        finished={done}
+        busy={busy}
+        onUpdate={(update) => onWorkflowUpdate(c, update)}
+      />
 
       <div className="detail-foot">
         <p>
           {done
-            ? "Checklist preservado para consulta."
-            : n === 10
-              ? "Todas as etapas concluídas. Confirme a finalização."
-              : "Marque as etapas conforme forem concluídas."}
+            ? "Histórico da implantação preservado para consulta."
+            : "As etapas bloqueadas serão liberadas conforme a implantação avançar."}
         </p>
         {done ? (
           <>
             <button className="secondary" onClick={onReopen}>
-              Reabrir checklist
+              Reabrir implantação
             </button>
             <button className="danger" onClick={onDelete}>
               <Trash2 size={12} /> Excluir cliente
             </button>
           </>
-        ) : (
-          <button className="primary" onClick={onFinish} disabled={n < 10}>
-            Finalizar cliente
-          </button>
-        )}
+        ) : null}
       </div>
     </section>
   );

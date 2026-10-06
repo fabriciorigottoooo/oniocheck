@@ -79,7 +79,9 @@ export function activityParts(a: Activity): { actor: string; msg: string } {
     case "finished":
       return { actor: a.actorName, msg: `finalizou ${alvo}` };
     case "reopened":
-      return { actor: a.actorName, msg: `reabriu o checklist de ${alvo}` };
+      return { actor: a.actorName, msg: `reabriu a implantação de ${alvo}` };
+    case "workflow":
+      return { actor: a.actorName, msg: `${a.detail ?? "atualizou uma etapa"} em ${alvo}` };
     case "deleted":
       return { actor: a.actorName, msg: `excluiu o cliente ${alvo}` };
     case "imported":

@@ -27,14 +27,19 @@ import {
 } from "lucide-react";
 import { api } from "@/lib/api";
 import { summarizeDashboard } from "@/lib/dashboard";
-import { STEPS } from "@/lib/steps";
 import {
   activityParts,
   isOnline,
   norm,
   relTime,
-  stepTotal,
 } from "@/lib/format";
+import {
+  WORKFLOW_FILTERS,
+  getWorkflowProgress,
+  isWorkflowFilterPending,
+  normalizeWorkflow,
+  type WorkflowUpdate,
+} from "@/lib/workflow";
 import type { Activity, AgendaEvent, AgendaType, AppState, ClientT, Collab } from "@/lib/types";
 import Sidebar from "./Sidebar";
 import ClientList from "./ClientList";
@@ -48,7 +53,6 @@ import {
   ClientDialog,
   ClientNotesDialog,
   CollaboratorDetailDialog,
-  FinishDialog,
   ProfileDialog,
   TeamModal,
 } from "./Dialogs";
@@ -60,6 +64,8 @@ const ME_KEY = "oniocheck-me-v1";
 const LAST_SEEN_ACTIVITY_KEY = "oniocheck-last-seen-activity-v1";
 const CLIENT_BACKUP_KEY = "oniocheck-client-backup-v1";
 const DELETED_CLIENTS_KEY = "oniocheck-deleted-clients-v1";
+
+const clientWorkflow = (client: ClientT) => client.workflow ?? normalizeWorkflow(null, client.checks, client.finishedAt);
 
 type Me = {
   id: string;
@@ -94,7 +100,6 @@ export default function App() {
     { mode: "new" } | { mode: "rename"; client: ClientT } | null
   >(null);
   const [notesFor, setNotesFor] = useState<ClientT | null>(null);
-  const [finishFor, setFinishFor] = useState<ClientT | null>(null);
   const [adminOpen, setAdminOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
@@ -117,7 +122,7 @@ export default function App() {
   const [teamOpen, setTeamOpen] = useState(false);
   const [activityOpen, setActivityOpen] = useState(false);
   const [activityAlert, setActivityAlert] = useState(false);
-  const [selectedStepFilters, setSelectedStepFilters] = useState<number[]>([]);
+  const [selectedStepFilters, setSelectedStepFilters] = useState<string[]>([]);
   const [advancedFiltersOpen, setAdvancedFiltersOpen] = useState(false);
   const [agendaOpen, setAgendaOpen] = useState(false);
   const [selectedCollaboratorId, setSelectedCollaboratorId] = useState<string | null>(null);
@@ -436,7 +441,7 @@ export default function App() {
   const filteredStepClients = useMemo(() => {
     if (!selectedStepFilters.length) return activeClients;
     return activeClients.filter((client) =>
-      selectedStepFilters.some((index) => !client.checks[index]?.done),
+      selectedStepFilters.some((filterId) => isWorkflowFilterPending(clientWorkflow(client), filterId)),
     );
   }, [activeClients, selectedStepFilters]);
 
@@ -453,17 +458,19 @@ export default function App() {
     visible[0] ??
     null;
   const onlineCollabs = collaborators.filter((c) => isOnline(c, now));
-  const stepsDone = activeClients.reduce((n, c) => n + stepTotal(c), 0);
+  const stepsDone = activeClients.reduce((n, client) => n + getWorkflowProgress(clientWorkflow(client)).done, 0);
+  const totalSteps = activeClients.reduce((n, client) => n + getWorkflowProgress(clientWorkflow(client)).total, 0);
   const selectedCollaborator =
     collaborators.find((c) => c.id === selectedCollaboratorId) ?? null;
   const dashboardSummary = useMemo(() => summarizeDashboard(filteredClients), [filteredClients]);
   const stepBreakdown = useMemo(
     () =>
-      STEPS.map((step, index) => {
-        const done = activeClients.filter((client) => client.checks[index]?.done).length;
+      WORKFLOW_FILTERS.map((step, index) => {
+        const done = activeClients.filter((client) => !isWorkflowFilterPending(clientWorkflow(client), step.id)).length;
         const missing = activeClients.length - done;
         return {
-          label: step,
+          label: step.label,
+          id: step.id,
           index,
           done,
           missing,
@@ -472,15 +479,17 @@ export default function App() {
       }),
     [activeClients],
   );
-  const doneStepBreakdown = STEPS.map((label, index) => {
-    const completed = doneClients.filter((client) => client.checks[index]?.done).length;
+  const doneStepBreakdown = useMemo(() => WORKFLOW_FILTERS.map((step, index) => {
+    const completed = doneClients.filter((client) => !isWorkflowFilterPending(clientWorkflow(client), step.id)).length;
     return {
-      label,
+      label: step.label,
+      id: step.id,
+      index,
       done: completed,
       missing: doneClients.length - completed,
       progress: doneClients.length ? Math.round((completed / doneClients.length) * 100) : 0,
     };
-  });
+  }), [doneClients]);
   const lineChartSteps = stepBreakdown;
   const chartViewWidth = dashboardChartExpanded ? 1480 : 850;
   const chartX = (index: number) => 56 + index * ((chartViewWidth - 112) / Math.max(lineChartSteps.length - 1, 1));
@@ -488,8 +497,8 @@ export default function App() {
   const chartViewHeight = dashboardChartExpanded ? 430 : 280;
   const chartLabelY = dashboardChartExpanded ? 408 : 218;
   const chartY = (value: number) => 28 + ((100 - value) / 100) * chartPlotHeight;
-  const activeAverage = activeClients.length
-    ? Math.round((stepsDone / (activeClients.length * STEPS.length)) * 100)
+  const activeAverage = totalSteps
+    ? Math.round((stepsDone / totalSteps) * 100)
     : 0;
   const chartSeries = [
     ...(activeClients.length ? [
@@ -506,7 +515,7 @@ export default function App() {
       color: "#9366dc",
       values: lineChartSteps.map(() => activeAverage),
       counts: lineChartSteps.map(() => stepsDone),
-      total: activeClients.length * STEPS.length,
+      total: totalSteps,
       dashed: true,
     }] : []),
   ];
@@ -860,39 +869,6 @@ export default function App() {
     }
   };
 
-  const toggleStep = (client: ClientT, index: number, value: boolean) => {
-    const meNow = meRef.current;
-    if (!meNow || client.finishedAt) return;
-    const checks = client.checks.map((s, i) =>
-      i === index
-        ? {
-            done: value,
-            by: value ? meNow.name : null,
-            at: value ? new Date().toISOString() : null,
-          }
-        : s,
-    );
-    const optimistic: ClientT = {
-      ...client,
-      checks,
-      updatedAt: new Date().toISOString(),
-    };
-    replaceClient(optimistic);
-    api
-      .patchClient(client.id, {
-        op: "step",
-        index,
-        value,
-        actor: { id: meNow.id, name: meNow.name },
-      })
-      .then(({ client: fresh }) => replaceClient(fresh))
-      .catch((e) => {
-        pushToast(errMsg(e, "Não foi possível salvar a alteração."));
-        void fetchState();
-      });
-    if (value && checks.every((s) => s.done)) setFinishFor(optimistic);
-  };
-
   const createClient = async ({
     name,
     economicGroup,
@@ -1023,25 +999,32 @@ export default function App() {
     }
   };
 
-  const finishClient = async () => {
+  const updateClientWorkflow = async (client: ClientT, workflowUpdate: WorkflowUpdate) => {
     const meNow = meRef.current;
-    const target = finishFor;
-    if (!meNow || !target) return;
+    if (!meNow || client.finishedAt) return;
     setSaving(true);
     try {
-      const { client } = await api.patchClient(target.id, {
-        op: "finish",
+      const { client: fresh } = await api.patchClient(client.id, {
+        op: "workflow",
+        workflowUpdate,
         actor: { id: meNow.id, name: meNow.name },
       });
-      replaceClient(client);
-      setFinishFor(null);
-      setView("done");
-      setSearch("");
-      setSelectedId(client.id);
-      pushToast(`“${client.name}” finalizado. Disponível em Finalizados.`);
+      replaceClient(fresh);
+      if (fresh.finishedAt) {
+        setView("done");
+        setSearch("");
+        setSelectedId(fresh.id);
+        pushToast(`Implantação de “${fresh.name}” concluída.`);
+      } else {
+        pushToast(workflowUpdate.type === "task" && workflowUpdate.status === "done"
+          ? "Etapa concluída. A próxima já foi liberada."
+          : workflowUpdate.type === "task" && workflowUpdate.status === "in_progress"
+            ? "Etapa iniciada. O quadro foi atualizado para toda a equipe."
+            : "Fluxo de implantação atualizado.");
+      }
     } catch (e) {
-      setFinishFor(null);
-      pushToast(errMsg(e, "Não foi possível finalizar."));
+      pushToast(errMsg(e, "Não foi possível atualizar a implantação."));
+      void fetchState();
     } finally {
       setSaving(false);
     }
@@ -1052,7 +1035,7 @@ export default function App() {
     if (!meNow) return;
     if (
       !window.confirm(
-        `Reabrir o checklist de ${client.name}? Ele voltará para Em andamento, mantendo as marcações.`,
+        `Reabrir a implantação de ${client.name}? A etapa de vinculação voltará para Em andamento.`,
       )
     ) {
       return;
@@ -1067,7 +1050,7 @@ export default function App() {
         setView("active");
         setSearch("");
         setSelectedId(fresh.id);
-        pushToast("Checklist reaberto. A equipe foi avisada.");
+        pushToast("Implantação reaberta. A equipe foi avisada.");
       })
       .catch((e) => {
         pushToast(errMsg(e, "Não foi possível reabrir."));
@@ -1126,7 +1109,13 @@ export default function App() {
       clients: clients.map((c) => ({
         id: c.id,
         name: c.name,
+        economicGroup: c.economicGroup,
+        attendanceUnit: c.attendanceUnit,
+        attendanceUnits: c.attendanceUnits,
+        phone: c.phone,
+        notes: c.notes,
         checks: c.checks,
+        workflow: clientWorkflow(c),
         finishedAt: c.finishedAt,
       })),
     };
@@ -1485,10 +1474,10 @@ export default function App() {
   const renderRightPanel = () => (
     <ClientDetail
       client={selected}
-      onToggle={(i, v) => selected && toggleStep(selected, i, v)}
+      busy={saving}
+      onWorkflowUpdate={updateClientWorkflow}
       onRename={() => selected && setClientDialog({ mode: "rename", client: selected })}
       onNotes={() => selected && setNotesFor(selected)}
-      onFinish={() => selected && setFinishFor(selected)}
       onReopen={() => selected && reopenClient(selected)}
       onDelete={() => selected && deleteFinishedClient(selected)}
     />
@@ -1659,8 +1648,8 @@ export default function App() {
               <div className={`panel dashboard-chart-panel line-chart-card${dashboardChartExpanded ? " expanded" : ""}`}>
                 <div className="list-head compact-head line-chart-heading">
                   <div className="line-chart-title">
-                    <h2>Progresso por etapa</h2>
-                    <p>Percentual de conclusão separado por situação das lojas.</p>
+                    <h2>Fluxo de implantação</h2>
+                    <p>Avanço dos marcos do OnioChat em cada grupo de lojas.</p>
                   </div>
                   <div className="chart-heading-actions">
                     {dashboardChartExpanded && (
@@ -1733,7 +1722,7 @@ export default function App() {
                       event.preventDefault();
                     }
                   }}>
-                    <svg className="steps-line-chart" viewBox={`0 0 ${chartViewWidth} ${chartViewHeight}`} role="img" aria-label="Percentual concluído e pendente por etapa, separado entre lojas em andamento e finalizadas">
+                    <svg className="steps-line-chart" viewBox={`0 0 ${chartViewWidth} ${chartViewHeight}`} role="img" aria-label="Avanço dos marcos de implantação, separado entre lojas em andamento e finalizadas">
                     {[0, 25, 50, 75, 100].map((value) => {
                       const y = chartY(value);
                       return <g key={value}>
@@ -1864,7 +1853,7 @@ export default function App() {
               <div className="stat">
                 <small>Etapas concluídas · ativos</small>
                 <strong>
-                  {stepsDone} / {activeClients.length * 10}
+                  {stepsDone} / {totalSteps}
                 </strong>
               </div>
               <div className="stat">
@@ -1894,7 +1883,7 @@ export default function App() {
                   <span className="step-filter-heading-icon"><ListFilter size={18} /></span>
                   <div>
                     <h2>Filtrar por etapa</h2>
-                    <p>Encontre as lojas pelo ponto em que estão no processo.</p>
+                    <p>Encontre as lojas pelo próximo marco pendente da implantação.</p>
                   </div>
                 </div>
                 <div className="step-filter-actions">
@@ -1925,19 +1914,19 @@ export default function App() {
                   <span>Todos</span>
                   <em>{activeClients.length}</em>
                 </button>
-                {STEPS.map((step, index) => {
-                  const count = activeClients.filter((client) => !client.checks[index]?.done).length;
-                  const active = selectedStepFilters.length === 1 && selectedStepFilters[0] === index;
+                {WORKFLOW_FILTERS.map((step) => {
+                  const count = activeClients.filter((client) => isWorkflowFilterPending(clientWorkflow(client), step.id)).length;
+                  const active = selectedStepFilters.length === 1 && selectedStepFilters[0] === step.id;
                   return (
                     <button
-                      key={step}
+                      key={step.id}
                       type="button"
                       className={`step-filter-pill ${active ? "active" : ""}`}
                       aria-pressed={active}
-                      onClick={() => setSelectedStepFilters((value) => value.length === 1 && value[0] === index ? [] : [index])}
-                      title={`${count} lojas ainda faltam ${step.toLowerCase()}`}
+                      onClick={() => setSelectedStepFilters((value) => value.length === 1 && value[0] === step.id ? [] : [step.id])}
+                      title={`${count} implantações ainda estão pendentes em ${step.label.toLowerCase()}`}
                     >
-                      <span>{step}</span>
+                      <span>{step.label}</span>
                       <em>{count}</em>
                     </button>
                   );
@@ -1947,22 +1936,22 @@ export default function App() {
                 <div className="advanced-step-filters" id="advanced-step-filters">
                   <div className="advanced-step-copy">
                     <strong>Escolha uma ou mais etapas</strong>
-                    <span>Exibe lojas com pelo menos uma etapa selecionada pendente.</span>
+                    <span>Exibe implantações com pelo menos um marco selecionado pendente.</span>
                   </div>
                   <div className="advanced-step-options">
-                    {STEPS.map((step, index) => (
-                      <label key={step} className="advanced-step-option">
+                    {WORKFLOW_FILTERS.map((step) => (
+                      <label key={step.id} className="advanced-step-option">
                         <input
                           type="checkbox"
-                          checked={selectedStepFilters.includes(index)}
+                          checked={selectedStepFilters.includes(step.id)}
                           onChange={() => setSelectedStepFilters((current) =>
-                            current.includes(index)
-                              ? current.filter((selected) => selected !== index)
-                              : [...current, index].sort((a, b) => a - b),
+                            current.includes(step.id)
+                              ? current.filter((selected) => selected !== step.id)
+                              : [...current, step.id],
                           )}
                         />
-                        <span>{step}</span>
-                        <em>{activeClients.filter((client) => !client.checks[index]?.done).length}</em>
+                        <span>{step.label}</span>
+                        <em>{activeClients.filter((client) => isWorkflowFilterPending(clientWorkflow(client), step.id)).length}</em>
                       </label>
                     ))}
                   </div>
@@ -2149,7 +2138,7 @@ export default function App() {
                   selectedStepFilters.length === 0
                     ? "Seus clientes"
                     : selectedStepFilters.length === 1
-                      ? `Sem ${STEPS[selectedStepFilters[0]]}`
+                      ? `Em ${WORKFLOW_FILTERS.find((step) => step.id === selectedStepFilters[0])?.label ?? "implantação"}`
                       : "Etapas selecionadas"
                 }
                 search={search}
@@ -2161,8 +2150,8 @@ export default function App() {
                   selectedStepFilters.length === 0
                     ? emptyText
                     : selectedStepFilters.length === 1
-                      ? `Nenhuma loja pendente em ${STEPS[selectedStepFilters[0]].toLowerCase()}.`
-                      : "Nenhuma loja tem etapas selecionadas pendentes."
+                      ? `Nenhuma loja tem pendências em ${WORKFLOW_FILTERS.find((step) => step.id === selectedStepFilters[0])?.label.toLowerCase() ?? "nesta etapa"}.`
+                      : "Nenhuma loja tem marcos selecionados pendentes."
                 }
               />
               {renderRightPanel()}
@@ -2310,15 +2299,6 @@ export default function App() {
             if (file) void importBackup(file);
             e.target.value = "";
           }}
-        />
-      )}
-
-      {finishFor && (
-        <FinishDialog
-          clientName={finishFor.name}
-          busy={saving}
-          onCancel={() => setFinishFor(null)}
-          onConfirm={finishClient}
         />
       )}
 

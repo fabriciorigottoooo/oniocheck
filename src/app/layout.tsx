@@ -10,9 +10,9 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "OnioCheck · Checklist de clientes",
+  title: "OnioCheck · Implantação OnioChat",
   description:
-    "Gestão colaborativa de checklists e unidades de atendimento.",
+    "Gestão colaborativa das implantações do OnioChat e unidades de atendimento.",
   icons: {
     icon: "/favicon.png",
     shortcut: "/favicon.png",
