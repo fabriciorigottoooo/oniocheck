@@ -5789,3 +5789,31 @@ button.team-row:hover {
 .app.dark .workflow-detail-block strong, .app.dark .workflow-observation > span { color:#b9c9de; }
 .app.dark .workflow-detail-block p, .app.dark .workflow-observation small { color:#8fa4bd; }
 .app.dark .workflow-observation textarea { border-color:#35465d; color:#dce8f6; background:#101a29; }
+
+.workspace { transition: grid-template-columns .28s cubic-bezier(.2,.75,.25,1), gap .28s ease; }
+.workspace.clients-collapsed { grid-template-columns: 42px minmax(0, 1fr); gap: 12px; }
+.client-list-collapse {
+  display:inline-flex; align-items:center; gap:3px; flex:0 0 auto; padding:5px 6px;
+  border:1px solid #e2e9f2; border-radius:7px; color:#6b7f99; background:#fff;
+  font-size:9px; font-weight:700; transition:all .16s ease;
+}
+.client-list-collapse:hover { border-color:#bad0ed; color:#3268b6; background:#f3f7ff; }
+.client-list-rail {
+  display:flex; align-items:center; flex-direction:column; gap:11px; width:42px; min-height:190px;
+  padding:12px 5px; border:1px solid #dce6f3; border-radius:13px; color:#4d6f9c;
+  background:linear-gradient(180deg,#fff,#f5f8fd); box-shadow:0 5px 18px rgba(31,59,96,.06);
+  transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+}
+.client-list-rail:hover { transform:translateY(-2px); border-color:#b7cdeb; box-shadow:0 9px 22px rgba(31,59,96,.1); }
+.client-list-rail > span { writing-mode:vertical-rl; transform:rotate(180deg); font-size:10px; font-weight:800; letter-spacing:.04em; }
+.client-list-rail small { display:grid; width:22px; height:22px; place-items:center; border-radius:50%; color:#3866a3; background:#eaf2ff; font-size:9px; font-weight:800; }
+.app.dark .client-list-collapse { border-color:#34465e; color:#b5c6dc; background:#172337; }
+.app.dark .client-list-rail { border-color:#34465e; color:#a9c5ed; background:linear-gradient(180deg,#1b2a40,#152237); }
+.app.dark .client-list-rail small { color:#b9d2f5; background:#263d5d; }
+@media (max-width:780px) {
+  .workspace.clients-collapsed { grid-template-columns:1fr; gap:9px; }
+  .client-list-rail { flex-direction:row; width:100%; min-height:0; justify-content:flex-start; padding:8px 11px; }
+  .client-list-rail > span { writing-mode:initial; transform:none; }
+  .client-list-rail small { margin-left:auto; }
+  .client-list-collapse span { display:none; }
+}

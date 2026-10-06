@@ -94,6 +94,7 @@ export default function App() {
   const [dashboardOpen, setDashboardOpen] = useState(false);
   const [storesOpen, setStoresOpen] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [clientListCollapsed, setClientListCollapsed] = useState(false);
   const [search, setSearch] = useState("");
   const [toasts, setToasts] = useState<ToastItem[]>([]);
   const [clientDialog, setClientDialog] = useState<
@@ -2132,8 +2133,12 @@ export default function App() {
           </section>
         ) : (
           !dashboardOpen && !storesOpen && (
-            <div className="workspace">
-              <ClientList
+            <div className={`workspace${clientListCollapsed ? " clients-collapsed" : ""}`}>
+              {clientListCollapsed ? (
+                <button type="button" className="client-list-rail" onClick={() => setClientListCollapsed(false)} aria-label="Expandir lista de clientes" title="Mostrar lista de clientes">
+                  <ChevronRight size={17} /><span>Clientes</span><small>{visible.length}</small>
+                </button>
+              ) : <ClientList
                 title={
                   selectedStepFilters.length === 0
                     ? "Seus clientes"
@@ -2146,6 +2151,7 @@ export default function App() {
                 clients={visible}
                 selectedId={selectedId}
                 onSelect={setSelectedId}
+                onCollapse={() => setClientListCollapsed(true)}
                 emptyText={
                   selectedStepFilters.length === 0
                     ? emptyText
@@ -2153,7 +2159,7 @@ export default function App() {
                       ? `Nenhuma loja tem pendências em ${WORKFLOW_FILTERS.find((step) => step.id === selectedStepFilters[0])?.label.toLowerCase() ?? "nesta etapa"}.`
                       : "Nenhuma loja tem marcos selecionados pendentes."
                 }
-              />
+              />}
               {renderRightPanel()}
             </div>
           )
