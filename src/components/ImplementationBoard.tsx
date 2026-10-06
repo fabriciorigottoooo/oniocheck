@@ -8,6 +8,7 @@ import {
   CalendarDays,
   Check,
   ChevronRight,
+  ChevronDown,
   CircleHelp,
   Clock3,
   FileText,
@@ -66,6 +67,8 @@ function stageIsDone(stage: WorkflowTask, workflow: ImplementationWorkflow) {
 
 export default function ImplementationBoard({ workflow, finished, busy, onUpdate }: Props) {
   const [editingPath, setEditingPath] = useState(false);
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+  const [noteDrafts, setNoteDrafts] = useState<Record<string, string>>({});
   const stages = getWorkflowStages(workflow);
   const decisionIndex = stages.findIndex((stage) => stage.id === "facebook-path");
   const branchStages = stages.slice(decisionIndex + 1);
@@ -153,6 +156,8 @@ export default function ImplementationBoard({ workflow, finished, busy, onUpdate
     const locked = !done && !previousDone && taskState?.status !== "in_progress";
     const ready = !done && previousDone && taskState?.status === "todo";
     const number = String(index + 1).padStart(2, "0");
+    const isExpanded = expanded[stage.id] ?? ready;
+    const note = noteDrafts[stage.id] ?? taskState?.note ?? "";
     return (
       <article className={`workflow-card${locked ? " is-locked" : ""}${ready ? " is-ready" : ""}${done ? " is-done" : ""}${decision ? " is-decision" : ""}`} key={stage.id}>
         <div className="workflow-card-top">
@@ -164,6 +169,13 @@ export default function ImplementationBoard({ workflow, finished, busy, onUpdate
         </div>
         <h4>{stage.title}</h4>
         {!decision && <p>{stage.description}</p>}
+        {!decision && <button type="button" className="workflow-expand-button" aria-expanded={isExpanded} onClick={() => setExpanded((current) => ({ ...current, [stage.id]: !isExpanded }))}><ChevronDown size={14} /> {isExpanded ? "Recolher detalhes" : "Ver detalhes e observações"}</button>}
+        {!decision && isExpanded && <div className="workflow-stage-details">
+          <div className="workflow-detail-block"><strong>Objetivo desta etapa</strong><p>{stage.description}</p></div>
+          <div className="workflow-detail-block"><strong>Dependência</strong><p>{index === 0 ? "Etapa inicial da implantação." : `Liberada após concluir: ${stages[index - 1].title}.`}</p></div>
+          <label className="workflow-observation"><span>Observações da equipe</span><textarea value={note} maxLength={2000} disabled={finished} placeholder="Registre contatos, pendências, decisões e o contexto desta etapa…" onChange={(event) => setNoteDrafts((current) => ({ ...current, [stage.id]: event.target.value }))} /><small>{note.length}/2000 caracteres · visível para a equipe</small></label>
+          {!finished && note !== (taskState?.note ?? "") && <button type="button" className="workflow-save-note" disabled={busy} onClick={() => onUpdate({ type: "task-note", taskId: stage.id, note })}>Salvar observação</button>}
+        </div>}
         {decision && renderDecision(stage)}
         {locked && <div className="workflow-lock-hint"><LockKeyhole size={13} /> Libera após concluir a etapa anterior</div>}
         {taskState?.status === "in_progress" && !finished && (

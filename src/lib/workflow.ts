@@ -6,6 +6,7 @@ export type WorkflowTaskState = {
   status: WorkflowStatus;
   by: string | null;
   at: string | null;
+  note?: string;
 };
 export type ImplementationWorkflow = {
   version: 1;
@@ -16,6 +17,7 @@ export type ImplementationWorkflow = {
 };
 export type WorkflowUpdate =
   | { type: "task"; taskId: string; status: "todo" | "in_progress" | "done" }
+  | { type: "task-note"; taskId: string; note: string }
   | { type: "facebook-path"; facebookStatus: FacebookStatus }
   | { type: "never-used-options"; needsFacebookAccess?: boolean; createWebsite?: boolean };
 
@@ -27,8 +29,7 @@ export type WorkflowTask = {
 };
 
 export const WORKFLOW_FILTERS = [
-  { id: "onboarding", label: "Onboarding" },
-  { id: "initial", label: "Checklist inicial" },
+  { id: "onboarding", label: "Onboarding e preparação" },
   { id: "api", label: "API oficial" },
   { id: "facebook", label: "Facebook e BM" },
   { id: "agenda", label: "Agenda e formulários" },
@@ -46,8 +47,7 @@ export const emptyWorkflow = (): ImplementationWorkflow => ({
 });
 
 const BASE_STAGES: WorkflowTask[] = [
-  { id: "onboarding", title: "Onboarding", description: "Alinhar objetivo, responsáveis e contexto da implantação.", group: "onboarding" },
-  { id: "initial", title: "Checklist inicial", description: "Reunir dados da empresa e confirmar os pré-requisitos.", group: "initial" },
+  { id: "onboarding", title: "Onboarding e preparação inicial", description: "Alinhar objetivos e responsáveis, reunir dados da empresa e confirmar os pré-requisitos da implantação.", group: "onboarding" },
   { id: "api", title: "Configurar API Oficial", description: "Validar o canal oficial e os dados necessários para iniciar a configuração.", group: "api" },
 ];
 
@@ -155,8 +155,7 @@ export function migrateWorkflow(checks: StepState[], finishedAt: string | null):
   const mark = (id: string, done: boolean) => {
     if (done) workflow.tasks[id] = { status: "done", by: null, at: null };
   };
-  mark("onboarding", old(0));
-  mark("initial", old(1));
+  mark("onboarding", old(0) || old(1));
   mark("api", checks.slice(2).some((check) => check?.done));
   mark("confirm-bm", old(6));
   mark("license-data", old(2) && old(4));
@@ -196,7 +195,22 @@ export function normalizeWorkflow(value: unknown, checks: StepState[], finishedA
       status,
       by: typeof state.by === "string" ? state.by : null,
       at: typeof state.at === "string" ? state.at : null,
+      note: typeof state.note === "string" ? state.note : "",
     };
+  }
+  if (safeTasks.initial) {
+    const onboarding = safeTasks.onboarding ?? { status: "todo" as const, by: null, at: null, note: "" };
+    const initial = safeTasks.initial;
+    const status = onboarding.status === "done" || initial.status === "done"
+      ? "done"
+      : onboarding.status === "in_progress" || initial.status === "in_progress" ? "in_progress" : "todo";
+    safeTasks.onboarding = {
+      status,
+      by: onboarding.by ?? initial.by,
+      at: onboarding.at ?? initial.at,
+      note: [onboarding.note, initial.note].filter(Boolean).join("\n\n"),
+    };
+    delete safeTasks.initial;
   }
   return {
     version: 1,
@@ -209,6 +223,11 @@ export function normalizeWorkflow(value: unknown, checks: StepState[], finishedA
 
 export function updateWorkflow(workflow: ImplementationWorkflow, update: WorkflowUpdate, actorName: string, now: string): ImplementationWorkflow {
   const next: ImplementationWorkflow = { ...workflow, tasks: { ...workflow.tasks } };
+  if (update.type === "task-note") {
+    if (!getWorkflowStages(workflow).some((stage) => stage.id === update.taskId && stage.id !== "facebook-path")) throw new Error("Etapa inválida.");
+    next.tasks[update.taskId] = { ...getWorkflowTaskState(workflow, update.taskId), note: update.note.slice(0, 2000) };
+    return next;
+  }
   if (update.type === "facebook-path") {
     if (update.facebookStatus !== "already-uses" && update.facebookStatus !== "used-before" && update.facebookStatus !== "never-used") {
       throw new Error("Selecione um cenário válido para o Facebook.");

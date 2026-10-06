@@ -2863,17 +2863,28 @@ button.team-row:hover {
 }
 
 .list-head {
-  padding: 18px 18px 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
   border-bottom: 1px solid #edf0f5;
 }
 
 .list-head h2 {
-  font-size: 15px;
-  margin: 0 0 12px;
+  flex: 0 0 auto;
+  font-size: 13px;
+  margin: 0;
+}
+
+@media (max-width: 520px) {
+  .list-head { align-items: flex-start; flex-direction: column; }
+  .search-wrap { width: 100%; max-width: none; }
 }
 
 .search-wrap {
   position: relative;
+  max-width: 210px;
+  margin-left: auto;
 }
 
 .search-wrap svg {
@@ -2889,7 +2900,8 @@ button.team-row:hover {
   width: 100%;
   border: 1px solid #dce3ec;
   border-radius: 9px;
-  padding: 10px 11px 10px 34px;
+  padding: 7px 9px 7px 31px;
+  font-size: 11px;
   background: #f8fafc;
   transition:
     border-color 0.15s ease,
@@ -5762,3 +5774,18 @@ button.team-row:hover {
     flex-direction: column;
   }
 }
+.workflow-expand-button { display:inline-flex; align-items:center; gap:5px; justify-self:start; padding:3px 0; border:0; color:#4772ad; background:transparent; font-size:9px; font-weight:750; }
+.workflow-expand-button svg { transition:transform .18s ease; }
+.workflow-expand-button[aria-expanded="true"] svg { transform:rotate(180deg); }
+.workflow-stage-details { display:grid; gap:9px; padding:10px; border:1px solid #e6edf6; border-radius:10px; background:#f8faff; animation:workflow-card-in .18s ease both; }
+.workflow-detail-block, .workflow-observation { display:grid; gap:4px; }
+.workflow-detail-block strong, .workflow-observation > span { color:#536780; font-size:9px; font-weight:800; }
+.workflow-detail-block p { margin:0; color:#71839b; font-size:9px; line-height:1.45; }
+.workflow-observation textarea { width:100%; min-height:74px; resize:vertical; padding:8px; border:1px solid #dce5f0; border-radius:8px; color:#354a65; background:#fff; font:inherit; font-size:9px; line-height:1.45; }
+.workflow-observation textarea:focus { outline:2px solid #d9e8ff; border-color:#9dbbe4; }
+.workflow-observation small { color:#91a0b3; font-size:8px; }
+.workflow-save-note { justify-self:end; padding:6px 9px; border:0; border-radius:7px; color:#fff; background:#2865c2; font-size:9px; font-weight:750; }
+.app.dark .workflow-stage-details { border-color:#28394f; background:#172335; }
+.app.dark .workflow-detail-block strong, .app.dark .workflow-observation > span { color:#b9c9de; }
+.app.dark .workflow-detail-block p, .app.dark .workflow-observation small { color:#8fa4bd; }
+.app.dark .workflow-observation textarea { border-color:#35465d; color:#dce8f6; background:#101a29; }

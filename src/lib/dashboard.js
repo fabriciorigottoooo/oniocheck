@@ -1,7 +1,7 @@
 export function getClientProgress(client = {}) {
   if (client.workflow && typeof client.workflow === 'object') {
     const workflow = client.workflow;
-    const base = ['onboarding', 'initial', 'api', 'facebook-path'];
+    const base = ['onboarding', 'api', 'facebook-path'];
     let branch = [];
     if (workflow.facebookStatus === 'already-uses') branch = ['confirm-bm'];
     if (workflow.facebookStatus === 'used-before') branch = ['verify-facebook', 'confirm-bm'];
